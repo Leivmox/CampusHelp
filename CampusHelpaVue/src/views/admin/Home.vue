@@ -26,6 +26,11 @@
                     <i class="el-icon-s-custom"></i>
                     <span style="font-size:20px;">用户管理</span>
                 </el-menu-item>
+
+                <el-menu-item index="/admin/home/post">
+                    <i class="el-icon-s-order"></i>
+                    <span style="font-size:20px;">论坛管理</span>
+                </el-menu-item>
  
                 <el-menu-item index="/admin/home/task">
                     <i class="el-icon-s-order"></i>

@@ -71,6 +71,11 @@
           <span style="font-size:20px">评价我的</span>
         </el-menu-item>
 
+        <el-menu-item index="/home/mycomment">
+          <i class="el-icon-s-order"></i>
+          <span style="font-size:20px;">我的评论</span>
+        </el-menu-item>
+
         <!-- 个人中心改为平铺 -->
         <el-menu-item index="/home/MyProfile">
           <i class="el-icon-s-custom"></i>

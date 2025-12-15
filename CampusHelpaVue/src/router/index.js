@@ -51,6 +51,7 @@ const routes = [
             },
             {
                 path: "accept",
+
                 meta: {title: "已接收求助"},
                 component:()=>import('@v/user/children/Accept.vue')
             },
@@ -75,6 +76,12 @@ const routes = [
                 path:"userremark",
                 meta:{title:"评价我的"},
                 component:() => import("@v/remark/userremark.vue")
+            },
+            {
+                name:"mycomment",
+                path:"mycomment",
+                meta:{title:"我的评论"},
+                component:()=>import('@v/user/children/MyComment.vue')
             },
         ]
     },
@@ -104,6 +111,12 @@ const routes = [
                 path:"student",
                 meta:{title:"用户信息"},
                 component:() => import("@v/admin/children/Student.vue")
+            },
+            {
+                name:"adminPost",
+                path:"Post",
+                meta:{title:"论坛管理"},
+                component:() => import("@v/admin/children/Post.vue")
             },
             {
                 name:"task",

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yqn.mapper.CommentMapper">
+
+    <resultMap id="commentResultMap" type="com.yqn.pojo.Comment">
+        <id column="id" property="id"/>
+
+        <!-- 关联 User：根据 user_id 查出 commenter 对象 -->
+        <association property="commenter" column="user_id" select="findUserById"/>
+    </resultMap>
+
+    <!-- 同样的查询逻辑 -->
+    <select id="findUserById" resultMap="com.yqn.mapper.UserMapper.userResultMap">
+        select * from user where id=#{id}
+    </select>
+
+</mapper>

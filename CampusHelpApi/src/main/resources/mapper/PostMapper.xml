@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yqn.mapper.PostMapper">
+
+    <resultMap id="postResultMap" type="com.yqn.pojo.Post">
+        <id column="id" property="id"/>
+        <!-- 普通字段 MyBatis 会自动匹配，但为了保险可以写上，这里主要写关联 -->
+
+        <!-- 关联 User：根据 user_id 查出 publisher 对象 -->
+        <association property="publisher" column="user_id" select="findUserById"/>
+    </resultMap>
+
+    <!-- 定义怎么查 User，复用 UserMapper 的 ResultMap (和你提供的例子一致) -->
+    <select id="findUserById" resultMap="com.yqn.mapper.UserMapper.userResultMap">
+        select * from user where id=#{id}
+    </select>
+
+</mapper>
