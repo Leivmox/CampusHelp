@@ -25,9 +25,9 @@
                     <el-collapse-item title="班级" name="6">
                         <div>{{user.aclass.name}}</div>
                     </el-collapse-item>
-                    <el-collapse-item title="零钱" name="7">
+                    <!-- <el-collapse-item title="零钱" name="7">
                         <div><i class="el-icon-money" style="color: red;"> {{user.balance}}元</i></div>
-                    </el-collapse-item>
+                    </el-collapse-item> -->
                 </el-collapse>
             </div>
         </el-card>

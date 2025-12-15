@@ -2,15 +2,16 @@ package com.yqn.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.yqn.common.tools.MessageTools;
+import com.yqn.common.tools.PocketMoney;
 import com.yqn.pojo.Task;
 import com.yqn.pojo.User;
 import com.yqn.service.TaskService;
-import com.yqn.common.tools.MessageTools;
-import com.yqn.common.tools.PocketMoney;
 import com.yqn.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import javax.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
@@ -74,16 +75,24 @@ public class TaskController {
 
     // 发布新task
     @PostMapping
+//    public Map<String, Object> saveTask(Task task) {
+//        User user = userService.getById(task.getPublishId());
+//        if (user.getBalance() >= task.getReward()) {
+//            boolean save = taskService.save(task);
+//            if (save) {
+//                money.transfer("balance=balance-", task.getReward(), user.getStudentId());
+//            }
+//            return message.message(true, "发布任务成功", "", null);
+//        } else {
+//            return message.message(false, "余额不足", "", null);
+//        }
+//    }
     public Map<String, Object> saveTask(Task task) {
-        User user = userService.getById(task.getPublishId());
-        if (user.getBalance() >= task.getReward()) {
-            boolean save = taskService.save(task);
-            if (save) {
-                money.transfer("balance=balance-", task.getReward(), user.getStudentId());
-            }
+        boolean save = taskService.save(task);
+        if (save) {
             return message.message(true, "发布任务成功", "", null);
         } else {
-            return message.message(false, "余额不足", "", null);
+            return message.message(false, "发布任务失败", "", null);
         }
     }
 
@@ -94,7 +103,8 @@ public class TaskController {
         System.out.println(task);
         if (task != null) {
             taskService.removeById(id);
-            money.transfer("balance=balance+", task.getReward(), task.getPublish().getStudentId());
+//            money.transfer("balance=balance+", task.getReward(), task.getPublish().getStudentId());
+            return message.message(true, "取消任务成功", "", null);
         }
         return message.message(true, "取消任务成功", "", null);
     }
@@ -137,6 +147,23 @@ public class TaskController {
 
     // 完成task
     @PutMapping("/{id}")
+//    public Map<String, Object> missionCompleted(@PathVariable Long id) {
+//
+//        UpdateWrapper<Task> wrapper = new UpdateWrapper<>();
+//        wrapper.setSql("end_time=now()")
+//                .setSql("state=2")
+//                .eq("id", id);
+//        boolean b = taskService.update(wrapper);
+//
+//        if (b) {
+//            Task task = taskService.getById(id);
+//            if (task != null) {
+//                money.transfer("balance=balance+", task.getReward(), task.getAccept().getStudentId());
+//            }
+//            return message.message(true, "任务完成", "", null);
+//        }
+//        return message.message(false, "任务完成失败", "", null);
+//    }
     public Map<String, Object> missionCompleted(@PathVariable Long id) {
 
         UpdateWrapper<Task> wrapper = new UpdateWrapper<>();
@@ -146,10 +173,7 @@ public class TaskController {
         boolean b = taskService.update(wrapper);
 
         if (b) {
-            Task task = taskService.getById(id);
-            if (task != null) {
-                money.transfer("balance=balance+", task.getReward(), task.getAccept().getStudentId());
-            }
+            // 不再打赏接单人，删除 money.transfer 调用
             return message.message(true, "任务完成", "", null);
         }
         return message.message(false, "任务完成失败", "", null);

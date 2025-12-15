@@ -1,3 +1,4 @@
+<!-- 已发布求助 -->
 <template>
     <div class="content">
         <el-card class="box-card">
@@ -40,9 +41,9 @@
                     <el-collapse-item title="求助内容" name="1">
                         <div>{{item.taskContext}}</div>
                     </el-collapse-item>
-                    <el-collapse-item title="求助奖励" name="2">
+                    <!-- <el-collapse-item title="求助奖励" name="2">
                         <div><i class="el-icon-money" style="color: red;"> {{item.reward}}元</i></div>
-                    </el-collapse-item>
+                    </el-collapse-item> -->
                     <el-collapse-item title="发布时间" name="3">
                         <div>{{item.createTime | formatDate}}</div>
                     </el-collapse-item>

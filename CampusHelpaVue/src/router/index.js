@@ -30,6 +30,11 @@ const routes = [
                 component: () => import("@v/user/children/Index.vue")
             },
             {
+                path: "forum",
+                meta: {title: "校园圈子"},
+                component:()=>import('@v/user/children/Forum.vue')
+            },
+            {
                 path: "task",
                 meta: {title: "发布求助"},
                 component:()=>import('@v/user/children/Task.vue')

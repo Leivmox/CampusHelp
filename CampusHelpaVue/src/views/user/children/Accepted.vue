@@ -1,3 +1,4 @@
+<!-- 已接受求助 -->
 <template>
     <div class="content">
         <el-card class="box-card">
@@ -42,7 +43,7 @@
                                         <th>学校</th>
                                         <th>所在系</th>
                                         <th>所在班级</th>
-                                        <th>求助奖励</th>
+                                        <!-- <th>求助奖励</th> -->
                                         <th>接受求助时间</th>
                                     </tr>
                                     <tr align="center">
@@ -50,7 +51,7 @@
                                         <td>{{item.publish.school.name}}</td>
                                         <td>{{item.publish.dept.name}}</td>
                                         <td>{{item.publish.aclass.name}}</td>
-                                        <td><i class="el-icon-money" style="color: red;">{{item.reward}}元</i></td>
+                                        <!-- <td><i class="el-icon-money" style="color: red;">{{item.reward}}元</i></td> -->
                                         <td>{{item.orderTime | formatDate}}</td>
                                     </tr>
                                 </table>
@@ -58,14 +59,14 @@
                         </el-card>
 
                     </el-collapse-item>
-                    <el-collapse-item title="查看钱款" name="2" v-if="item.state == 2">
+                    <!-- <el-collapse-item title="查看钱款" name="2" v-if="item.state == 2">
                         <el-card class="box-card">
                             <div>
                                 <p>实收款：<i class="el-icon-money" style="color: red;">{{item.reward}}元</i></p>
                                 <p>到款时间：{{item.endTime | formatDate}}</p>
                             </div>
                         </el-card>
-                    </el-collapse-item>
+                    </el-collapse-item> -->
                 </el-collapse>
             </el-card>
 

@@ -72,14 +72,14 @@
           show-overflow-tooltip>
         </el-table-column>
         
-        <el-table-column 
+        <!-- <el-table-column 
           label="余额" 
           width="90" 
           align="right">
           <template slot-scope="scope">
             <span class="balance-cell">¥{{scope.row.balance}}</span>
           </template>
-        </el-table-column>
+        </el-table-column> -->
         
         <el-table-column 
           label="禁用用户" 

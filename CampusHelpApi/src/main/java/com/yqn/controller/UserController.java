@@ -1,12 +1,13 @@
 package com.yqn.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.yqn.pojo.User;
-import com.yqn.service.UserService;
 import com.yqn.common.tools.MessageTools;
 import com.yqn.common.tools.PocketMoney;
+import com.yqn.pojo.User;
+import com.yqn.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import javax.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +66,7 @@ public class UserController {
 
     // 添加User
     @PostMapping
-    public Map<String, Object> saveUser( User user) {
+    public Map<String, Object> saveUser(User user) {
         QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.eq("school_id", user.getSchoolId())
                 .eq("student_id", user.getStudentId());
@@ -98,14 +99,14 @@ public class UserController {
     }
 
     // 零钱转入
-    @PutMapping("rollIn")
-    public Map<String, Object> rollIn(String studentId, Double balance) {
-        return money.transfer("balance=balance+", balance, studentId);
-    }
+//    @PutMapping("rollIn")
+//    public Map<String, Object> rollIn(String studentId, Double balance) {
+//        return money.transfer("balance=balance+", balance, studentId);
+//    }
 
     // 零钱转出
-    @PutMapping("rollOut")
-    public Map<String, Object> rollOut(String studentId, Double balance) {
-        return money.transfer("balance=balance-", balance, studentId);
-    }
+//    @PutMapping("rollOut")
+//    public Map<String, Object> rollOut(String studentId, Double balance) {
+//        return money.transfer("balance=balance-", balance, studentId);
+//    }
 }

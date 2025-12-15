@@ -28,12 +28,12 @@
           </template>
         </el-table-column>
         
-        <el-table-column
+        <!-- <el-table-column
           prop="reward"
           label="求助奖励"
           min-width="110"
           align="center">
-        </el-table-column>
+        </el-table-column> -->
         
         <el-table-column
           prop="school.name"
