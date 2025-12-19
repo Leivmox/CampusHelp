@@ -352,12 +352,19 @@ export default {
     // 当我们在 /home/help/task, /home/help/accept 等子路径时，让左侧"求助中心"保持高亮
     activeMenu() {
       const path = this.$route.path;
+      if (path.startsWith("/home/forum")) {
+        return "/home/forum";
+      }
       if (path.startsWith("/home/help")) {
         return "/home/help";
       }
       if (path.startsWith("/home/remark")) {
         return "/home/remark";
       }
+      if (path === "/home" || path === "/home/") {
+        return "/home/";
+      }
+
       return path;
     },
   },
@@ -389,7 +396,8 @@ export default {
         phone: [{ validator: validatePhone, trigger: "blur" }],
       },
       // 颜色
-      themeColor: { bg: "#fff", color: "#000" },
+      // themeColor: { bg: "#fff", color: "#000" },
+      themeColor: { bg: "#E0E8FB", color: "#000" },
       // 性别
       sex: "0",
       drawer: false,
@@ -447,6 +455,11 @@ export default {
 </script>
 
 <style scoped lang="less">
+/* 定义深蓝色变量，方便调整 */
+@deep-blue: #165dff;
+/* 未选中时的标签底色 */
+@item-bg-normal: #e8eefa;
+
 .main {
   display: flex;
   height: 90%;
@@ -454,49 +467,112 @@ export default {
   .left {
     position: fixed;
     height: 100%;
+    /* 强制覆盖内联样式，确保背景色正确 */
+    background-color: #e0e8fb !important;
+    box-shadow: 2px 0 6px rgba(0, 21, 41, 0.05); /* 加一点点右侧阴影更有立体感 */
 
     .logo {
-      width: 90%;
-      /*color: white;*/
-      font-size: 16px;
+      width: 100%;
+      font-size: 18px;
+      font-weight: bold;
       text-align: center;
-      padding: 8px 0;
-      /*border: 1px solid white;*/
-      margin: 9.1px auto 0 auto;
+      padding: 20px 0;
+      color: @deep-blue; /* Logo 也用深蓝色 */
+      /* 1Panel风格的Logo背景通常是透明或者也是浅蓝，这里保持简单 */
+    }
+
+    /* --- 核心修改：穿透修改 Element UI 菜单样式 --- */
+    /deep/ .el-menu {
+      border-right: none; /* 去掉右侧那条难看的灰线 */
+      background-color: transparent !important; /* 菜单背景透明，透出 .left 的背景 */
+    }
+
+    /deep/ .el-menu-item {
+      /* 布局：让菜单项像小卡片一样浮在中间 */
+      margin: 8px 10px;
+      height: 50px;
+      line-height: 50px;
+      border-radius: 6px; /* 圆角 */
+
+      /* 颜色：未选中状态 */
+      background-color: @item-bg-normal !important;
+      color: #333 !important; /* 字体黑色 */
+      border: 1px solid transparent; /* 预留边框位置，防止抖动 */
+      transition: all 0.3s;
+
+      i {
+        color: #606266; /* 图标默认灰色 */
+      }
+
+      /* 鼠标移入 (Hover) */
+      &:hover {
+        background-color: #fff !important;
+        color: @deep-blue !important;
+        border-color: @deep-blue !important;
+
+        i {
+          color: @deep-blue !important;
+        }
+      }
+    }
+
+    /* 选中状态 (Active) */
+    /deep/ .el-menu-item.is-active {
+      background-color: #fff !important; /* 背景白色 */
+      color: @deep-blue !important; /* 字体深蓝 */
+      border: 1px solid @deep-blue !important; /* 一圈深蓝色边框 */
+      font-weight: bold; /* 选中加粗一点 */
+
+      i {
+        color: @deep-blue !important; /* 图标也变深蓝 */
+      }
     }
   }
 
+  /* 右侧内容区保持原样，微调一点背景配合 */
   .right {
     transition: all 0.3s ease 0s;
     position: relative;
+    background-color: #f2f3f5; /* 整个右侧给个淡淡的灰白背景，突出左侧 */
 
     .top {
       transition: all 0.3s ease 0s;
       position: fixed;
-      /*color: #fff;*/
       display: flex;
       align-items: center;
       justify-content: space-between;
       z-index: 9;
+      box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08); /* 顶部加阴影 */
+
+      /* 顶部背景强制白色，显得干净 */
+      background-color: #fff !important;
 
       .icon {
         font-size: 20px;
         cursor: pointer;
-        margin-left: 10px;
+        margin-left: 20px;
+        color: #333 !important;
       }
     }
 
     .bottom {
       width: 100%;
       height: 100%;
-      /*background: #fff;*/
       margin-top: 65px;
-      .bottom_top {
+      padding: 20px;
+      box-sizing: border-box;
+
+      /* 内容盒子 */
+      .content-box {
+        background: #fff;
         padding: 20px;
+        border-radius: 4px;
+        min-height: 80vh;
       }
     }
   }
 
+  /* 修复表单样式 */
   .ruleform /deep/ .el-input {
     width: 80% !important;
   }
