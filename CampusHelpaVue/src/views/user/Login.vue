@@ -1,7 +1,6 @@
 <template>
   <div class="login-container">
     <el-card class="login-card">
-      <!-- 登录表单 -->
       <div v-show="!isShow" class="login-form">
         <h2>校园IT互助系统</h2>
         <el-input 
@@ -46,11 +45,10 @@
         </div>
       </div>
       
-      <!-- 注册表单 -->
       <div v-show="isShow" class="register-form">
         <h2>立即注册</h2>
         <label>
-          <span>学号</span>
+          <!-- <span>学号</span> -->
           <el-input 
             prefix-icon="el-icon-user"
             v-model="studentId"
@@ -61,7 +59,7 @@
         </label>
         
         <label>
-          <span>密码</span>
+          <!-- <span>密码</span> -->
           <el-input 
             prefix-icon="el-icon-lock"
             v-model="password"
@@ -71,7 +69,7 @@
         </label>
         
         <label>
-          <span>选择学校</span>
+          <!-- <span>选择学校</span> -->
           <el-select 
             v-model="schoolId" 
             placeholder="请选择学校"
@@ -94,7 +92,6 @@
         >注册</el-button>
       </div>
       
-      <!-- 切换按钮 -->
       <div class="switch-btn" @click="isShow = !isShow">
         {{ isShow ? '已有账号？登录' : '还未注册？注册' }}
       </div>
@@ -181,27 +178,58 @@ export default {
 
 <style scoped>
 .login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  /* 修改1：容器改为相对定位，作为坐标参考系 */
+  position: relative; 
+  width: 100%;
   height: 100vh;
+  
+  /* 背景保持不变 */
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   background-size: cover;
-  background-image: url("../../assets/img/bg.jpg");
+  background-image: url("../../assets/img/bg3.jpg");
+  overflow: hidden; /* 防止某些极端情况出现滚动条 */
 }
 
 .login-card {
+  /* 修改2：使用绝对定位，精准锚定位置 */
+  position: absolute;
+  top: 50%;       /* 垂直居中 */
+  left: 66.66%;   /* 水平锚点设在 2/3 处 (约等于66.66%) */
+  
+  /* 修改3：利用 translate 将自身的中心点对齐到锚点 
+     (-50%, -50%) 代表向左移自身宽的一半，向上移自身高的一半
+  */
+  transform: translate(-50%, -50%);
+  
   width: 90%;
   max-width: 420px;
   border-radius: 16px;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-  background: rgba(255, 255, 255, 0.95);
-  animation: fadeIn 0.8s ease-out;
+  
+  /* 磨砂玻璃效果保持不变 */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px); 
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3); 
+  
+  /* 动画应用 */
+  animation: fadeIn 0.8s ease-out forwards;
 }
 
+/* 修改4：重写动画 
+   注意：必须保留 translate(-50%, -50%)，否则动画结束后位置会跑偏
+*/
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    /* 从稍微靠下一点的地方浮上来 (Y轴 -40% -> -50%) */
+    transform: translate(-50%, -40%); 
+  }
+  to { 
+    opacity: 1; 
+    /* 最终状态必须回到精准居中位置 */
+    transform: translate(-50%, -50%); 
+  }
 }
 
 .login-form, .register-form {
@@ -211,8 +239,8 @@ export default {
 h2 {
   text-align: center;
   margin-bottom: 25px;
-  color: #1f2d3d;
-  font-size:28px;
+  color: #005EEB;
+  font-size: 28px;
 }
 
 .el-input, .el-select {
@@ -229,8 +257,8 @@ h2 {
   height: 48px;
   font-size: 18px;
   font-weight: 500;
-  border-radius: 10px;
-  background: linear-gradient(to right, #4b6cb7, #182848);
+  border-radius: 30px;
+  background: linear-gradient(to right, #8da7e3, #6192f5);
   border: none;
   box-shadow: 0 4px 12px rgba(75, 108, 183, 0.3);
   transition: all 0.3s ease;
@@ -269,14 +297,19 @@ h2 {
   padding: 15px;
   color: #4b6cb7;
   cursor: pointer;
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* 响应式适配 */
 @media (max-width: 768px) {
   .login-card {
+    /* 修改5：手机端强制回到正中间 
+       将 left 改回 50% 即可
+    */
+    left: 50%;
     width: 95%;
     max-width: none;
+    background: rgba(255, 255, 255, 0.85);
   }
   
   .login-form, .register-form {

@@ -130,28 +130,49 @@ export default {
 
 <style scoped>
 .login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  /* 修改：改为相对定位，作为坐标参考系 */
+  position: relative;
   width: 100%;
+  height: 100vh;
+  
+  /* 背景图改为 bg3 */
   background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
   background-size: cover;
-  background-image: url("../../assets/img/bg.jpg");
+  background-image: url("../../assets/img/bg3.jpg");
+  overflow: hidden;
 }
 
 .login-card {
+  /* 修改：使用绝对定位，位置锁定在 2/3 处 */
+  position: absolute;
+  top: 50%;
+  left: 66.66%;
+  transform: translate(-50%, -50%);
+  
   width: 90%;
   max-width: 420px;
   border-radius: 16px;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-  animation: fadeIn 0.8s ease-out;
-  overflow: hidden;
+  
+  /* 修改：背景透明度 + 磨砂效果 */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px); 
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3); 
+  
+  animation: fadeIn 0.8s ease-out forwards;
 }
 
+/* 修改：动画配合 translate */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translate(-50%, -40%); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translate(-50%, -50%); 
+  }
 }
 
 .login-content {
@@ -165,14 +186,15 @@ export default {
 
 .login-title {
   font-size: 28px;
-  font-weight: 600;
-  color: #1f2d3d;
+  /* 修改：标题颜色与用户端一致 */
+  color: #005EEB;
   margin-bottom: 8px;
+  font-weight: normal; /* 去掉粗体，或者保留看你喜好，这里默认保持跟普通h2类似 */
 }
 
 .login-subtitle {
   font-size: 14px;
-  color: #8492a6;
+  color: #5c6b7f; /* 稍微加深一点灰色以适配透明背景 */
 }
 
 .input-group {
@@ -181,28 +203,25 @@ export default {
 
 .login-input {
   border-radius: 10px;
-  transition: box-shadow 0.3s ease;
 }
 
-.login-input:hover {
-  box-shadow: 0 4px 10px rgba(37, 117, 252, 0.2);
-}
-
+/* 修改：按钮样式与用户端一致 */
 .login-btn {
   width: 100%;
-  height: 46px;
+  height: 48px; /* 高度微调匹配 */
   font-size: 18px;
   font-weight: 500;
-  border-radius: 10px;
-  background: linear-gradient(to right, #6a11cb, #2575fc);
+  border-radius: 30px; /* 圆角改为30px */
+  background: linear-gradient(to right, #8da7e3, #6192f5); /* 颜色改为淡蓝渐变 */
   border: none;
-  box-shadow: 0 4px 12px rgba(37, 117, 252, 0.3);
+  box-shadow: 0 4px 12px rgba(75, 108, 183, 0.3);
   transition: all 0.3s ease;
+  color: white;
 }
 
 .login-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(37, 117, 252, 0.4);
+  box-shadow: 0 6px 14px rgba(75, 108, 183, 0.4);
 }
 
 .login-btn:active {
@@ -215,22 +234,26 @@ export default {
 }
 
 .action-link {
-  color: #2575fc;
+  color: #4b6cb7;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s ease;
+  font-size: 14px;
 }
 
 .action-link:hover {
-  color: #6a11cb;
+  color: #182848;
   text-decoration: underline;
 }
 
 /* 响应式适配 */
 @media (max-width: 768px) {
   .login-card {
+    /* 手机端强制回正 */
+    left: 50%;
     width: 95%;
     max-width: none;
+    background: rgba(255, 255, 255, 0.85);
   }
   
   .login-content {
@@ -238,7 +261,7 @@ export default {
   }
   
   .login-title {
-    font-size: 22px;
+    font-size: 24px;
   }
 }
 </style>
