@@ -46,11 +46,6 @@
           <span style="font-size: 20px">查看公告</span>
         </el-menu-item>
 
-        <!-- <el-menu-item index="/home/mycomment">
-          <i class="el-icon-chat-dot-square"></i>
-          <span style="font-size: 20px">我的评论</span>
-        </el-menu-item> -->
-
         <el-menu-item index="/home/MyProfile">
           <i class="el-icon-user"></i>
           <span style="font-size: 20px">个人信息</span>
@@ -136,36 +131,15 @@
         </el-menu>
       </div>
 
-      <!-- <div class="bottom">
-        <div class="bottom_top">
-          <el-breadcrumb separator-class="el-icon-arrow-right">
-            <el-breadcrumb-item
-              v-for="(item, index) in breadList"
-              :key="index"
-              :to="item.path"
-              v-if="item.meta.title"
-            >
-              {{ item.meta.title }}
-            </el-breadcrumb-item>
-          </el-breadcrumb>
-        </div>
-        <transition name="el-fade-in" mode="out-in">
-          <router-view @personalInformation="personalInformation"></router-view>
-        </transition>
-      </div> -->
-
       <div class="bottom">
-        <div class="content-box" style="padding: 20px">
+        <div class="content-box">
           <transition name="el-fade-in" mode="out-in">
             <router-view
               @personalInformation="personalInformation"
             ></router-view>
           </transition>
         </div>
-      </div>
-    </div>
-
-    <el-drawer
+      </div> </div> <el-drawer
       title="完善信息"
       :visible.sync="drawer"
       direction="rtl"
@@ -234,8 +208,7 @@
         <el-button type="primary" @click="submitChanges">确 定</el-button>
       </div>
     </el-dialog>
-  </div>
-</template>
+  </div> </template>
 
 <script>
 import { mapState, mapMutations } from "vuex";
@@ -559,16 +532,23 @@ export default {
       width: 100%;
       height: 100%;
       margin-top: 65px;
-      padding: 20px;
+      padding: 0 20px;
       box-sizing: border-box;
 
-      /* 内容盒子 */
-      .content-box {
-        background: #fff;
-        padding: 20px;
-        border-radius: 4px;
-        min-height: 80vh;
-      }
+      // /* 内容盒子 */
+      // .content-box {
+      //   background: #fff;
+      //   padding: 20px;
+      //   border-radius: 4px;
+      //   min-height: 80vh;
+      // }
+    /* 内容盒子 */
+    .content-box {
+      background: transparent; /* 改为透明，背景色由子页面自己决定 */
+      padding: 0;              /* 去掉内边距，让子页面撑满 */
+      /* border-radius: 4px; */ /* 圆角也可以注释掉，交给子页面控制 */
+      min-height: 80vh;
+    }
     }
   }
 

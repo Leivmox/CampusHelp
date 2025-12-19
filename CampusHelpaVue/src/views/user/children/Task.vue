@@ -1,65 +1,70 @@
 <template>
   <div class="content">
-    <el-alert title="发布新求助" :closable="false" type="info"> </el-alert>
-    <el-card class="box-card card">
+    <el-alert 
+      title="发布新求助 - 请详细描述你的问题" 
+      :closable="false" 
+      type="success"
+      style="margin-bottom: 10px;"> 
+    </el-alert>
+
+    <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
-        <span>发布求助</span>
+        <span style="font-size: 18px; font-weight: bold;">发布求助</span>
         <el-button
-          style="float: right; padding: 3px 0;font-size: 16px"
+          style="float: right; padding: 3px 0; font-size: 16px"
           icon="el-icon-s-promotion"
           type="text"
           @click="submitTask"
-          >发布
+        >
+          发布
         </el-button>
       </div>
-      <div class="input">
-        <div class="append">求助标题</div>
-        <el-input placeholder="请输入求助标题" v-model="taskTitle"></el-input>
-      </div>
-      <!-- <div class="input"> -->
-      <!-- <div class="append">奖励</div>
-                <el-input placeholder="请输入奖励" v-model="reward" oninput="value=value.replace(/[^\d]/g,'')"></el-input> -->
-      <!-- <div class="append" style="border-right: 1px solid #DCDFE6;border-left: none;">余额：{{user.balance}}元
-                </div> -->
-      <!-- </div> -->
-      <el-card class="box-card">
-        <div slot="header" class="clearfix">
-          <span>详细描述</span>
+
+      <div class="form-wrapper">
+        
+        <div class="form-item">
+          <el-input placeholder="请输入简短的求助标题" v-model="taskTitle">
+            <template slot="prepend">求助标题</template>
+          </el-input>
         </div>
-        <el-input
-          resize="none"
-          type="textarea"
-          :autosize="{ minRows: 6, maxRows: 10 }"
-          placeholder="请输入内容"
-          v-model="taskContext"
-          style="padding: 0"
-        >
-        </el-input>
-      </el-card>
+
+        <div class="form-item">
+          <div class="label-text">详细描述</div>
+          <el-input
+            type="textarea"
+            :autosize="{ minRows: 8, maxRows: 12 }"
+            placeholder="请详细描述你的问题背景、环境以及报错信息..."
+            v-model="taskContext"
+            resize="none"
+          >
+          </el-input>
+        </div>
+
+      </div>
     </el-card>
-    <el-drawer title="求助信息" :visible.sync="drawer" direction="rtl">
+
+    <el-drawer title="求助发布详情" :visible.sync="drawer" direction="rtl" size="40%">
       <div class="content_drawer">
-        <el-card class="box-card">
+        <el-card class="drawer-card" shadow="never">
           <div slot="header" class="clearfix">
-            <span>发布内容</span>
+            <span>发布内容概览</span>
           </div>
           <el-collapse v-model="activeNames">
             <el-collapse-item title="求助标题" name="1">
-              <div>{{ taskTitle }}</div>
+              <div class="preview-text">{{ taskTitle }}</div>
             </el-collapse-item>
             <el-collapse-item title="求助内容" name="2">
-              <div>{{ taskContext }}</div>
+              <div class="preview-text">{{ taskContext }}</div>
             </el-collapse-item>
-            <!-- <el-collapse-item title="求助奖励" name="3">
-              <div>
-                <i class="el-icon-money" style="color: red;"> {{ reward }}元</i>
-              </div>
-            </el-collapse-item> -->
             <el-collapse-item title="发布时间" name="4">
               <div>{{ createTime | formatDate }}</div>
             </el-collapse-item>
           </el-collapse>
         </el-card>
+        
+        <div style="margin-top: 20px; text-align: center;">
+             <el-button type="primary" @click="drawer = false" style="width: 100%">关闭</el-button>
+        </div>
       </div>
     </el-drawer>
   </div>
@@ -73,19 +78,11 @@ export default {
   name: "Task",
   data() {
     return {
-      // 求助奖励
-      // reward: "",
-      // 求助标题
       taskTitle: "",
-      // 求助内容
       taskContext: "",
-      // 发布时间
       createTime: "",
-      // 零钱
-      // balance: 0,
-      // 是否弹出抽屉
       drawer: false,
-      activeNames: ["1", "2", "3", "4"],
+      activeNames: ["1", "2", "4"],
     };
   },
   computed: {
@@ -95,13 +92,11 @@ export default {
     ...mapMutations("user", ["setUser"]),
 
     submitTask() {
-      // if (this.taskTitle && this.reward > 0 && this.taskContext) {
       if (this.taskTitle && this.taskContext) {
-        // console.log(this.user)
         this.$post("/task", {
           publishId: this.user.id,
           schoolId: this.user.school.id,
-          reward: this.reward,
+          // reward: this.reward, // 暂时注释奖励
           taskTitle: this.taskTitle,
           taskContext: this.taskContext,
         }).then((res) => {
@@ -110,12 +105,15 @@ export default {
             this.drawer = true;
             this.renew();
             this.$msg(res.data.msg, "success");
+            // 发布成功后清空表单
+            this.taskTitle = "";
+            this.taskContext = "";
           } else {
             this.$msg(res.data.msg, "error");
           }
         });
       } else {
-        this.$msg("请正确填写信息", "error");
+        this.$msg("请完整填写标题和详细描述", "warning"); // 改为 warning 更合适
       }
     },
     renew() {
@@ -138,68 +136,60 @@ export default {
 </script>
 
 <style scoped lang="less">
+/* 1. 容器样式重置：透明 + 上下10px */
 .content {
-  background: #fff;
-  margin: 0 15px;
-  padding: 15px;
+  background: transparent;
+  margin: 0;
+  padding: 10px 0;
 
-  .card {
-    margin-top: 20px;
-
-    .input {
-      margin-top: 10px;
-
-      width: 100%;
-      height: 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      .append {
-        border: 1px solid #dcdfe6;
-        border-right: none;
-        width: 150px;
-        font-size: 14px;
-        line-height: 40px;
-        height: 100%;
-        text-align: center;
-      }
-
-      .select {
-        flex: 1;
-      }
-
-      /deep/ .el-input {
-        flex: 1;
-      }
+  /* 2. 主卡片样式：圆角 + 无边框 */
+  .box-card {
+    border-radius: 8px;
+    border: none;
+    
+    .form-wrapper {
+      padding: 10px 0;
     }
 
-    .box-card {
-      /deep/ .el-textarea__inner {
-        font-family: "微软雅黑" !important;
-      }
+    /* 表单项间距 */
+    .form-item {
+      margin-bottom: 20px;
+    }
 
+    /* 标签文字样式 */
+    .label-text {
+      font-size: 14px;
+      color: #606266;
+      background-color: #F5F7FA;
+      border: 1px solid #DCDFE6;
+      border-bottom: none;
+      padding: 0 20px;
+      line-height: 38px;
+      width: fit-content; /* 宽度自适应内容 */
+      border-radius: 4px 4px 0 0; /* 上方圆角 */
       margin-top: 10px;
+      display: inline-block; /* 让它像个标签页一样 */
+    }
 
-      /deep/ .el-card__header {
-        border-bottom: none;
-      }
-
-      /deep/ .el-card__body {
-        padding: 0 !important;
-      }
+    /* 文本域特殊处理，让它看起来和上面的标签连在一起 */
+    /deep/ .el-textarea__inner {
+      font-family: "Microsoft YaHei", sans-serif !important;
+      border-radius: 0 4px 4px 4px; /* 左上角直角，其他圆角 */
     }
   }
 
+  /* 抽屉内部样式 */
   .content_drawer {
     padding: 0 20px;
-
-    p {
-      margin: 10px 0;
+    
+    .drawer-card {
+        border-radius: 8px;
+        border: 1px solid #EBEEF5;
     }
 
-    span {
-      font-size: 14px;
+    .preview-text {
+        white-space: pre-wrap; /* 保留换行符 */
+        color: #333;
     }
   }
 }

@@ -46,14 +46,14 @@ export default {
 
 <style scoped>
 .forum-center {
-  padding: 0;
+  padding: 10px 0;
 }
 .sub-nav {
   background-color: #fff;
   padding: 15px 20px;
-  margin-bottom: 20px;
-  border-radius: 4px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  /* margin-bottom: 20px; */
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05); 
 }
 .sub-content {
   min-height: 500px;

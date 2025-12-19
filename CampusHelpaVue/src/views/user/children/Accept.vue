@@ -1,71 +1,74 @@
 <template>
   <div class="content">
     <el-alert
-      :title="user.school.name + '- - -互助平台共' + tasks.length + '个求助'"
+      :title="user.school.name + ' - 互助平台共 ' + tasks.length + ' 个求助'"
       :closable="false"
       type="info"
+      style="margin-bottom: 10px;"
     >
     </el-alert>
 
-    <div>
-      <el-card class="box-card">
-        <div slot="header" class="clearfix">
-          <span>求助广场</span>
-          <el-button style="float: right; padding: 3px 0" type="text">最新</el-button>
-        </div>
-        
-        <el-card class="box-card" v-for="item in tasks" :key="item.id">
-          <div
-            slot="header"
-            class="clearfix"
-            style="display: flex; align-items: center; justify-content: space-between"
-          >
-            <span>
+    <el-card class="box-card" shadow="never">
+      <div slot="header" class="clearfix">
+        <span style="font-size: 18px; font-weight: bold;">求助广场</span>
+        <el-button style="float: right; padding: 3px 0; font-size: 14px" type="text" icon="el-icon-refresh">最新</el-button>
+      </div>
+      
+      <div v-if="tasks.length > 0">
+        <div v-for="item in tasks" :key="item.id" class="task-item">
+          
+          <div class="task-header">
+            <div class="title-wrapper">
               <el-tag 
                 :type="item.state == 0 ? 'success' : 'info'" 
-                style="margin-right: 5px"
+                size="small"
                 effect="dark"
+                style="margin-right: 8px"
               >
                 {{ item.state == 0 ? '待解决' : '已解决' }}
               </el-tag>
               
-              <span :style="{ color: item.state == 0 ? '#303133' : '#909399' }">
+              <span class="task-title" :class="{ 'solved': item.state != 0 }">
                  {{ item.taskTitle }}
               </span>
-            </span>
+            </div>
 
-            <el-button
-              style="float: right; padding: 3px 0"
-              type="text"
-              v-show="user.id != item.publish.id && item.state == 0"
-              @click="acceptTask(item.id)"
-            >
-              接受求助
-            </el-button>
+            <div class="action-btn">
+              <el-button
+                size="small"
+                type="primary"
+                plain
+                v-show="user.id != item.publish.id && item.state == 0"
+                @click="acceptTask(item.id)"
+              >
+                接受求助
+              </el-button>
 
-            <el-button
-              style="float: right; padding: 3px 0"
-              type="text"
-              v-show="user.id == item.publish.id"
-            >
-              本人求助
-            </el-button>
+              <el-tag type="warning" v-show="user.id == item.publish.id" size="medium" effect="plain">
+                本人求助
+              </el-tag>
+            </div>
           </div>
           
-          <div class="text item">
-            <p class="el-icon-s-custom" :style="{ color: item.state == 0 ? '#606266' : '#999' }">
-              {{ item.publish.username }}
-              <span style="margin-left: 10px;">{{ item.taskContext }}</span>
-            </p>
-            <span style="float: right; color: #909399">{{ item.createTime | formatDate }}</span>
+          <div class="task-content">
+             {{ item.taskContext }}
           </div>
-        </el-card>
 
-        <div style="text-align: center" v-if="tasks.length == 0">
-          <span><i class="el-icon-refresh-right"></i>暂无求助</span>
+          <div class="task-footer">
+            <span class="user-info">
+              <i class="el-icon-user-solid"></i> {{ item.publish.username }}
+            </span>
+            <span class="time-info">
+              {{ item.createTime | formatDate }}
+            </span>
+          </div>
+
+          <el-divider></el-divider>
         </div>
-      </el-card>
-    </div>
+      </div>
+
+      <el-empty v-else description="暂时没有求助任务，休息一下吧~"></el-empty>
+    </el-card>
   </div>
 </template>
 
@@ -85,13 +88,15 @@ export default {
     acceptTask(id) {
       this.$msgbox({
         title: "提示",
-        message: "确定接受此求助吗？",
+        message: "确定接受此求助吗？请确保您有能力解决该问题。",
         showCancelButton: true,
-        confirmButtonText: "确定",
+        confirmButtonText: "确定接受",
         cancelButtonText: "取消",
+        type: 'warning',
         beforeClose: (action, instance, done) => {
           if (action == "confirm") {
             instance.confirmButtonText = "执行中...";
+            instance.confirmButtonLoading = true;
             this.$put("task/takerAccept", {
               id: id,
               acceptId: this.user.id,
@@ -114,18 +119,13 @@ export default {
   },
   created() {
     this.$get("/task", { id: this.user.id }).then((res) => {
-      // 修改点4：获取数据后进行排序
       let list = res.data.task;
       
-      // 使用 sort 方法排序
-      // 规则：state=0 (待解决) 排在前面，其他状态 (已解决) 排在后面
-      // 如果状态相同，则按时间倒序（新的在上面）
+      // 排序规则：待解决优先，时间倒序
       list.sort((a, b) => {
         if (a.state === b.state) {
-          // 如果状态一样，按时间降序（最新的在上面）
           return new Date(b.createTime) - new Date(a.createTime);
         }
-        // 状态不一样，0在前面
         return a.state - b.state;
       });
 
@@ -143,37 +143,69 @@ export default {
 </script>
 
 <style scoped lang="less">
+/* 1. 容器样式重置 */
 .content {
-  background: #fff;
-  margin: 0 15px;
-  padding: 15px;
+  background: transparent;
+  margin: 0;
+  padding: 10px 0; /* 上下10px，左右0 */
 
-  .card h2 {
-    font-weight: normal;
-    font-size: 18px;
+  /* 2. 主卡片样式 */
+  .box-card {
+    border-radius: 8px;
+    border: none;
+    
+    /* 列表项样式 */
+    .task-item {
+      padding: 5px 0;
+      
+      .task-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
 
-    span {
-      font-size: 12px;
-      display: inline-block;
-      border: 1px solid red;
-      padding: 1px 3px;
+        .title-wrapper {
+          display: flex;
+          align-items: center;
+          
+          .task-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #303133;
+            
+            &.solved {
+              color: #909399;
+              text-decoration: line-through; /* 已解决的加个删除线效果，可选 */
+            }
+          }
+        }
+      }
+
+      .task-content {
+        font-size: 14px;
+        color: #606266;
+        line-height: 1.6;
+        margin-bottom: 12px;
+        /* 最多显示两行，超出省略 */
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+      }
+
+      .task-footer {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #909399;
+        
+        .user-info {
+          display: flex;
+          align-items: center;
+          i { margin-right: 4px; }
+        }
+      }
     }
   }
-}
-
-/deep/ .el-alert--info.is-light {
-  height: 50px;
-}
-
-/deep/ .el-select .el-input {
-  width: 130px;
-}
-
-/deep/ .input-with-select .el-input-group__prepend {
-  background-color: #fff;
-}
-
-/deep/ .el-card {
-  margin-bottom: 20px;
 }
 </style>

@@ -1,13 +1,17 @@
 <template>
   <div class="content">
-    <!-- 顶部欢迎栏 -->
-    <el-alert title="校园圈子 - 分享你的校园生活" :closable="false" type="success" style="margin-bottom: 20px;"> </el-alert>
-    
-    <!-- 主体卡片 -->
-    <el-card class="box-card">
+    <el-alert
+      title="校园圈子 - 分享你的校园生活"
+      :closable="false"
+      type="success"
+      style="margin-bottom: 10px
+      "
+    >
+    </el-alert>
+
+    <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
-        <span style="font-size: 18px; font-weight: bold;">最新动态</span>
-        <!-- 发布按钮 -->
+        <span style="font-size: 18px; font-weight: bold">最新动态</span>
         <el-button
           style="float: right; padding: 3px 0; font-size: 16px"
           icon="el-icon-edit-outline"
@@ -18,67 +22,81 @@
         </el-button>
       </div>
 
-      <!-- 帖子列表循环 -->
       <div v-if="postList.length > 0">
         <div v-for="(item, index) in postList" :key="index" class="post-item">
-          <!-- 帖子头部：头像/名字/时间 -->
           <div class="post-header">
-            <span class="user-name">{{ item.publisher ? item.publisher.username : '未知用户' }}</span>
+            <span class="user-name">{{
+              item.publisher ? item.publisher.username : "未知用户"
+            }}</span>
             <span class="post-time">{{ item.createTime | formatDate }}</span>
           </div>
 
-          <!-- 帖子内容 -->
           <div class="post-content">
             <h3 class="title">{{ item.title }}</h3>
             <p class="text">{{ item.content }}</p>
           </div>
 
-          <!-- 帖子操作栏 -->
           <div class="post-actions">
-            <el-button size="mini" icon="el-icon-thumb" @click="handleLike(item)">
+            <el-button
+              size="mini"
+              icon="el-icon-thumb"
+              @click="handleLike(item)"
+            >
               点赞 ({{ item.likeCount || 0 }})
             </el-button>
-            <el-button size="mini" icon="el-icon-chat-dot-round" @click="toggleComment(item)">
+            <el-button
+              size="mini"
+              icon="el-icon-chat-dot-round"
+              @click="toggleComment(item)"
+            >
               评论 ({{ item.comments ? item.comments.length : 0 }})
             </el-button>
           </div>
 
-          <!-- 评论区 (默认显示) -->
           <div class="comment-area">
-            <div v-for="(c, cIndex) in item.comments" :key="cIndex" class="comment-row">
-              <span class="c-user">{{ c.commenter ? c.commenter.username : '匿名' }}: </span>
+            <div
+              v-for="(c, cIndex) in item.comments"
+              :key="cIndex"
+              class="comment-row"
+            >
+              <span class="c-user"
+                >{{ c.commenter ? c.commenter.username : "匿名" }}:
+              </span>
               <span class="c-content">{{ c.content }}</span>
             </div>
-            
-            <!-- 评论输入框 (点击评论按钮后显示) -->
+
             <div v-if="item.showInput" class="input-wrapper">
-               <el-input 
-                  size="small" 
-                  placeholder="写下你的评论..." 
-                  v-model="item.tempComment"
-                  @keyup.enter.native="submitComment(item)"
-               ></el-input>
-               <el-button type="primary" size="small" @click="submitComment(item)">发送</el-button>
+              <el-input
+                size="small"
+                placeholder="写下你的评论..."
+                v-model="item.tempComment"
+                @keyup.enter.native="submitComment(item)"
+              ></el-input>
+              <el-button
+                type="primary"
+                size="small"
+                @click="submitComment(item)"
+                >发送</el-button
+              >
             </div>
           </div>
-          
+
           <el-divider></el-divider>
         </div>
       </div>
       <el-empty v-else description="暂无动态，快来发布第一条吧！"></el-empty>
     </el-card>
 
-    <!-- 发布帖子的弹窗 -->
     <el-dialog title="发布新论坛" :visible.sync="dialogVisible" width="50%">
       <el-form label-width="80px">
         <el-form-item label="标题">
           <el-input v-model="newPost.title" placeholder="请输入标题"></el-input>
         </el-form-item>
         <el-form-item label="内容">
-          <el-input 
-            type="textarea" 
-            :rows="6" 
-            v-model="newPost.content" 
+          <el-input
+            type="textarea"
+            :rows="6"
+            v-model="newPost.content"
             placeholder="分享新鲜事..."
           ></el-input>
         </el-form-item>
@@ -103,8 +121,8 @@ export default {
       dialogVisible: false,
       newPost: {
         title: "",
-        content: ""
-      }
+        content: "",
+      },
     };
   },
   computed: {
@@ -121,9 +139,9 @@ export default {
         if (res.data.status) {
           // 为每个帖子增加前端控制字段
           let list = res.data.posts;
-          list.forEach(p => {
-            this.$set(p, 'showInput', false); // 控制评论框显隐
-            this.$set(p, 'tempComment', '');  // 绑定输入内容
+          list.forEach((p) => {
+            this.$set(p, "showInput", false); // 控制评论框显隐
+            this.$set(p, "tempComment", ""); // 绑定输入内容
           });
           this.postList = list;
         }
@@ -141,7 +159,7 @@ export default {
         userId: this.user.id,
         schoolId: this.user.school.id,
         title: this.newPost.title,
-        content: this.newPost.content
+        content: this.newPost.content,
       }).then((res) => {
         if (res.data.status) {
           this.$msg(res.data.msg, "success");
@@ -157,7 +175,7 @@ export default {
 
     // 点赞
     handleLike(item) {
-      this.$put("/post/like/" + item.id).then(res => {
+      this.$put("/post/like/" + item.id).then((res) => {
         if (res.data.status) {
           item.likeCount++;
           this.$msg("点赞成功", "success");
@@ -179,8 +197,8 @@ export default {
       this.$post("/post/comment", {
         postId: item.id,
         userId: this.user.id,
-        content: item.tempComment
-      }).then(res => {
+        content: item.tempComment,
+      }).then((res) => {
         if (res.data.status) {
           this.$msg("评论成功", "success");
           item.tempComment = "";
@@ -190,7 +208,7 @@ export default {
           this.$msg("评论失败", "error");
         }
       });
-    }
+    },
   },
   filters: {
     formatDate(time) {
@@ -202,21 +220,30 @@ export default {
 </script>
 
 <style scoped lang="less">
+/* 关键修改：容器透明，只留上下间距 */
 .content {
-  background: #fff;
-  margin: 0 15px;
-  padding: 15px;
+  background: transparent;
+  margin: 0; /* 左右0，因为Home已经给了20px */
+  padding: 10px 0; /* 上下10px */
 
+  /* 卡片美化：圆角、白底 */
+  .box-card {
+    border-radius: 8px;
+    border: none; /* 去掉边框，看起来更干净 */
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  /* 以下是原有的内容样式，保持不变 */
   .post-item {
     margin-bottom: 20px;
-    
+
     .post-header {
       display: flex;
       justify-content: space-between;
       margin-bottom: 10px;
       .user-name {
         font-weight: bold;
-        color: #409EFF;
+        color: #409eff;
       }
       .post-time {
         color: #909399;
@@ -246,13 +273,13 @@ export default {
       background-color: #f9fafc;
       padding: 10px;
       border-radius: 4px;
-      
+
       .comment-row {
         font-size: 13px;
         line-height: 20px;
         margin-bottom: 5px;
         .c-user {
-          color: #409EFF;
+          color: #409eff;
         }
         .c-content {
           color: #606266;

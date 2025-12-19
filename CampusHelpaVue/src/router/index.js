@@ -9,7 +9,7 @@ const routes = [
     component: () => import("@v/Error.vue"),
   },
 
-  //用户登录
+  // 用户登录
   {
     path: "/",
     redirect: "/login",
@@ -29,62 +29,61 @@ const routes = [
         meta: { title: "首页" },
         component: () => import("@v/user/children/Index.vue"),
       },
-      // {
-      //     path: "forum",
-      //     meta: { title: "校园圈子" },
-      //     component: () => import('@v/user/children/Forum.vue')
-      // },
-      // --- 修改：校园圈子 (整合了论坛和我的评论) ---
+      
+      // --- 校园圈子 ---
       {
         path: "forum",
-        // 指向刚才新建的容器组件
         component: () => import("@v/user/children/ForumCenter.vue"),
         meta: { title: "校园圈子" },
-        redirect: "/home/forum/list", // 默认显示论坛列表
+        redirect: "/home/forum/list",
         children: [
           {
-            path: "list", // 注意：这里改名叫 list，避免和父路由冲突
+            path: "list",
             name: "ForumList",
             meta: { title: "校园论坛" },
-            component: () => import("@v/user/children/Forum.vue"), // 原来的 Forum.vue
+            component: () => import("@v/user/children/Forum.vue"),
           },
           {
             path: "mycomment",
             name: "MyComment",
             meta: { title: "我的评论" },
-            component: () => import("@v/user/children/MyComment.vue"), // 原来的 MyComment.vue
+            component: () => import("@v/user/children/MyComment.vue"),
           },
         ],
       },
 
-      // --- 新增：求助中心 (嵌套路由) ---
+      // --- 求助中心 (HelpCenter) ---
       {
         path: "help",
-        // 这是一个容器组件(HelpCenter.vue)，包含顶部的红框导航按钮和 <router-view>
-        // 请确保你已经创建了这个文件，路径要对应
+        // 这里的 component 就是上面的 HelpCenter.vue
         component: () => import("@v/user/children/HelpCenter.vue"),
         meta: { title: "求助中心" },
-        redirect: "/home/help/task", // 默认打开“发布求助”
+        // 默认重定向到 '发布求助' 页面，防止进来是空白
+        redirect: "/home/help/task", 
         children: [
           {
+            // 完整路径: /home/help/task
             path: "task",
             name: "PublishTask",
             meta: { title: "发布求助" },
             component: () => import("@v/user/children/Task.vue"),
           },
           {
+            // 完整路径: /home/help/accept
             path: "accept",
             name: "AcceptTask",
             meta: { title: "接受求助" },
             component: () => import("@v/user/children/Accept.vue"),
           },
           {
+            // 完整路径: /home/help/published
             path: "published",
             name: "MyPublished",
             meta: { title: "已发布求助" },
             component: () => import("@v/user/children/Published.vue"),
           },
           {
+            // 完整路径: /home/help/accepted
             path: "accepted",
             name: "MyAccepted",
             meta: { title: "已接收求助" },
@@ -93,13 +92,12 @@ const routes = [
         ],
       },
 
-      // --- 新增：评价中心 (嵌套路由) ---
+      // --- 评价中心 ---
       {
         path: "remark",
-        // 这是一个容器组件(RemarkCenter.vue)，类似 HelpCenter
         component: () => import("@v/user/children/RemarkCenter.vue"),
         meta: { title: "评价中心" },
-        redirect: "/home/remark/myremark", // 默认打开“我的评价”
+        redirect: "/home/remark/myremark",
         children: [
           {
             path: "myremark",
@@ -116,18 +114,12 @@ const routes = [
         ],
       },
 
-      // 其他保持不变
+      // 其他路由
       {
         path: "noticeu",
         meta: { title: "查看公告" },
         component: () => import("@v/notice/adviseuser.vue"),
       },
-    //   {
-    //     path: "mycomment",
-    //     name: "mycomment",
-    //     meta: { title: "我的评论" },
-    //     component: () => import("@v/user/children/MyComment.vue"),
-    //   },
       {
         path: "myProfile",
         meta: { title: "个人信息" },
@@ -136,7 +128,7 @@ const routes = [
     ],
   },
 
-  //管理员
+  // 管理员
   {
     path: "/admin",
     component: () => import("@v/admin/Login.vue"),

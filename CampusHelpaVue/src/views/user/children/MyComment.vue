@@ -1,6 +1,6 @@
 <template>
   <div class="my-comment-container">
-    <el-card class="box-card">
+    <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
         <span style="font-size: 18px; font-weight: bold;">我的评论历史</span>
       </div>
@@ -16,14 +16,11 @@
           >
             <el-card shadow="hover" class="comment-card">
               
-              <!-- 上半部分：左边内容，右边删除按钮 -->
               <div class="top-row">
-                <!-- 评论内容 -->
                 <div class="comment-content">
                   {{ item.content }}
                 </div>
 
-                <!-- 删除按钮 (放在右上角) -->
                 <div class="action-box">
                   <el-popconfirm
                     title="确定要删除这条评论吗？"
@@ -44,7 +41,6 @@
                 </div>
               </div>
               
-              <!-- 下半部分：来源帖子信息 -->
               <div class="post-source-bar">
                 <span class="label">来源于帖子：</span>
                 <span class="post-title" v-if="item.post" :title="item.post.title">
@@ -119,8 +115,21 @@ export default {
 </script>
 
 <style scoped lang="less">
+/* 1. 容器改为透明，只负责上下间距 */
 .my-comment-container {
-  padding: 10px;
+  background: transparent;
+  padding: 10px 0; /* 上下10px，左右0 */
+  
+  /* 2. 主卡片样式：圆角、去边框 */
+  .box-card {
+    border-radius: 8px;
+    border: none;
+  }
+
+  /* 时间轴内部的小卡片 */
+  .comment-card {
+    border-radius: 6px; /* 内部小卡片也加一点圆角 */
+  }
   
   // 顶部行布局
   .top-row {

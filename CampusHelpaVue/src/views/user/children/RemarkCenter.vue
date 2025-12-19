@@ -47,7 +47,7 @@ export default {
 
 <style scoped>
 .remark-center {
-  padding: 0;
+  padding: 10px 0;
 }
 .sub-nav {
   background-color: #fff;
