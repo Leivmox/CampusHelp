@@ -36,6 +36,11 @@
           <span style="font-size: 20px">求助中心</span>
         </el-menu-item>
 
+        <el-menu-item index="/home/ai">
+          <i class="el-icon-magic-stick"></i>
+          <span style="font-size: 20px">智能助手</span>
+        </el-menu-item>
+
         <el-menu-item index="/home/remark">
           <i class="el-icon-s-custom"></i>
           <span style="font-size: 20px">评价中心</span>
@@ -435,7 +440,7 @@ export default {
 
 .main {
   display: flex;
-  height: 90%;
+  height: 100%;
 
   .left {
     position: fixed;

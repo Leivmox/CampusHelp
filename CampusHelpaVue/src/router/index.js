@@ -29,7 +29,7 @@ const routes = [
         meta: { title: "首页" },
         component: () => import("@v/user/children/Index.vue"),
       },
-      
+
       // --- 校园圈子 ---
       {
         path: "forum",
@@ -59,7 +59,7 @@ const routes = [
         component: () => import("@v/user/children/HelpCenter.vue"),
         meta: { title: "求助中心" },
         // 默认重定向到 '发布求助' 页面，防止进来是空白
-        redirect: "/home/help/task", 
+        redirect: "/home/help/task",
         children: [
           {
             // 完整路径: /home/help/task
@@ -91,7 +91,12 @@ const routes = [
           },
         ],
       },
-
+      {
+        path: "ai", // 路径 /home/help/ai
+        name: "AiHelp",
+        meta: { title: "智能助手" },
+        component: () => import("@v/user/children/AiHelp.vue"),
+      },
       // --- 评价中心 ---
       {
         path: "remark",

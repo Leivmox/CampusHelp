@@ -3,6 +3,9 @@ package com.yqn.pojo;
 import com.yqn.common.core.domain.BaseEntity;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import com.baomidou.mybatisplus.annotation.TableField;
+
+
 
 /**
  * remark对象 remark
@@ -10,80 +13,101 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author Leivmox
  * @date 2025-12-16
  */
-public class Remark extends BaseEntity
-{
+public class Remark extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
-    /** 评价id */
+    /**
+     * 评价id
+     */
     private Long id;
 
-    /** 星级 */
+    /**
+     * 星级
+     */
     private Long star;
 
-    /** 任务id */
+    /**
+     * 任务id
+     */
     private Long taskId;
 
-    /** 送货人id */
+    /**
+     * 送货人id
+     */
     private Long acceptId;
 
-    /** 评价人id */
+    /**
+     * 评价人id
+     */
     private Long publishId;
 
-    public void setId(Long id)
-    {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public Long getId()
-    {
+    public Long getId() {
         return id;
     }
-    public void setStar(Long star)
-    {
+
+    public void setStar(Long star) {
         this.star = star;
     }
 
-    public Long getStar()
-    {
+    public Long getStar() {
         return star;
     }
-    public void setTaskId(Long taskId)
-    {
+
+    public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
 
-    public Long getTaskId()
-    {
+    public Long getTaskId() {
         return taskId;
     }
-    public void setAcceptId(Long acceptId)
-    {
+
+    public void setAcceptId(Long acceptId) {
         this.acceptId = acceptId;
     }
 
-    public Long getAcceptId()
-    {
+    public Long getAcceptId() {
         return acceptId;
     }
-    public void setPublishId(Long publishId)
-    {
+
+    public void setPublishId(Long publishId) {
         this.publishId = publishId;
     }
 
-    public Long getPublishId()
-    {
+    public Long getPublishId() {
         return publishId;
     }
 
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("id", getId())
-            .append("star", getStar())
-            .append("remark", getRemark())
-            .append("taskId", getTaskId())
-            .append("acceptId", getAcceptId())
-            .append("publishId", getPublishId())
-            .toString();
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+                .append("id", getId())
+                .append("star", getStar())
+                .append("remark", getRemark())
+                .append("taskId", getTaskId())
+                .append("acceptId", getAcceptId())
+                .append("publishId", getPublishId())
+                .toString();
     }
+
+    // ====== 请务必添加这部分 ======
+    /**
+     * 关联的任务对象 (数据库里没有，用于存Controller查出来的任务)
+     */
+    @TableField(exist = false)
+    private Task task;
+
+    public void setTask(Task task) {
+        this.task = task;
+    }
+
+    public Task getTask() {
+        return task;
+    }
+    // ============================
+
 }
