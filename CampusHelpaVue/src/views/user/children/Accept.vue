@@ -1,4 +1,3 @@
-<!-- 接受求助 -->
 <template>
   <div class="content">
     <el-alert
@@ -11,45 +10,57 @@
     <div>
       <el-card class="box-card">
         <div slot="header" class="clearfix">
-          <span>求助</span>
-          <el-button style="float: right; padding: 3px 0" type="text"
-            >最新</el-button
-          >
+          <span>求助广场</span>
+          <el-button style="float: right; padding: 3px 0" type="text">最新</el-button>
         </div>
-        <el-card class="box-card" v-for="item in tasks" v-if="item.state == 0">
+        
+        <el-card class="box-card" v-for="item in tasks" :key="item.id">
           <div
             slot="header"
             class="clearfix"
             style="display: flex; align-items: center; justify-content: space-between"
           >
             <span>
-              <el-tag type="success" style="margin-right: 5px">待解决</el-tag>
-              {{ item.taskTitle }}
-              <!-- 删除奖励显示 -->
-              <!-- <i class="el-icon-money" style="margin-left: 20px;color: red;"> {{item.reward}}元</i> -->
+              <el-tag 
+                :type="item.state == 0 ? 'success' : 'info'" 
+                style="margin-right: 5px"
+                effect="dark"
+              >
+                {{ item.state == 0 ? '待解决' : '已解决' }}
+              </el-tag>
+              
+              <span :style="{ color: item.state == 0 ? '#303133' : '#909399' }">
+                 {{ item.taskTitle }}
+              </span>
             </span>
+
             <el-button
               style="float: right; padding: 3px 0"
               type="text"
-              v-show="user.id != item.publish.id"
+              v-show="user.id != item.publish.id && item.state == 0"
               @click="acceptTask(item.id)"
-              >接受求助
+            >
+              接受求助
             </el-button>
+
             <el-button
               style="float: right; padding: 3px 0"
               type="text"
               v-show="user.id == item.publish.id"
-              >本人求助
+            >
+              本人求助
             </el-button>
           </div>
+          
           <div class="text item">
-            <p class="el-icon-s-custom">
-              {{ item.publish.username
-              }}<span style="margin-left: 10px;">{{ item.taskContext }}</span>
+            <p class="el-icon-s-custom" :style="{ color: item.state == 0 ? '#606266' : '#999' }">
+              {{ item.publish.username }}
+              <span style="margin-left: 10px;">{{ item.taskContext }}</span>
             </p>
-            <span style="float: right">{{ item.createTime | formatDate }}</span>
+            <span style="float: right; color: #909399">{{ item.createTime | formatDate }}</span>
           </div>
         </el-card>
+
         <div style="text-align: center" v-if="tasks.length == 0">
           <span><i class="el-icon-refresh-right"></i>暂无求助</span>
         </div>
@@ -80,7 +91,6 @@ export default {
         cancelButtonText: "取消",
         beforeClose: (action, instance, done) => {
           if (action == "confirm") {
-            // instance.confirmButtonLoading = true;
             instance.confirmButtonText = "执行中...";
             this.$put("task/takerAccept", {
               id: id,
@@ -103,9 +113,23 @@ export default {
     ...mapState("user", ["user"]),
   },
   created() {
-    // console.log(this.user)
     this.$get("/task", { id: this.user.id }).then((res) => {
-      this.tasks = res.data.task;
+      // 修改点4：获取数据后进行排序
+      let list = res.data.task;
+      
+      // 使用 sort 方法排序
+      // 规则：state=0 (待解决) 排在前面，其他状态 (已解决) 排在后面
+      // 如果状态相同，则按时间倒序（新的在上面）
+      list.sort((a, b) => {
+        if (a.state === b.state) {
+          // 如果状态一样，按时间降序（最新的在上面）
+          return new Date(b.createTime) - new Date(a.createTime);
+        }
+        // 状态不一样，0在前面
+        return a.state - b.state;
+      });
+
+      this.tasks = list;
     });
   },
 
