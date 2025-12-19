@@ -7,79 +7,58 @@
         background: themeColor.bg,
         color: themeColor.color,
       }"
-      style="transition: .3s;"
+      style="transition: 0.3s"
     >
       <div class="logo">
-        <span style="font-size:22px;">校园IT互助系统</span>
+        <span style="font-size: 22px">校园IT互助系统</span>
       </div>
       <el-menu
         :collapse-transition="false"
         :collapse="isCollapse"
         :router="true"
-        :default-active="$route.path"
+        :default-active="activeMenu"
         :background-color="themeColor.bg"
         :text-color="themeColor.color"
         :unique-opened="true"
       >
-        <!-- 首页保持不变 -->
         <el-menu-item index="/home/">
           <i class="el-icon-s-home"></i>
-          <span style="font-size:20px">首页</span>
+          <span style="font-size: 20px">首页</span>
         </el-menu-item>
 
         <el-menu-item index="/home/forum">
-          <!-- <i class="el-icon-s-home"></i> -->
-          <!-- 改为校园圈子图标 -->
           <i class="el-icon-s-comment"></i>
-          <span style="font-size:20px">校园圈子</span>
-        </el-menu-item>
-        <!-- 新增 -->
-
-        <!-- 求助管理改为平铺 -->
-        <el-menu-item index="/home/task">
-          <i class="el-icon-s-order"></i>
-          <span style="font-size:20px">发布求助</span>
-        </el-menu-item>
-        <el-menu-item index="/home/accept">
-          <i class="el-icon-s-order"></i>
-          <span style="font-size:20px">接受求助</span>
+          <span style="font-size: 20px">校园圈子</span>
         </el-menu-item>
 
-        <!-- 订单管理改为平铺 -->
-        <el-menu-item index="/home/published">
-          <i class="el-icon-s-order"></i>
-          <span style="font-size:20px">已发布求助</span>
-        </el-menu-item>
-        <el-menu-item index="/home/accepted">
-          <i class="el-icon-s-order"></i>
-          <span style="font-size:20px">已接受求助</span>
+        <el-menu-item index="/home/help">
+          <i class="el-icon-s-cooperation"></i>
+          <span style="font-size: 20px">求助中心</span>
         </el-menu-item>
 
-        <!-- 公告管理改为平铺 -->
+        <el-menu-item index="/home/remark">
+          <i class="el-icon-s-custom"></i>
+          <span style="font-size: 20px">评价中心</span>
+        </el-menu-item>
+
         <el-menu-item index="/home/noticeu">
           <i class="el-icon-paperclip"></i>
-          <span style="font-size:20px">查看公告</span>
+          <span style="font-size: 20px">查看公告</span>
         </el-menu-item>
 
-        <!-- 评价管理改为平铺 -->
-        <el-menu-item index="/home/myremark">
-          <i class="el-icon-s-custom"></i>
-          <span style="font-size:20px">我的评价</span>
-        </el-menu-item>
-        <el-menu-item index="/home/userremark">
-          <i class="el-icon-s-custom"></i>
-          <span style="font-size:20px">评价我的</span>
-        </el-menu-item>
+        <!-- <el-menu-item index="/home/mycomment">
+          <i class="el-icon-chat-dot-square"></i>
+          <span style="font-size: 20px">我的评论</span>
+        </el-menu-item> -->
 
-        <el-menu-item index="/home/mycomment">
-          <i class="el-icon-s-order"></i>
-          <span style="font-size:20px;">我的评论</span>
-        </el-menu-item>
-
-        <!-- 个人中心改为平铺 -->
         <el-menu-item index="/home/MyProfile">
-          <i class="el-icon-s-custom"></i>
-          <span style="font-size:20px">个人信息</span>
+          <i class="el-icon-user"></i>
+          <span style="font-size: 20px">个人信息</span>
+        </el-menu-item>
+
+        <el-menu-item index="logout" @click="exit">
+          <i class="el-icon-switch-button"></i>
+          <span style="font-size: 20px">退出登录</span>
         </el-menu-item>
       </el-menu>
     </div>
@@ -101,12 +80,29 @@
           background: themeColor.bg,
         }"
       >
-        <div class="icon" @click="isCollapse = !isCollapse">
-          <i
-            :class="isCollapse ? 'el-icon-s-unfold' : 'el-icon-s-fold'"
-            :style="{ color: themeColor.color }"
-          ></i>
+        <div style="display: flex; align-items: center">
+          <div class="icon" @click="isCollapse = !isCollapse">
+            <i
+              :class="isCollapse ? 'el-icon-s-unfold' : 'el-icon-s-fold'"
+              :style="{ color: themeColor.color }"
+            ></i>
+          </div>
+
+          <el-breadcrumb
+            separator-class="el-icon-arrow-right"
+            style="margin-left: 20px"
+          >
+            <el-breadcrumb-item
+              v-for="(item, index) in breadList"
+              :key="index"
+              :to="item.path"
+              v-if="item.meta.title"
+            >
+              {{ item.meta.title }}
+            </el-breadcrumb-item>
+          </el-breadcrumb>
         </div>
+
         <el-menu
           :unique-opened="true"
           :default-active="activeIndex"
@@ -117,22 +113,13 @@
           :active-text-color="themeColor.color"
           menu-trigger="click"
         >
-          <!-- <el-menu-item @click="recharge(user.studentId)">充值余额</el-menu-item> -->
-          <!-- <el-submenu index="1">
-                        <template slot="title">更换主题</template>
-                        <el-menu-item v-for="item in theme" @click="changeColor(item)">
-                            {{item.name}}
-                        </el-menu-item>
-                    </el-submenu> -->
           <el-submenu index="2">
-            <!--                        <template slot="title">{{user.username}}</template>-->
-            <!-- <el-avatar slot="title" style="background: #65c4a6; user-select: none;">{{firstName}}</el-avatar> -->
             <template slot="title">
-              <span style="margin-right: 8px; font-size: 14px;">
+              <span style="margin-right: 8px; font-size: 14px">
                 {{ user.username }}
               </span>
               <el-avatar
-                style="background: #65c4a6; user-select: none;"
+                style="background: #65c4a6; user-select: none"
                 size="small"
               >
                 {{ firstName }}
@@ -148,11 +135,13 @@
           </el-submenu>
         </el-menu>
       </div>
-      <div class="bottom">
+
+      <!-- <div class="bottom">
         <div class="bottom_top">
           <el-breadcrumb separator-class="el-icon-arrow-right">
             <el-breadcrumb-item
-              v-for="item in breadList"
+              v-for="(item, index) in breadList"
+              :key="index"
               :to="item.path"
               v-if="item.meta.title"
             >
@@ -163,6 +152,16 @@
         <transition name="el-fade-in" mode="out-in">
           <router-view @personalInformation="personalInformation"></router-view>
         </transition>
+      </div> -->
+
+      <div class="bottom">
+        <div class="content-box" style="padding: 20px">
+          <transition name="el-fade-in" mode="out-in">
+            <router-view
+              @personalInformation="personalInformation"
+            ></router-view>
+          </transition>
+        </div>
       </div>
     </div>
 
@@ -170,7 +169,6 @@
       title="完善信息"
       :visible.sync="drawer"
       direction="rtl"
-      closeDrawer="false"
       :show-close="false"
       :before-close="handleClose"
     >
@@ -241,7 +239,6 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import user from "@s/store/module/user";
 
 export default {
   name: "Home",
@@ -251,7 +248,7 @@ export default {
       sessionStorage.setItem("themeColor", JSON.stringify(val));
       this.themeColor = { bg: val.value, color: val.color };
     },
-    //面包屑
+    // 面包屑
     getBreadcrumb() {
       let matched = this.$route.matched;
       if (matched[0].name != "home") {
@@ -259,7 +256,7 @@ export default {
       }
       this.breadList = matched;
     },
-    //关闭抽屉触发的事件
+    // 关闭抽屉触发的事件
     handleClose(done) {
       this.$msg("请完善资料", "error");
     },
@@ -275,7 +272,6 @@ export default {
               phone: this.ruleForm.phone,
               sex: this.sex,
             }).then((res) => {
-              // console.log(res)
               this.drawer = false;
               this.$notifyMsg("成功", res.data.msg, "success");
               this.newList(this.user.id);
@@ -284,12 +280,11 @@ export default {
             this.$notifyMsg("错误", "请选择班级", "error");
           }
         } else {
-          // console.log('error submit!!');
           return false;
         }
       });
     },
-    //修改密码
+    // 修改密码
     updPassword(id) {
       this.$prompt("请输入密码", "提示", {
         confirmButtonText: "确定",
@@ -300,32 +295,12 @@ export default {
         inputErrorMessage: "格式不对,密码只能输入6-16位英文和数字",
       })
         .then((res) => {
-          // console.log(res);
           this.$put("/user", { id: id, password: res.value }).then((res) => {
             this.$notifyMsg("成功", res.data.msg, "success");
           });
         })
         .catch(() => {});
     },
-    //充值
-    // recharge(id) {
-    //     this.$prompt('请输入充值金额', '提示', {
-    //         confirmButtonText: '确定',
-    //         cancelButtonText: '取消',
-    //         inputType: 'text',
-    //         closeOnClickModal:false,
-    //         inputPattern: /^[0-9]*$/,
-    //         inputErrorMessage: '格式不对，只能输入数字'
-    //     }).then((res) => {
-    //         // console.log(res);
-    //         this.$put('/user/rollIn', {studentId: id, balance: res.value})
-    //         .then((res) => {
-    //             this.newList(this.user.id)
-    //             this.$notifyMsg('成功', '充值成功', 'success')
-    //         })
-    //     }).catch(() => {
-    //     })
-    // },
     personalInformation() {
       this.dialogVisible = true;
       this.ruleForm.username = this.user.username;
@@ -342,12 +317,12 @@ export default {
         this.newList(this.user.id);
       });
     },
-    //根据当前用户查询id
+    // 根据当前用户查询id
     newList(id) {
       this.$get("/user/" + id).then((rs) => {
         sessionStorage.setItem("user", JSON.stringify(rs.data.user));
         this.setUser(JSON.parse(sessionStorage.getItem("user")));
-        // 修改完名字, 清空當前firstName; 避免出現疊加
+        // 修改完名字, 清空当前firstName; 避免出现叠加
         this.firstName = "";
         this.textAvatar(rs.data.user.username);
       });
@@ -356,9 +331,11 @@ export default {
       sessionStorage.removeItem("user");
       this.$router.push("/");
     },
-    // 文字頭像
+    // 文字头像
     textAvatar(username) {
+      if (!username) return;
       let arr = username.split(" ");
+      this.firstName = ""; // 确保先清空
       for (var i in arr) {
         this.firstName += arr[i].substr(0, 1);
       }
@@ -370,6 +347,18 @@ export default {
     ...mapState("user", ["user"]),
     theme() {
       return this.$store.state.theme.theme;
+    },
+    // 计算属性：处理菜单高亮逻辑
+    // 当我们在 /home/help/task, /home/help/accept 等子路径时，让左侧"求助中心"保持高亮
+    activeMenu() {
+      const path = this.$route.path;
+      if (path.startsWith("/home/help")) {
+        return "/home/help";
+      }
+      if (path.startsWith("/home/remark")) {
+        return "/home/remark";
+      }
+      return path;
     },
   },
   data() {
@@ -399,21 +388,21 @@ export default {
         username: [{ validator: validateUsername, trigger: "blur" }],
         phone: [{ validator: validatePhone, trigger: "blur" }],
       },
-      //颜色
+      // 颜色
       themeColor: { bg: "#fff", color: "#000" },
-      //性别
+      // 性别
       sex: "0",
       drawer: false,
-      //当前路由
+      // 当前路由
       breadList: [],
-      //当前屏幕宽度
+      // 当前屏幕宽度
       windowWidth: document.documentElement.clientWidth,
       activeIndex: "1",
-      //控制菜单是否展开
+      // 控制菜单是否展开
       isCollapse: false,
       admin: "",
       school: [],
-      //级联选择器的值
+      // 级联选择器的值
       value: "",
       dialogVisible: false,
     };
@@ -440,7 +429,7 @@ export default {
         });
       }
     } else {
-      this.$msg("您向未登陆,没有权限", "error");
+      this.$msg("您尚未登陆,没有权限", "error");
       this.$router.push("/");
     }
   },
@@ -449,8 +438,10 @@ export default {
     window.onresize = () => {
       this.windowWidth = document.documentElement.clientWidth;
     };
-    // 文字頭像
-    this.textAvatar(this.user.username);
+    // 文字头像
+    if (this.user && this.user.username) {
+      this.textAvatar(this.user.username);
+    }
   },
 };
 </script>
