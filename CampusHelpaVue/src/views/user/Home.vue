@@ -129,12 +129,15 @@
             >
               {{ user.username }}
             </span>
+
             <el-avatar
               style="background: #65c4a6; user-select: none"
-              size="small"
+              :size="35"
+              :src="fullAvatarUrl"
             >
               {{ firstName }}
             </el-avatar>
+
             <i
               class="el-icon-arrow-down el-icon--right"
               :style="{ color: themeColor.color }"
@@ -325,15 +328,41 @@ export default {
     // 根据当前用户查询id
     newList(id) {
       this.$get("/user/" + id).then((rs) => {
+        // 同步更新 session 和 local，确保下次刷新不出错
         sessionStorage.setItem("user", JSON.stringify(rs.data.user));
-        this.setUser(JSON.parse(sessionStorage.getItem("user")));
+        localStorage.setItem("user", JSON.stringify(rs.data.user));
+
+        this.setUser(rs.data.user);
+
         // 修改完名字, 清空当前firstName; 避免出现叠加
         this.firstName = "";
         this.textAvatar(rs.data.user.username);
       });
     },
     exit() {
+      // ============================================================
+      // 🟢 新增逻辑：退出时清除当前用户的 AI 聊天记录
+      // 注意：key 必须和 AiHelp.vue 里的 cacheKey 生成规则保持一致
+      // ============================================================
+      if (this.user && this.user.id) {
+        localStorage.removeItem("ai_chat_history_" + this.user.id);
+      } else {
+        //以此防万一：如果 this.user 为空，尝试从缓存里读一下 ID 再删
+        try {
+          const cachedUser = JSON.parse(
+            sessionStorage.getItem("user") || localStorage.getItem("user")
+          );
+          if (cachedUser && cachedUser.id) {
+            localStorage.removeItem("ai_chat_history_" + cachedUser.id);
+          }
+        } catch (e) {}
+      }
+
+      // ============================================================
+      // 原有逻辑
+      // ============================================================
       sessionStorage.removeItem("user");
+      localStorage.removeItem("user"); // 登出也顺便清一下local
       this.$router.push("/");
     },
     // 文字头像
@@ -350,6 +379,18 @@ export default {
   },
   computed: {
     ...mapState("user", ["user"]),
+
+    // ==========================================
+    // 🟢 新增：处理头像的完整路径
+    // ==========================================
+    fullAvatarUrl() {
+      if (!this.user || !this.user.avatar) return "";
+      // 如果已经是 http 开头，直接用
+      if (this.user.avatar.startsWith("http")) return this.user.avatar;
+      // 否则拼接后端地址 (假设你的后端端口是 8080)
+      return `http://localhost:8080${this.user.avatar}`;
+    },
+
     theme() {
       return this.$store.state.theme.theme;
     },
@@ -413,15 +454,50 @@ export default {
     $route(to, form) {
       this.getBreadcrumb();
     },
+    // 监听 user 变化，重新计算文字头像 (防止只显示图不显示字)
+    user: {
+      handler(val) {
+        if (val && val.username) {
+          this.textAvatar(val.username);
+        }
+      },
+      deep: true,
+    },
   },
   created() {
     let theme = JSON.parse(sessionStorage.getItem("themeColor"));
     if (theme) {
       this.themeColor = { bg: theme.value, color: theme.color };
     }
-    if (sessionStorage.getItem("user")) {
+
+    // ===============================================
+    // 🟢 修改：优先读取 LocalStorage (之前修复缓存的地方)
+    // 防止 session 里是旧的，而 local 里是新的
+    // ===============================================
+    let storedUserStr = sessionStorage.getItem("user");
+    if (!storedUserStr) {
+      // 如果 session 没有，尝试找 local
+      storedUserStr = localStorage.getItem("user");
+    } else {
+      // 如果 session 有，为了保险起见，看看 local 是不是更新
+      const localUserStr = localStorage.getItem("user");
+      if (localUserStr) {
+        // 这里简单粗暴一点，如果 local 存在，我们信任 local 是最新的
+        // (因为你在 MyProfile 里修改头像时是更新的 local)
+        storedUserStr = localUserStr;
+      }
+    }
+
+    if (storedUserStr) {
       this.getBreadcrumb();
-      this.setUser(JSON.parse(sessionStorage.getItem("user")));
+      const userObj = JSON.parse(storedUserStr);
+      this.setUser(userObj);
+
+      // 如果发现 session 里没存，顺便存一下
+      if (!sessionStorage.getItem("user")) {
+        sessionStorage.setItem("user", storedUserStr);
+      }
+
       if (!this.user.dept) {
         this.$get("/school/" + this.user.school.id).then((res) => {
           this.school = res.data.school;
@@ -446,6 +522,7 @@ export default {
 </script>
 
 <style scoped lang="less">
+/* 这里样式保持不变，我就不重复贴太长的样式代码了，直接使用你原本的样式即可 */
 /* 定义深蓝色变量，方便调整 */
 @deep-blue: #165dff;
 /* 未选中时的标签底色 */
@@ -581,9 +658,9 @@ export default {
       z-index: 9;
       box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
       background-color: #fff !important;
-      
+
       /* 这里添加了右内边距，防止头像贴边 */
-      padding-right: 20px; 
+      padding-right: 20px;
 
       .icon {
         font-size: 20px;

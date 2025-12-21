@@ -4,8 +4,7 @@
       title="校园圈子 - 分享你的校园生活"
       :closable="false"
       type="success"
-      style="margin-bottom: 10px
-      "
+      style="margin-bottom: 10px"
     >
     </el-alert>
 
@@ -25,9 +24,20 @@
       <div v-if="postList.length > 0">
         <div v-for="(item, index) in postList" :key="index" class="post-item">
           <div class="post-header">
-            <span class="user-name">{{
-              item.publisher ? item.publisher.username : "未知用户"
-            }}</span>
+            <div class="user-info-wrapper">
+              <el-avatar 
+                :size="30" 
+                :src="getAvatarUrl(item.publisher)"
+                style="background-color: #409eff; font-size: 14px; margin-right: 8px;"
+              >
+                {{ getAvatarText(item.publisher) }}
+              </el-avatar>
+
+              <span class="user-name">{{
+                item.publisher ? item.publisher.username : "未知用户"
+              }}</span>
+            </div>
+
             <span class="post-time">{{ item.createTime | formatDate }}</span>
           </div>
 
@@ -132,6 +142,19 @@ export default {
     this.getPosts();
   },
   methods: {
+    // 🟢 修改点 2：添加处理头像URL的方法
+    getAvatarUrl(publisher) {
+      if (!publisher || !publisher.avatar) return ""; // 没图，返回空，显示文字
+      if (publisher.avatar.startsWith("http")) return publisher.avatar;
+      return `http://localhost:8080${publisher.avatar}`;
+    },
+
+    // 🟢 修改点 3：添加处理文字头像的方法
+    getAvatarText(publisher) {
+      if (!publisher || !publisher.username) return "U";
+      return publisher.username.charAt(0).toUpperCase();
+    },
+
     // 获取列表
     getPosts() {
       // 假设你的后端接口支持 ?schoolId=xxx 传参
@@ -233,17 +256,25 @@ export default {
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
   }
 
-  /* 以下是原有的内容样式，保持不变 */
   .post-item {
     margin-bottom: 20px;
 
+    /* 🟢 修改点 4：头部样式调整，支持 flex 布局对齐头像 */
     .post-header {
       display: flex;
       justify-content: space-between;
+      align-items: center; /* 垂直居中 */
       margin-bottom: 10px;
+
+      .user-info-wrapper {
+        display: flex;
+        align-items: center;
+      }
+
       .user-name {
         font-weight: bold;
         color: #409eff;
+        font-size: 15px;
       }
       .post-time {
         color: #909399;
@@ -253,6 +284,9 @@ export default {
 
     .post-content {
       margin-bottom: 15px;
+      /* 这里稍微加一点左内边距，让文字和上面的名字对齐（可选） */
+      padding-left: 40px; 
+      
       .title {
         margin: 0 0 10px 0;
         font-size: 16px;
@@ -265,14 +299,18 @@ export default {
       }
     }
 
+    /* 操作按钮也缩进一下，看起来更有层次感 */
     .post-actions {
       margin-bottom: 15px;
+      padding-left: 40px;
     }
-
+    
+    /* 评论区也缩进 */
     .comment-area {
       background-color: #f9fafc;
       padding: 10px;
       border-radius: 4px;
+      margin-left: 40px; /* 缩进 */
 
       .comment-row {
         font-size: 13px;
