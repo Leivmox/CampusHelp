@@ -1,6 +1,8 @@
 package com.yqn.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper; // 必须导入这个
+import com.yqn.common.core.domain.AjaxResult;
 import com.yqn.common.tools.MessageTools;
 import com.yqn.common.tools.PocketMoney;
 import com.yqn.pojo.User;
@@ -18,6 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/user")
 public class UserController {
+
     @Autowired
     private UserService userService;
     @Autowired
@@ -98,15 +101,40 @@ public class UserController {
         return message.message(false, "error,删除学生失败", "", null);
     }
 
-    // 零钱转入
-//    @PutMapping("rollIn")
-//    public Map<String, Object> rollIn(String studentId, Double balance) {
-//        return money.transfer("balance=balance+", balance, studentId);
-//    }
+    // ==========================================
+    // 修复后的头像更新接口 (纯数据库更新版)
+    // ==========================================
 
-    // 零钱转出
-//    @PutMapping("rollOut")
-//    public Map<String, Object> rollOut(String studentId, Double balance) {
-//        return money.transfer("balance=balance-", balance, studentId);
-//    }
+    /**
+     * 更新头像路径到数据库
+     * 注意：这里不负责上传文件，只负责接收文件路径和学号并更新数据库
+     */
+    @PostMapping("/updateAvatar")
+    public AjaxResult updateAvatar(@RequestBody User user) {
+        System.out.println("【调试】收到头像更新请求 -> ID: " + user.getId() + " | Avatar: " + user.getAvatar());
+
+        // 1. 必须要有 ID
+        if (user.getId() == null) {
+            return AjaxResult.error("更新失败：无法获取用户ID (Primary Key)");
+        }
+
+        // 2. 必须要有头像路径
+        if (user.getAvatar() == null || "".equals(user.getAvatar())) {
+            return AjaxResult.error("更新失败：头像路径为空");
+        }
+
+        // 3. 构造更新条件：只认 ID (id = ?)
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.set("avatar", user.getAvatar()); // 设置新头像
+        updateWrapper.eq("id", user.getId());          // 锁定这一行数据
+
+        // 4. 执行更新
+        boolean success = userService.update(updateWrapper);
+
+        if (success) {
+            return AjaxResult.success("头像更新成功");
+        } else {
+            return AjaxResult.error("更新失败：数据库中不存在 ID=" + user.getId() + " 的用户");
+        }
+    }
 }

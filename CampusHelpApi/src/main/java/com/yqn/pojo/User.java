@@ -6,18 +6,21 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.ToString;
-
 import java.util.Date;
 
-/**
- * @author Leivmox
- */
 @ToString
 @Data
 @TableName(resultMap = "userResultMap")
 public class User {
+
+    // 1. 头像字段只要普通的声明即可，不要加 @TableId
+    /** 用户头像 */
+    private String avatar;
+
+    // 2. 主键注解必须紧贴着 id 字段！
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
+
     private String studentId;
     private String password;
     private String phone;
