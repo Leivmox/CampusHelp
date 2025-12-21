@@ -9,8 +9,19 @@
       }"
       style="transition: 0.3s"
     >
-      <div class="logo">
+      <!-- <div class="logo">
         <span style="font-size: 22px">校园IT互助系统</span>
+      </div> -->
+      <div class="logo" @click="$router.push('/home/')" style="cursor: pointer">
+        <img
+          :src="
+            isCollapse
+              ? require('@/assets/img/ItHelp2.png')
+              : require('@/assets/img/ItHelp.png')
+          "
+          :class="isCollapse ? 'logo-icon' : 'logo-full'"
+          alt="logo"
+        />
       </div>
       <el-menu
         :collapse-transition="false"
@@ -103,7 +114,7 @@
           </el-breadcrumb>
         </div>
 
-        <el-menu
+        <!-- <el-menu
           :unique-opened="true"
           :default-active="activeIndex"
           class="el-menu-demo"
@@ -133,7 +144,43 @@
               >修改个人信息</el-menu-item
             >
           </el-submenu>
-        </el-menu>
+        </el-menu> -->
+        <el-dropdown trigger="click" @command="handleCommand" style="margin-right: 20px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              cursor: pointer;
+              height: 60px;
+            "
+          >
+            <span
+              :style="{
+                color: themeColor.color,
+                marginRight: '8px',
+                fontSize: '14px',
+              }"
+            >
+              {{ user.username }}
+            </span>
+            <el-avatar
+              style="background: #65c4a6; user-select: none"
+              size="small"
+            >
+              {{ firstName }}
+            </el-avatar>
+            <i
+              class="el-icon-arrow-down el-icon--right"
+              :style="{ color: themeColor.color }"
+            ></i>
+          </div>
+
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item command="exit">退出登录</el-dropdown-item>
+            <el-dropdown-item command="password">修改密码</el-dropdown-item>
+            <el-dropdown-item command="info">修改个人信息</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
       </div>
 
       <div class="bottom">
@@ -144,7 +191,9 @@
             ></router-view>
           </transition>
         </div>
-      </div> </div> <el-drawer
+      </div>
+    </div>
+    <el-drawer
       title="完善信息"
       :visible.sync="drawer"
       direction="rtl"
@@ -213,7 +262,8 @@
         <el-button type="primary" @click="submitChanges">确 定</el-button>
       </div>
     </el-dialog>
-  </div> </template>
+  </div>
+</template>
 
 <script>
 import { mapState, mapMutations } from "vuex";
@@ -261,6 +311,15 @@ export default {
           return false;
         }
       });
+    },
+    handleCommand(command) {
+      if (command === "exit") {
+        this.exit();
+      } else if (command === "password") {
+        this.updPassword(this.user.id);
+      } else if (command === "info") {
+        this.personalInformation();
+      }
     },
     // 修改密码
     updPassword(id) {
@@ -449,16 +508,51 @@ export default {
     background-color: #e0e8fb !important;
     box-shadow: 2px 0 6px rgba(0, 21, 41, 0.05); /* 加一点点右侧阴影更有立体感 */
 
+    // .logo {
+    //   width: 100%;
+    //   font-size: 18px;
+    //   font-weight: bold;
+    //   text-align: center;
+    //   padding: 20px 0;
+    //   color: @deep-blue; /* Logo 也用深蓝色 */
+    //   /* 1Panel风格的Logo背景通常是透明或者也是浅蓝，这里保持简单 */
+    // }
     .logo {
       width: 100%;
-      font-size: 18px;
-      font-weight: bold;
-      text-align: center;
-      padding: 20px 0;
-      color: @deep-blue; /* Logo 也用深蓝色 */
-      /* 1Panel风格的Logo背景通常是透明或者也是浅蓝，这里保持简单 */
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* 移除 overflow: hidden，避免某些阴影被切掉 */
+
+      /* 展开时：完整Logo样式 */
+      .logo-full {
+        width: 90%; /* 宽度占比大一些 */
+        height: 40px; /* 固定高度，防止图片过大 */
+        object-fit: contain; /* 保持比例 */
+        transition: all 0.3s; /* 过渡动画 */
+        animation: fadeIn 0.5s; /* 切换时加个淡入效果 */
+      }
+
+      /* 收起时：小图标样式 */
+      .logo-icon {
+        width: 32px; /* 宽度固定 */
+        height: 32px; /* 高度固定 */
+        object-fit: contain;
+        transition: all 0.3s;
+        animation: fadeIn 0.5s;
+      }
     }
 
+    /* 简单的淡入动画，让图片切换不那么生硬 */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
     /* --- 核心修改：穿透修改 Element UI 菜单样式 --- */
     /deep/ .el-menu {
       border-right: none; /* 去掉右侧那条难看的灰线 */
@@ -466,6 +560,8 @@ export default {
     }
 
     /deep/ .el-menu-item {
+      display: flex;
+      align-items: center;
       /* 布局：让菜单项像小卡片一样浮在中间 */
       margin: 8px 10px;
       height: 50px;
@@ -503,6 +599,43 @@ export default {
 
       i {
         color: @deep-blue !important; /* 图标也变深蓝 */
+      }
+    }
+
+    /* ================================================== */
+    /* === 新增：专门修复折叠状态下图标不居中的问题 === */
+    /* ================================================== */
+
+    /* 这里的 .el-menu--collapse 是 Element UI 自动加在 el-menu 上的类 */
+    /deep/ .el-menu--collapse .el-menu-item {
+      /* 1. 强制去除 Element 默认的内边距，这是导致偏右的罪魁祸首 */
+      padding: 0 !important;
+
+      /* 2. 使用 Flex 强制水平居中 */
+      justify-content: center;
+
+      /* 3. 因为折叠后只有 64px 宽，左右 margin 10px 可能会太挤，稍微调小一点 */
+      margin: 8px 4px;
+
+      /* 4. 确保里面的图标也没有额外的 margin */
+      i {
+        margin: 0 !important;
+      }
+
+      /* 5. 隐藏可能残留的 span 文字（虽然 Element 会自动隐藏，但加个双保险） */
+      span {
+        display: none;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+      }
+
+      /* 6. 处理折叠时 Tooltip 的包裹层 (Element UI 会在折叠时加一个 div 包裹) */
+      & > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
       }
     }
   }
@@ -547,13 +680,13 @@ export default {
       //   border-radius: 4px;
       //   min-height: 80vh;
       // }
-    /* 内容盒子 */
-    .content-box {
-      background: transparent; /* 改为透明，背景色由子页面自己决定 */
-      padding: 0;              /* 去掉内边距，让子页面撑满 */
-      /* border-radius: 4px; */ /* 圆角也可以注释掉，交给子页面控制 */
-      min-height: 80vh;
-    }
+      /* 内容盒子 */
+      .content-box {
+        background: transparent; /* 改为透明，背景色由子页面自己决定 */
+        padding: 0; /* 去掉内边距，让子页面撑满 */
+        /* border-radius: 4px; */ /* 圆角也可以注释掉，交给子页面控制 */
+        min-height: 80vh;
+      }
     }
   }
 
