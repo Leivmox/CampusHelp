@@ -3,7 +3,10 @@
     <el-col :xs="24" :sm="24" :md="16" :lg="17">
       <el-card shadow="never" class="detail-card">
         <div slot="header" class="clearfix">
-          <el-page-header @back="$router.back()" content="帖子详情"></el-page-header>
+          <el-page-header
+            @back="$router.back()"
+            content="帖子详情"
+          ></el-page-header>
         </div>
 
         <div v-if="loading" class="loading-box">
@@ -15,7 +18,7 @@
             <el-avatar
               :size="40"
               :src="getSafeAvatar(post.publisher)"
-              style="background-color: #409eff; color: #fff; margin-right: 10px;"
+              style="background-color: #409eff; color: #fff; margin-right: 10px"
             >
               {{ getAvatarText(post.publisher) }}
             </el-avatar>
@@ -29,17 +32,37 @@
 
           <div class="post-main">
             <div class="title-row">
-              <h1 class="main-title">{{ post.title }}</h1>
               <div class="owner-actions" v-if="isOwner">
-                <el-button type="text" icon="el-icon-edit" size="medium" @click="handleEdit">修改</el-button>
-                <el-popconfirm title="确定删除这个帖子吗？" @confirm="handleDelete" style="margin-left: 10px">
-                  <el-button slot="reference" type="text" icon="el-icon-delete" size="medium" class="delete-btn">删除</el-button>
+                <el-button
+                  type="text"
+                  icon="el-icon-edit"
+                  size="medium"
+                  @click="handleEdit"
+                  >修改</el-button
+                >
+                <el-popconfirm
+                  title="确定删除这个帖子吗？"
+                  @confirm="handleDelete"
+                  style="margin-left: 10px"
+                >
+                  <el-button
+                    slot="reference"
+                    type="text"
+                    icon="el-icon-delete"
+                    size="medium"
+                    class="delete-btn"
+                    >删除</el-button
+                  >
                 </el-popconfirm>
               </div>
+              <h1 class="main-title">{{ post.title }}</h1>
             </div>
             <div class="main-content">{{ post.content }}</div>
 
-            <div class="img-grid" v-if="post.imgList && post.imgList.length > 0">
+            <div
+              class="img-grid"
+              v-if="post.imgList && post.imgList.length > 0"
+            >
               <el-image
                 v-for="(img, idx) in post.imgList"
                 :key="idx"
@@ -52,7 +75,13 @@
           </div>
 
           <div class="action-bar">
-            <el-button type="primary" plain round icon="el-icon-thumb" @click="handleLike">
+            <el-button
+              type="primary"
+              plain
+              round
+              icon="el-icon-thumb"
+              @click="handleLike"
+            >
               点赞 {{ post.likeCount || 0 }}
             </el-button>
             <span class="divider"></span>
@@ -74,14 +103,20 @@
               show-word-limit
             ></el-input>
             <div class="btn-wrapper">
-              <el-button type="primary" size="small" @click="submitComment">发表评论</el-button>
+              <el-button type="primary" size="small" @click="submitComment"
+                >发表评论</el-button
+              >
             </div>
           </div>
 
           <div class="comment-list">
             <div class="list-title">全部评论</div>
             <div v-if="post.comments && post.comments.length > 0">
-              <div v-for="(c, idx) in post.comments" :key="idx" class="comment-item">
+              <div
+                v-for="(c, idx) in post.comments"
+                :key="idx"
+                class="comment-item"
+              >
                 <el-avatar
                   :size="30"
                   :src="getSafeAvatar(c.commenter)"
@@ -92,14 +127,20 @@
                 </el-avatar>
                 <div class="c-right">
                   <div class="c-user">
-                    <span class="u-name">{{ c.commenter ? c.commenter.username : "匿名" }}</span>
+                    <span class="u-name">{{
+                      c.commenter ? c.commenter.username : "匿名"
+                    }}</span>
                     <span class="c-time">{{ c.createTime | formatDate }}</span>
                   </div>
                   <div class="c-text">{{ c.content }}</div>
                 </div>
               </div>
             </div>
-            <el-empty v-else description="还没有人评论，抢个沙发吧~" :image-size="60"></el-empty>
+            <el-empty
+              v-else
+              description="还没有人评论，抢个沙发吧~"
+              :image-size="60"
+            ></el-empty>
           </div>
         </div>
         <el-empty v-else description="帖子不存在或已被删除"></el-empty>
@@ -108,10 +149,17 @@
 
     <el-col :xs="24" :sm="24" :md="8" :lg="7">
       <div v-if="post && post.publisher" class="white-block profile-card">
-        <div class="profile-bg" :style="{ backgroundImage: `url(${userBgImg})` }"></div>
+        <div
+          class="profile-bg"
+          :style="{ backgroundImage: `url(${userBgImg})` }"
+        ></div>
         <div class="profile-content">
           <div class="avatar-wrap">
-            <el-avatar :size="70" :src="getSafeAvatar(post.publisher)" class="user-avatar">
+            <el-avatar
+              :size="70"
+              :src="getSafeAvatar(post.publisher)"
+              class="user-avatar"
+            >
               {{ getAvatarText(post.publisher) }}
             </el-avatar>
           </div>
@@ -119,7 +167,10 @@
             {{ post.publisher.nickname || post.publisher.username }}
           </div>
           <div class="user-role">
-            {{ post.publisher.school ? post.publisher.school.name : "未知学校" }} · 发布者
+            {{
+              post.publisher.school ? post.publisher.school.name : "未知学校"
+            }}
+            · 发布者
           </div>
           <div class="user-bio" :title="post.publisher.signature">
             {{ post.publisher.signature || "这个发布者很懒，什么都没写..." }}
@@ -127,7 +178,9 @@
         </div>
         <div class="profile-stats">
           <div class="p-stat-item">
-            <div class="num" style="color: #ff9900">{{ post.publisher.balance || 0 }}</div>
+            <div class="num" style="color: #ff9900">
+              {{ post.publisher.balance || 0 }}
+            </div>
             <div class="label">积分</div>
           </div>
           <div class="p-divider"></div>
@@ -143,22 +196,70 @@
         </div>
       </div>
 
-      <el-card v-if="post && post.publisher" shadow="never" class="detail-info-card">
+      <el-card
+        v-if="post && post.publisher"
+        shadow="never"
+        class="detail-info-card"
+      >
         <div slot="header" class="clearfix">
           <span class="card-title">详细资料</span>
         </div>
         <el-descriptions :column="1" border size="small">
-          <el-descriptions-item label="用户名">{{ post.publisher.username }}</el-descriptions-item>
-          <el-descriptions-item label="学校">
-            {{ post.publisher.school ? post.publisher.school.name : "未关联" }}
+          <el-descriptions-item label="用户名">{{
+            post.publisher.username
+          }}</el-descriptions-item>
+          <el-descriptions-item label="系别">
+            {{ post.publisher.school ? post.publisher.dept.name : "未关联" }}
           </el-descriptions-item>
-          <el-descriptions-item label="邮箱">{{ post.publisher.email || "未公开" }}</el-descriptions-item>
+          <el-descriptions-item label="邮箱">{{
+            post.publisher.email || "未公开"
+          }}</el-descriptions-item>
         </el-descriptions>
       </el-card>
     </el-col>
 
-    <el-dialog title="修改帖子" :visible.sync="editDialogVisible" width="50%" @close="resetEditForm">
-      </el-dialog>
+    <el-dialog
+      title="修改帖子"
+      :visible.sync="editDialogVisible"
+      width="50%"
+      @close="resetEditForm"
+    >
+      <el-form label-width="80px">
+        <el-form-item label="标题">
+          <el-input
+            v-model="editForm.title"
+            placeholder="请输入标题"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="内容">
+          <el-input
+            type="textarea"
+            :rows="6"
+            v-model="editForm.content"
+            placeholder="分享新鲜事..."
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="图片">
+          <el-upload
+            action="http://localhost:8080/common/upload"
+            :data="{ type: 'post' }"
+            name="file"
+            list-type="picture-card"
+            :limit="9"
+            :file-list="fileList"
+            :on-success="handleEditUploadSuccess"
+            :on-remove="handleEditRemove"
+            multiple
+          >
+            <i class="el-icon-plus"></i>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitEdit">确 定</el-button>
+      </span>
+    </el-dialog>
   </el-row>
 </template>
 
@@ -178,7 +279,7 @@ export default {
       baseUrl: "http://localhost:8080",
       userBgImg: require("@/assets/img/user_bg.jpg"),
       pubStats: { publishCount: 0, solveCount: 0 },
-      editDialogVisible: false,
+      fileList: [], // 用于存储 el-upload 显示的图片列表
       editForm: { id: null, title: "", content: "", imgList: [] },
     };
   },
@@ -212,7 +313,9 @@ export default {
             }
           }
         })
-        .catch(() => { this.loading = false; });
+        .catch(() => {
+          this.loading = false;
+        });
     },
     getPublisherStats(pubId) {
       listPublished(pubId).then((res) => {
@@ -244,6 +347,28 @@ export default {
         }
       });
     },
+    // 🟢 提交修改
+    submitEdit() {
+      if (!this.editForm.title || !this.editForm.content) {
+        this.$msg("请填写完整信息", "error");
+        return;
+      }
+
+      this.$put("/post", {
+        id: this.editForm.id,
+        title: this.editForm.title,
+        content: this.editForm.content,
+        imgList: this.editForm.imgList, // 发送更新后的图片数组
+      }).then((res) => {
+        if (res.data.status) {
+          this.$msg("修改成功", "success");
+          this.editDialogVisible = false;
+          this.fetchPostDetail(); // 重新加载详情刷新页面
+        } else {
+          this.$msg(res.data.msg, "error");
+        }
+      });
+    },
     submitComment() {
       if (!this.commentContent.trim()) return;
       let formData = new FormData();
@@ -265,12 +390,45 @@ export default {
         }
       });
     },
+    // 🟢 修改状态下的上传成功
+    handleEditUploadSuccess(res) {
+      if (res.url) {
+        this.editForm.imgList.push(res.url);
+      } else {
+        this.$msg("图片上传失败", "error");
+      }
+    },
+    // 🟢 修改状态下的移除图片
+    handleEditRemove(file) {
+      // 无论是刚上传的还是回显的，都从 editForm.imgList 中过滤掉
+      const urlToRemove = file.response ? file.response.url : "";
+      this.editForm.imgList = this.editForm.imgList.filter(
+        (url) => url !== urlToRemove
+      );
+    },
     handleEdit() {
-      this.editForm = { ...this.post };
+      this.editForm = {
+        id: this.post.id,
+        title: this.post.title,
+        content: this.post.content,
+        imgList: [...(this.post.imgList || [])], // 深拷贝原图片数组
+      };
+
+      // 初始化 fileList 用于回显已有图片
+      this.fileList = this.editForm.imgList.map((url) => {
+        return {
+          name: url, // 文件名随便写
+          url: this.getResUrl(url), // 完整的预览图地址
+          response: { url: url }, // 模拟上传成功的返回格式，方便 handleEditRemove 统一处理
+        };
+      });
+
       this.editDialogVisible = true;
     },
+    // 🟢 重置表单
     resetEditForm() {
-      this.editDialogVisible = false;
+      this.editForm = { id: null, title: "", content: "", imgList: [] };
+      this.fileList = [];
     },
   },
   filters: {
@@ -301,11 +459,15 @@ export default {
   align-items: center;
   margin-top: 20px;
   padding: 10px 0;
-  .divider { flex: 1; }
+  .divider {
+    flex: 1;
+  }
   .read-info {
     color: #909399;
     font-size: 14px;
-    i { margin-right: 5px; }
+    i {
+      margin-right: 5px;
+    }
   }
 }
 
@@ -321,10 +483,21 @@ export default {
       display: flex;
       justify-content: space-between;
       margin-bottom: 6px;
-      .u-name { font-weight: 600; color: #1a1a1a; font-size: 14px; }
-      .c-time { color: #999; font-size: 12px; }
+      .u-name {
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 14px;
+      }
+      .c-time {
+        color: #999;
+        font-size: 12px;
+      }
     }
-    .c-text { font-size: 14px; color: #555; line-height: 1.6; }
+    .c-text {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.6;
+    }
   }
 }
 
@@ -363,17 +536,42 @@ export default {
       background: #fff;
       border-radius: 50%;
     }
-    .user-name { font-size: 18px; font-weight: bold; margin-top: 5px; }
-    .user-role { font-size: 12px; color: #909399; }
-    .user-bio { font-size: 13px; color: #606266; padding: 0 15px; margin-top: 8px; }
+    .user-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    .user-role {
+      font-size: 12px;
+      color: #909399;
+    }
+    .user-bio {
+      font-size: 13px;
+      color: #606266;
+      padding: 0 15px;
+      margin-top: 8px;
+    }
   }
   .profile-stats {
     display: flex;
     padding: 15px 0;
-    .p-stat-item { flex: 1; text-align: center; }
-    .p-divider { width: 1px; height: 20px; background: #eee; }
-    .num { font-weight: bold; font-size: 16px; }
-    .label { font-size: 12px; color: #999; }
+    .p-stat-item {
+      flex: 1;
+      text-align: center;
+    }
+    .p-divider {
+      width: 1px;
+      height: 20px;
+      background: #eee;
+    }
+    .num {
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .label {
+      font-size: 12px;
+      color: #999;
+    }
   }
 }
 
@@ -387,19 +585,38 @@ export default {
   align-items: center;
   margin-bottom: 20px;
   .author-text {
-    .name { font-weight: bold; font-size: 16px; color: #303133; }
-    .time { font-size: 12px; color: #909399; margin-top: 2px; }
+    .name {
+      font-weight: bold;
+      font-size: 16px;
+      color: #303133;
+    }
+    .time {
+      font-size: 12px;
+      color: #909399;
+      margin-top: 2px;
+    }
   }
 }
 
-.post-main .main-title { font-size: 22px; margin-bottom: 15px; }
-.post-main .main-content { line-height: 1.8; white-space: pre-wrap; margin-bottom: 20px; }
+.post-main .main-title {
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+.post-main .main-content {
+  line-height: 1.8;
+  white-space: pre-wrap;
+  margin-bottom: 20px;
+}
 
 .img-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  .detail-img { width: 140px; height: 140px; border-radius: 4px; }
+  .detail-img {
+    width: 140px;
+    height: 140px;
+    border-radius: 4px;
+  }
 }
 
 .list-title {
@@ -407,5 +624,10 @@ export default {
   border-left: 4px solid #409eff;
   padding-left: 10px;
   margin-bottom: 15px;
+}
+.owner-actions {
+  display: flex; /* 启用 flex 布局 */
+  justify-content: flex-end; /* 水平方向靠右对齐 */
+  align-items: center; /* 垂直方向居中对齐（可选） */
 }
 </style>

@@ -86,7 +86,7 @@
             <div class="p-divider"></div>
             <div class="p-stat-item">
               <div class="num">{{ myPublishCount }}</div>
-              <div class="label">发布</div>
+              <div class="label">求助</div>
             </div>
             <div class="p-divider"></div>
             <div class="p-stat-item">
@@ -150,7 +150,7 @@ export default {
       pendingTasks: 0,
       postCount: 0,
       chartInstance: null,
-      bannerImg: require("@/assets/img/index_bg2.jpg"),
+      bannerImg: require("@/assets/img/index_bg.png"),
 
       // 🟢 新增：引入用户背景图 (假设在 assets/img/ 下)
       userBgImg: require("@/assets/img/user_bg.jpg"),
@@ -556,5 +556,10 @@ export default {
   padding-left: 10px;
   border-left: 4px solid #409eff;
   margin-bottom: 15px;
+}
+.coin-symbol {
+  margin-right: 4px; /* 图标和数字之间的间距 */
+  font-size: 0.8em; /* 可选：调整图标大小 */
+  display: inline-block;
 }
 </style>

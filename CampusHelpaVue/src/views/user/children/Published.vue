@@ -2,60 +2,89 @@
   <div class="published-container">
     <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
-        <span style="font-size: 18px; font-weight: bold;">已发布求助</span>
+        <span style="font-size: 18px; font-weight: bold">已发布求助</span>
       </div>
 
       <div v-if="tasks.length > 0">
         <div v-for="(item, index) in tasks" :key="item.id" class="task-item">
-          
           <div class="item-header">
             <div class="title-section">
-              <el-tag 
-                :type="item.state == 0 ? 'danger':(item.state == 1 ? 'warning':'success')"
+              <el-tag
+                :type="
+                  item.state == 0
+                    ? 'danger'
+                    : item.state == 1
+                    ? 'warning'
+                    : 'success'
+                "
                 effect="dark"
                 size="small"
                 style="margin-right: 10px"
               >
-                {{item.state == 0 ? '待解决':(item.state == 1 ? '服务中':'已完成')}}
+                {{
+                  item.state == 0
+                    ? "待解决"
+                    : item.state == 1
+                    ? "服务中"
+                    : "已完成"
+                }}
               </el-tag>
               <span class="task-title">{{ item.taskTitle }}</span>
             </div>
 
             <div class="action-section">
-              <el-button 
+              <el-button
                 v-show="item.state == 2"
-                type="text" 
+                type="text"
                 icon="el-icon-star-off"
                 @click="remark(item)"
               >
                 订单评价
               </el-button>
 
-              <el-button 
+              <el-button
                 v-show="item.state != 0"
-                type="text" 
+                type="text"
                 icon="el-icon-user"
                 @click="receiver(item)"
               >
                 查看接受人
               </el-button>
 
-              <el-popconfirm 
-                title="确定取消这条求助吗？" 
-                @confirm="cancel(item.id)" 
+              <el-popconfirm
+                title="确定取消这条求助吗？"
+                @confirm="cancel(item.id)"
                 @onConfirm="cancel(item.id)"
                 v-show="item.state == 0"
               >
-                <el-button slot="reference" type="text" style="color: #F56C6C">取消求助</el-button>
+                <el-button slot="reference" type="text" style="color: #f56c6c"
+                  >取消求助</el-button
+                >
               </el-popconfirm>
             </div>
           </div>
 
           <div class="step-wrapper">
-            <el-steps :active="item.state + 1" finish-status="success" align-center size="small">
-              <el-step title="发布成功" :description="item.createTime | formatDate"></el-step>
-              <el-step title="服务中" :description="item.orderTime ? transform(item.orderTime):'等待接单'"></el-step>
-              <el-step title="已完成" :description="item.endTime ? transform(item.endTime):''"></el-step>
+            <el-steps
+              :active="item.state + 1"
+              finish-status="success"
+              align-center
+              size="small"
+            >
+              <el-step
+                title="发布成功"
+                :description="item.createTime | formatDate"
+              ></el-step>
+              <el-step
+                title="服务中"
+                :description="
+                  item.orderTime ? transform(item.orderTime) : '等待接单'
+                "
+              ></el-step>
+              <el-step
+                title="已完成"
+                :description="item.endTime ? transform(item.endTime) : ''"
+              ></el-step>
             </el-steps>
           </div>
 
@@ -66,14 +95,14 @@
               </template>
               <div class="detail-content">
                 <p><strong>求助内容：</strong>{{ item.taskContext }}</p>
-                </div>
+              </div>
             </el-collapse-item>
           </el-collapse>
 
           <div class="item-footer" v-show="item.state == 1">
-            <el-button 
-              type="primary" 
-              size="small" 
+            <el-button
+              type="primary"
+              size="small"
               plain
               @click="completeTask(item.id)"
               icon="el-icon-check"
@@ -93,23 +122,38 @@
       title="接受人信息"
       :visible.sync="drawer"
       direction="rtl"
-      size="30%">
+      size="30%"
+    >
       <div class="content_drawer">
         <el-card shadow="never" class="info-card" v-if="recipientInformation">
           <div class="info-row">
-            <label>姓名：</label> <span>{{recipientInformation.username}}</span>
+            <label>姓名：</label>
+            <span>{{ recipientInformation.username }}</span>
           </div>
           <div class="info-row">
-            <label>电话：</label> <span>{{recipientInformation.phone}}</span>
+            <label>电话：</label> <span>{{ recipientInformation.phone }}</span>
           </div>
           <div class="info-row">
-            <label>学校：</label> <span>{{recipientInformation.school ? recipientInformation.school.name : '-'}}</span>
+            <label>学校：</label>
+            <span>{{
+              recipientInformation.school
+                ? recipientInformation.school.name
+                : "-"
+            }}</span>
           </div>
           <div class="info-row">
-            <label>系部：</label> <span>{{recipientInformation.dept ? recipientInformation.dept.name : '-'}}</span>
+            <label>系部：</label>
+            <span>{{
+              recipientInformation.dept ? recipientInformation.dept.name : "-"
+            }}</span>
           </div>
           <div class="info-row">
-            <label>班级：</label> <span>{{recipientInformation.aclass ? recipientInformation.aclass.name : '-'}}</span>
+            <label>班级：</label>
+            <span>{{
+              recipientInformation.aclass
+                ? recipientInformation.aclass.name
+                : "-"
+            }}</span>
           </div>
         </el-card>
       </div>
@@ -121,7 +165,11 @@
           <el-rate v-model="form.star" show-text></el-rate>
         </el-form-item>
         <el-form-item label="评价内容" prop="remark">
-          <el-input type="textarea" v-model="form.remark" placeholder="请输入评价内容" />
+          <el-input
+            type="textarea"
+            v-model="form.remark"
+            placeholder="请输入评价内容"
+          />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -133,7 +181,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapMutations } from "vuex";
 import { formatDate } from "@/util/date";
 import { addRemark } from "@/api/remark/remark";
 
@@ -159,6 +207,18 @@ export default {
     this.retrieveData();
   },
   methods: {
+    ...mapMutations("user", ["setUser"]), // 映射 setUser 方法
+
+    // 更新用户信息（用于刷新积分）
+    renew() {
+      this.$get("user/" + this.user.id).then((response) => {
+        if (response.data.status) {
+          sessionStorage.setItem("user", JSON.stringify(response.data.user));
+          this.setUser(response.data.user);
+        }
+      });
+    },
+
     retrieveData() {
       this.$get("/task/published", { id: this.user.id }).then((res) => {
         this.tasks = res.data.task;
@@ -178,10 +238,22 @@ export default {
       return formatDate(date, "yyyy-MM-dd hh:mm");
     },
 
-    cancel(id) {
+cancel(id) {
       this.$del("/task/" + id).then((res) => {
-        this.retrieveData();
-        this.$msg(res.data.msg, "success"); // notifyMsg 改回 msg 保持一致
+        // 关键：这里要打印 res 看看后端到底返回了什么
+        console.log("删除请求返回：", res);
+        
+        if (res.data.status) {
+          this.$msg(res.data.msg, "success");
+          this.retrieveData(); // 刷新列表
+          this.renew();        // 刷新 Vuex 中的积分
+        } else {
+          // 如果后端返回 message.message(false, ...)，会走这里
+          this.$msg(res.data.msg || "取消失败", "error");
+        }
+      }).catch((err) => {
+        console.error("请求报错：", err);
+        this.$msg("网络异常或权限不足", "error");
       });
     },
 
@@ -222,7 +294,7 @@ export default {
     submitForm() {
       // 这里的 val 已经没用了，使用 this.currentTask
       const val = this.currentTask;
-      
+
       if (!this.form.star) {
         this.$message("请选择星级评分");
         return;
@@ -245,7 +317,7 @@ export default {
         this.$message.success("评价成功");
         this.open = false;
         // 评价完可能需要刷新列表状态，防止重复评价
-        // this.retrieveData(); 
+        // this.retrieveData();
       });
     },
 
@@ -281,7 +353,7 @@ export default {
   .box-card {
     border-radius: 8px;
     border: none;
-    
+
     /* 列表项 */
     .task-item {
       padding: 10px 0;
@@ -314,12 +386,12 @@ export default {
         padding: 0 20px;
         margin-bottom: 20px;
       }
-      
+
       /* 自定义折叠面板样式，使其不那么突兀 */
       .custom-collapse {
         border-top: none;
         border-bottom: none;
-        
+
         /deep/ .el-collapse-item__header {
           border-bottom: none;
           color: #909399;
@@ -331,7 +403,7 @@ export default {
         /deep/ .el-collapse-item__wrap {
           border-bottom: none;
         }
-        
+
         .detail-content {
           padding: 10px 20px;
           background-color: #f8f8f8;
@@ -351,15 +423,15 @@ export default {
   /* 抽屉内容 */
   .content_drawer {
     padding: 20px;
-    
+
     .info-card {
-      border: 1px solid #EBEEF5;
-      
+      border: 1px solid #ebeef5;
+
       .info-row {
         margin-bottom: 15px;
         font-size: 14px;
         display: flex;
-        
+
         label {
           color: #909399;
           width: 60px;

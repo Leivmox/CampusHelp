@@ -10,6 +10,7 @@ import com.yqn.service.TaskService;
 import com.yqn.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
@@ -74,7 +75,7 @@ public class TaskController {
     }
 
     // 发布新task
-    @PostMapping
+//    @PostMapping
 //    public Map<String, Object> saveTask(Task task) {
 //        User user = userService.getById(task.getPublishId());
 //        if (user.getBalance() >= task.getReward()) {
@@ -87,26 +88,77 @@ public class TaskController {
 //            return message.message(false, "余额不足", "", null);
 //        }
 //    }
-    public Map<String, Object> saveTask(Task task) {
-        boolean save = taskService.save(task);
-        if (save) {
-            return message.message(true, "发布任务成功", "", null);
-        } else {
-            return message.message(false, "发布任务失败", "", null);
-        }
+
+// 发布新task
+@PostMapping
+// 必须加 @RequestBody，否则后端收到的 task 字段全是 null
+public Map<String, Object> saveTask(@RequestBody Task task) {
+    log.info("接收到发布请求: {}", task);
+
+    // 1. 获取发布者信息
+    if (task.getPublishId() == null) {
+        return message.message(false, "发布失败：用户ID不能为空", "", null);
     }
 
-    // 发布人取消task
+    User user = userService.getById(task.getPublishId());
+    if (user == null) {
+        return message.message(false, "发布失败：用户不存在", "", null);
+    }
+
+    // 2. 积分校验 (10个)
+    double cost = 10.0;
+    if (user.getBalance() == null || user.getBalance() < cost) {
+        return message.message(false, "积分不足，无法发布 (当前积分: " + user.getBalance() + ")", "", null);
+    }
+
+    // 3. 执行扣分和保存 (简单处理版)
+    user.setBalance(user.getBalance() - cost);
+    userService.updateById(user); // 更新用户余额
+
+    task.setCreateTime(new java.util.Date());
+    task.setState(0); // 待领取
+    boolean save = taskService.save(task);
+
+    if (save) {
+        return message.message(true, "发布成功，扣除 10 积分", "", null);
+    } else {
+        return message.message(false, "服务器保存失败", "", null);
+    }
+}
     @DeleteMapping("/{id}")
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> delTask(@PathVariable Long id) {
         Task task = taskService.getById(id);
-        System.out.println(task);
-        if (task != null) {
-            taskService.removeById(id);
-//            money.transfer("balance=balance+", task.getReward(), task.getPublish().getStudentId());
-            return message.message(true, "取消任务成功", "", null);
+        if (task == null) {
+            return message.message(false, "取消失败：任务不存在", "", null);
         }
-        return message.message(true, "取消任务成功", "", null);
+
+        if (task.getState() != 0) {
+            return message.message(false, "取消失败：任务已被接单或已完成", "", null);
+        }
+
+        // 🟢 重点修复：尝试从字段或关联对象中获取 userId
+        Long userId = task.getPublishId();
+        if (userId == null && task.getPublish() != null) {
+            userId = task.getPublish().getId();
+        }
+
+        if (userId == null) {
+            // 这里就是你报错的地方，现在增加了上面的判断，应该能拿到了
+            return message.message(false, "取消失败：找不到发布者信息", "", null);
+        }
+
+        boolean removed = taskService.removeById(id);
+        if (removed) {
+            double refundAmount = 10.0;
+            User user = userService.getById(userId);
+            if (user != null) {
+                user.setBalance(user.getBalance() + refundAmount);
+                userService.updateById(user);
+                return message.message(true, "取消任务成功，已退回 10 积分", "", null);
+            }
+        }
+        return message.message(false, "操作失败", "", null);
     }
 
     // 接单人取消task

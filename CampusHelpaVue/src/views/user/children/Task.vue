@@ -1,15 +1,16 @@
 <template>
   <div class="content">
-    <el-alert 
-      title="发布新求助 - 请详细描述你的问题" 
-      :closable="false" 
+    <el-alert
+      title="发布新求助 - 请详细描述你的问题"
+      :closable="false"
       type="success"
-      style="margin-bottom: 10px;"> 
+      style="margin-bottom: 10px"
+    >
     </el-alert>
 
     <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
-        <span style="font-size: 18px; font-weight: bold;">发布求助</span>
+        <span style="font-size: 18px; font-weight: bold">发布求助</span>
         <el-button
           style="float: right; padding: 3px 0; font-size: 16px"
           icon="el-icon-s-promotion"
@@ -21,7 +22,6 @@
       </div>
 
       <div class="form-wrapper">
-        
         <div class="form-item">
           <el-input placeholder="请输入简短的求助标题" v-model="taskTitle">
             <template slot="prepend">求助标题</template>
@@ -39,11 +39,15 @@
           >
           </el-input>
         </div>
-
       </div>
     </el-card>
 
-    <el-drawer title="求助发布详情" :visible.sync="drawer" direction="rtl" size="40%">
+    <el-drawer
+      title="求助发布详情"
+      :visible.sync="drawer"
+      direction="rtl"
+      size="40%"
+    >
       <div class="content_drawer">
         <el-card class="drawer-card" shadow="never">
           <div slot="header" class="clearfix">
@@ -61,9 +65,11 @@
             </el-collapse-item>
           </el-collapse>
         </el-card>
-        
-        <div style="margin-top: 20px; text-align: center;">
-             <el-button type="primary" @click="drawer = false" style="width: 100%">关闭</el-button>
+
+        <div style="margin-top: 20px; text-align: center">
+          <el-button type="primary" @click="drawer = false" style="width: 100%"
+            >关闭</el-button
+          >
         </div>
       </div>
     </el-drawer>
@@ -91,36 +97,56 @@ export default {
   methods: {
     ...mapMutations("user", ["setUser"]),
 
-    submitTask() {
-      if (this.taskTitle && this.taskContext) {
-        this.$post("/task", {
-          publishId: this.user.id,
-          schoolId: this.user.school.id,
-          // reward: this.reward, // 暂时注释奖励
-          taskTitle: this.taskTitle,
-          taskContext: this.taskContext,
-        }).then((res) => {
-          if (res.data.status) {
-            this.createTime = new Date().getTime();
-            this.drawer = true;
-            this.renew();
-            this.$msg(res.data.msg, "success");
-            // 发布成功后清空表单
-            this.taskTitle = "";
-            this.taskContext = "";
-          } else {
-            this.$msg(res.data.msg, "error");
-          }
-        });
+submitTask() {
+  if (this.taskTitle && this.taskContext) {
+    // 再次确认积分（前端拦截）
+    if (this.user.balance < 10) {
+      this.$msg("积分不足，发布求助需要 10 积分", "error");
+      return;
+    }
+
+    // 发送请求
+    this.$post("/task", {
+      publishId: this.user.id,
+      schoolId: this.user.school.id,
+      taskTitle: this.taskTitle,
+      taskContext: this.taskContext,
+    }).then((res) => {
+      // 只有 res.data.status 为 true 时才算成功
+      if (res.data.status) {
+        this.createTime = new Date().getTime();
+        this.drawer = true;
+        this.renew(); // 刷新 Vuex 中的用户信息（同步积分）
+        this.$msg(res.data.msg, "success");
+        this.taskTitle = "";
+        this.taskContext = "";
       } else {
-        this.$msg("请完整填写标题和详细描述", "warning"); // 改为 warning 更合适
+        // 后端返回的积分不足提示会走这里
+        this.$msg(res.data.msg, "error");
       }
-    },
+    }).catch(err => {
+      // 只有网络不通、404、500 才会走 catch
+      console.error(err);
+      this.$msg("服务器连接异常", "error");
+    });
+  } else {
+    this.$msg("请完整填写标题和详细描述", "warning");
+  }
+},
     renew() {
-      this.$get("user/" + this.user.id).then((response) => {
-        sessionStorage.setItem("user", JSON.stringify(response.data.user));
-        this.setUser(JSON.parse(sessionStorage.getItem("user")));
-      });
+      this.$get("user/" + this.user.id)
+        .then((response) => {
+          if (response.data.status) {
+            const newUserInfo = response.data.user;
+            // 更新 sessionStorage 防止刷新页面丢失
+            sessionStorage.setItem("user", JSON.stringify(newUserInfo));
+            // 更新 Vuex 状态
+            this.setUser(newUserInfo);
+          }
+        })
+        .catch((err) => {
+          console.error("更新用户信息失败", err);
+        });
     },
   },
   created() {
@@ -146,7 +172,7 @@ export default {
   .box-card {
     border-radius: 8px;
     border: none;
-    
+
     .form-wrapper {
       padding: 10px 0;
     }
@@ -160,8 +186,8 @@ export default {
     .label-text {
       font-size: 14px;
       color: #606266;
-      background-color: #F5F7FA;
-      border: 1px solid #DCDFE6;
+      background-color: #f5f7fa;
+      border: 1px solid #dcdfe6;
       border-bottom: none;
       padding: 0 20px;
       line-height: 38px;
@@ -181,15 +207,15 @@ export default {
   /* 抽屉内部样式 */
   .content_drawer {
     padding: 0 20px;
-    
+
     .drawer-card {
-        border-radius: 8px;
-        border: 1px solid #EBEEF5;
+      border-radius: 8px;
+      border: 1px solid #ebeef5;
     }
 
     .preview-text {
-        white-space: pre-wrap; /* 保留换行符 */
-        color: #333;
+      white-space: pre-wrap; /* 保留换行符 */
+      color: #333;
     }
   }
 }
