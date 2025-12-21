@@ -27,7 +27,6 @@
                     icon="el-icon-info"
                     icon-color="red"
                     @confirm="handleDelete(item.id)"
-                    @onConfirm="handleDelete(item.id)"
                   >
                     <el-button 
                       slot="reference" 
@@ -43,7 +42,12 @@
               
               <div class="post-source-bar">
                 <span class="label">来源于帖子：</span>
-                <span class="post-title" v-if="item.post" :title="item.post.title">
+                <span 
+                  class="post-title" 
+                  v-if="item.post" 
+                  :title="item.post.title"
+                  @click="toPostDetail(item.post.id)"
+                >
                   {{ item.post.title }}
                 </span>
                 <span class="post-deleted" v-else>
@@ -90,6 +94,16 @@ export default {
       });
     },
 
+    // 🟢 修改点 2: 添加跳转方法
+    toPostDetail(postId) {
+      if (!postId) return;
+      // 使用 router/index.js 中定义的 name: 'PostDetail' 进行跳转
+      this.$router.push({
+        name: "PostDetail",
+        params: { id: postId }
+      });
+    },
+
     // 删除评论
     handleDelete(commentId) {
       this.$del("/comment/" + commentId).then(res => {
@@ -115,40 +129,35 @@ export default {
 </script>
 
 <style scoped lang="less">
-/* 1. 容器改为透明，只负责上下间距 */
 .my-comment-container {
   background: transparent;
-  padding: 10px 0; /* 上下10px，左右0 */
+  padding: 10px 0;
   
-  /* 2. 主卡片样式：圆角、去边框 */
   .box-card {
     border-radius: 8px;
     border: none;
   }
 
-  /* 时间轴内部的小卡片 */
   .comment-card {
-    border-radius: 6px; /* 内部小卡片也加一点圆角 */
+    border-radius: 6px;
   }
   
-  // 顶部行布局
   .top-row {
     display: flex;
-    justify-content: space-between; // 两端对齐
-    align-items: flex-start; // 顶部对齐 (防止文字多时按钮跑偏)
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 10px;
 
     .comment-content {
-      flex: 1; // 占据剩余空间
+      flex: 1;
       font-size: 15px;
       color: #303133;
       line-height: 1.6;
       word-break: break-all;
-      margin-right: 15px; // 给右边按钮留点距离
+      margin-right: 15px;
     }
 
     .action-box {
-      // 按钮样式
       .delete-btn {
         color: #F56C6C; 
         padding: 0; 
@@ -161,7 +170,6 @@ export default {
     }
   }
 
-  // 底部来源条样式
   .post-source-bar {
     background: #f5f7fa;
     padding: 8px 12px;
@@ -173,11 +181,19 @@ export default {
       color: #909399;
     }
     
+    // 🟢 修改点 3: 修改样式，让它看起来像链接
     .post-title {
       color: #409EFF;
       font-weight: bold;
       margin-left: 5px;
-      cursor: default;
+      cursor: pointer; // 变成小手
+      transition: all 0.2s; // 添加过渡效果
+
+      // 鼠标悬浮时添加下划线，颜色加深
+      &:hover {
+        text-decoration: underline;
+        color: #2b85e4;
+      }
     }
 
     .post-deleted {

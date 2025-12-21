@@ -15,7 +15,7 @@
           style="float: right; padding: 3px 0; font-size: 16px"
           icon="el-icon-edit-outline"
           type="text"
-          @click="dialogVisible = true"
+          @click="openDialog"
         >
           发布论坛
         </el-button>
@@ -27,7 +27,7 @@
             <div class="user-info-wrapper">
               <el-avatar 
                 :size="30" 
-                :src="getAvatarUrl(item.publisher)"
+                :src="getResUrl(item.publisher ? item.publisher.avatar : '')"
                 style="background-color: #409eff; font-size: 14px; margin-right: 8px;"
               >
                 {{ getAvatarText(item.publisher) }}
@@ -37,78 +37,61 @@
                 item.publisher ? item.publisher.username : "未知用户"
               }}</span>
             </div>
-
             <span class="post-time">{{ item.createTime | formatDate }}</span>
           </div>
 
-          <div class="post-content">
-            <h3 class="title">{{ item.title }}</h3>
-            <p class="text">{{ item.content }}</p>
+          <div class="post-content-wrapper" @click="goToDetail(item.id)" style="cursor: pointer;">
+            <div class="post-cover" v-if="item.imgList && item.imgList.length > 0">
+              <el-image 
+                :src="getResUrl(item.imgList[0])" 
+                fit="cover"
+                style="width: 150px; height: 100%; border-radius: 4px;">
+              </el-image>
+            </div>
+
+            <div class="post-text">
+              <h3 class="title hover-link">{{ item.title }}</h3>
+              <p class="text">{{ item.content }}</p>
+            </div>
           </div>
 
           <div class="post-actions">
-            <el-button
-              size="mini"
-              icon="el-icon-thumb"
-              @click="handleLike(item)"
-            >
+            <el-button size="mini" icon="el-icon-thumb" @click.stop="handleLike(item)">
               点赞 ({{ item.likeCount || 0 }})
             </el-button>
-            <el-button
-              size="mini"
-              icon="el-icon-chat-dot-round"
-              @click="toggleComment(item)"
-            >
+            <el-button size="mini" icon="el-icon-chat-dot-round" @click.stop="goToDetail(item.id)">
               评论 ({{ item.comments ? item.comments.length : 0 }})
             </el-button>
           </div>
-
-          <div class="comment-area">
-            <div
-              v-for="(c, cIndex) in item.comments"
-              :key="cIndex"
-              class="comment-row"
-            >
-              <span class="c-user"
-                >{{ c.commenter ? c.commenter.username : "匿名" }}:
-              </span>
-              <span class="c-content">{{ c.content }}</span>
-            </div>
-
-            <div v-if="item.showInput" class="input-wrapper">
-              <el-input
-                size="small"
-                placeholder="写下你的评论..."
-                v-model="item.tempComment"
-                @keyup.enter.native="submitComment(item)"
-              ></el-input>
-              <el-button
-                type="primary"
-                size="small"
-                @click="submitComment(item)"
-                >发送</el-button
-              >
-            </div>
-          </div>
-
+          
           <el-divider></el-divider>
         </div>
       </div>
       <el-empty v-else description="暂无动态，快来发布第一条吧！"></el-empty>
     </el-card>
 
-    <el-dialog title="发布新论坛" :visible.sync="dialogVisible" width="50%">
+    <el-dialog title="发布新论坛" :visible.sync="dialogVisible" width="50%" @close="resetForm">
       <el-form label-width="80px">
         <el-form-item label="标题">
           <el-input v-model="newPost.title" placeholder="请输入标题"></el-input>
         </el-form-item>
         <el-form-item label="内容">
-          <el-input
-            type="textarea"
-            :rows="6"
-            v-model="newPost.content"
-            placeholder="分享新鲜事..."
-          ></el-input>
+          <el-input type="textarea" :rows="4" v-model="newPost.content" placeholder="分享新鲜事..."></el-input>
+        </el-form-item>
+        <el-form-item label="图片">
+          <el-upload
+            action="http://localhost:8080/common/upload"
+            :data="{ type: 'post' }"
+            name="file"
+            list-type="picture-card"
+            :limit="9"
+            :file-list="fileList"
+            :on-success="handleUploadSuccess"
+            :on-remove="handleRemove"
+            multiple
+          >
+            <i class="el-icon-plus"></i>
+          </el-upload>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -132,70 +115,80 @@ export default {
       newPost: {
         title: "",
         content: "",
+        imgList: [] 
       },
+      fileList: [], 
+      baseUrl: "http://localhost:8080"
     };
   },
   computed: {
-    ...mapState("user", ["user"]), // 获取当前登录用户
+    ...mapState("user", ["user"]),
   },
   created() {
     this.getPosts();
   },
   methods: {
-    // 🟢 修改点 2：添加处理头像URL的方法
-    getAvatarUrl(publisher) {
-      if (!publisher || !publisher.avatar) return ""; // 没图，返回空，显示文字
-      if (publisher.avatar.startsWith("http")) return publisher.avatar;
-      return `http://localhost:8080${publisher.avatar}`;
+    getResUrl(url) {
+      if (!url) return "";
+      if (url.startsWith("http")) return url;
+      return this.baseUrl + url;
     },
-
-    // 🟢 修改点 3：添加处理文字头像的方法
     getAvatarText(publisher) {
       if (!publisher || !publisher.username) return "U";
       return publisher.username.charAt(0).toUpperCase();
     },
-
-    // 获取列表
     getPosts() {
-      // 假设你的后端接口支持 ?schoolId=xxx 传参
       this.$get("/post", { schoolId: this.user.school.id }).then((res) => {
         if (res.data.status) {
-          // 为每个帖子增加前端控制字段
-          let list = res.data.posts;
-          list.forEach((p) => {
-            this.$set(p, "showInput", false); // 控制评论框显隐
-            this.$set(p, "tempComment", ""); // 绑定输入内容
-          });
-          this.postList = list;
+          this.postList = res.data.posts;
         }
       });
     },
-
-    // 提交发布
+    openDialog() {
+      this.dialogVisible = true;
+    },
+    // 上传相关
+    handleUploadSuccess(res, file, fileList) {
+      if (res.url) {
+        this.newPost.imgList.push(res.url);
+      } else {
+        this.$msg("图片上传返回值异常", "error");
+      }
+    },
+    handleRemove(file, fileList) {
+      if (file.response && file.response.url) {
+        const urlToRemove = file.response.url;
+        this.newPost.imgList = this.newPost.imgList.filter(url => url !== urlToRemove);
+      }
+    },
+    resetForm() {
+      this.newPost.title = "";
+      this.newPost.content = "";
+      this.newPost.imgList = [];
+      this.fileList = [];
+    },
     submitPost() {
       if (!this.newPost.title || !this.newPost.content) {
         this.$msg("请填写完整信息", "error");
         return;
       }
-      // 使用表单对象提交，与 TaskController 风格一致
       this.$post("/post", {
         userId: this.user.id,
         schoolId: this.user.school.id,
         title: this.newPost.title,
         content: this.newPost.content,
+        imgList: this.newPost.imgList
       }).then((res) => {
         if (res.data.status) {
           this.$msg(res.data.msg, "success");
           this.dialogVisible = false;
-          this.newPost.title = "";
-          this.newPost.content = "";
-          this.getPosts(); // 刷新列表
+          this.resetForm();
+          this.getPosts();
         } else {
           this.$msg(res.data.msg, "error");
         }
       });
     },
-
     // 点赞
     handleLike(item) {
       this.$put("/post/like/" + item.id).then((res) => {
@@ -205,33 +198,10 @@ export default {
         }
       });
     },
-
-    // 显示评论框
-    toggleComment(item) {
-      item.showInput = !item.showInput;
-    },
-
-    // 提交评论
-    submitComment(item) {
-      if (!item.tempComment) {
-        this.$msg("评论内容不能为空", "warning");
-        return;
-      }
-      this.$post("/post/comment", {
-        postId: item.id,
-        userId: this.user.id,
-        content: item.tempComment,
-      }).then((res) => {
-        if (res.data.status) {
-          this.$msg("评论成功", "success");
-          item.tempComment = "";
-          item.showInput = false;
-          this.getPosts(); // 刷新显示评论
-        } else {
-          this.$msg("评论失败", "error");
-        }
-      });
-    },
+    // 🟢 跳转详情页
+    goToDetail(postId) {
+      this.$router.push({ name: 'PostDetail', params: { id: postId } });
+    }
   },
   filters: {
     formatDate(time) {
@@ -243,92 +213,76 @@ export default {
 </script>
 
 <style scoped lang="less">
-/* 关键修改：容器透明，只留上下间距 */
+/* 样式保留主要的，移除评论区样式 */
 .content {
   background: transparent;
-  margin: 0; /* 左右0，因为Home已经给了20px */
-  padding: 10px 0; /* 上下10px */
+  margin: 0;
+  padding: 10px 0;
 
-  /* 卡片美化：圆角、白底 */
   .box-card {
     border-radius: 8px;
-    border: none; /* 去掉边框，看起来更干净 */
+    border: none;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
   }
 
   .post-item {
     margin-bottom: 20px;
 
-    /* 🟢 修改点 4：头部样式调整，支持 flex 布局对齐头像 */
     .post-header {
       display: flex;
       justify-content: space-between;
-      align-items: center; /* 垂直居中 */
+      align-items: center;
       margin-bottom: 10px;
-
-      .user-info-wrapper {
-        display: flex;
-        align-items: center;
-      }
-
-      .user-name {
-        font-weight: bold;
-        color: #409eff;
-        font-size: 15px;
-      }
-      .post-time {
-        color: #909399;
-        font-size: 13px;
-      }
+      .user-info-wrapper { display: flex; align-items: center; }
+      .user-name { font-weight: bold; color: #409eff; font-size: 15px; }
+      .post-time { color: #909399; font-size: 13px; }
     }
 
-    .post-content {
+    .post-content-wrapper {
+      display: flex;
+      padding-left: 40px;
       margin-bottom: 15px;
-      /* 这里稍微加一点左内边距，让文字和上面的名字对齐（可选） */
-      padding-left: 40px; 
+      transition: background-color 0.2s; /* 点击反馈 */
       
-      .title {
-        margin: 0 0 10px 0;
-        font-size: 16px;
-        color: #303133;
+      &:hover .hover-link {
+        color: #409eff; /* 鼠标悬停标题变色 */
       }
-      .text {
-        font-size: 14px;
-        color: #606266;
-        line-height: 1.6;
+
+      .post-cover {
+        flex-shrink: 0;
+        width: 150px;
+        height: 100px;
+        margin-right: 15px;
+        overflow: hidden;
+      }
+
+      .post-text {
+        flex-grow: 1;
+        min-width: 0;
+        .title {
+          margin: 0 0 8px 0;
+          font-size: 16px;
+          color: #303133;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .text {
+          margin: 0;
+          font-size: 14px;
+          color: #606266;
+          line-height: 1.6;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 3;
+          overflow: hidden;
+        }
       }
     }
 
-    /* 操作按钮也缩进一下，看起来更有层次感 */
     .post-actions {
       margin-bottom: 15px;
       padding-left: 40px;
-    }
-    
-    /* 评论区也缩进 */
-    .comment-area {
-      background-color: #f9fafc;
-      padding: 10px;
-      border-radius: 4px;
-      margin-left: 40px; /* 缩进 */
-
-      .comment-row {
-        font-size: 13px;
-        line-height: 20px;
-        margin-bottom: 5px;
-        .c-user {
-          color: #409eff;
-        }
-        .c-content {
-          color: #606266;
-        }
-      }
-
-      .input-wrapper {
-        display: flex;
-        margin-top: 10px;
-        gap: 10px;
-      }
     }
   }
 }
