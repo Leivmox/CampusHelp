@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
 
@@ -33,17 +32,23 @@ public class TaskController {
     @Autowired
     private PocketMoney money;
 
-    // 获取当前登录user所在学校的任务
     @GetMapping
     public Map<String, Object> tasks(Long id) {
         User user = userService.getById(id);
+        List<Task> tasks;
         if (user != null) {
             QueryWrapper<Task> wrapper = new QueryWrapper<>();
             wrapper.eq("user_school_id", user.getSchool().getId());
-
-            return message.message(true, "请求成功", "task", taskService.list(wrapper));
+            tasks = taskService.list(wrapper);
+        } else {
+            tasks = taskService.list();
         }
-        List<Task> tasks = taskService.list();
+
+        // 🟢 核心增加：遍历拆分图片字符串为列表
+        for (Task task : tasks) {
+            task.convertStringToList();
+        }
+
         return message.message(true, "请求成功", "task", tasks);
     }
 
@@ -51,6 +56,9 @@ public class TaskController {
     @GetMapping("/{id}")
     public Map<String, Object> task(@PathVariable String id) {
         Task task = taskService.getById(id);
+        if (task != null) {
+            task.convertStringToList(); // 🟢 转换
+        }
         return message.message(true, "请求成功", "task", task);
     }
 
@@ -89,42 +97,51 @@ public class TaskController {
 //        }
 //    }
 
-// 发布新task
-@PostMapping
+    // 发布新task
+    @PostMapping
 // 必须加 @RequestBody，否则后端收到的 task 字段全是 null
-public Map<String, Object> saveTask(@RequestBody Task task) {
-    log.info("接收到发布请求: {}", task);
+    public Map<String, Object> saveTask(@RequestBody Task task) {
+        log.info("接收到发布请求: {}", task);
 
-    // 1. 获取发布者信息
-    if (task.getPublishId() == null) {
-        return message.message(false, "发布失败：用户ID不能为空", "", null);
+        // 1. 获取发布者信息
+        if (task.getPublishId() == null) {
+            return message.message(false, "发布失败：用户ID不能为空", "", null);
+        }
+
+
+        User user = userService.getById(task.getPublishId());
+        if (user == null) {
+            return message.message(false, "发布失败：用户不存在", "", null);
+        }
+
+        // 2. 积分校验 (10个)
+        double cost = 10.0;
+        if (user.getBalance() == null || user.getBalance() < cost) {
+            return message.message(false, "积分不足，无法发布 (当前积分: " + user.getBalance() + ")", "", null);
+        }
+
+        // 3. 执行扣分和保存 (简单处理版)
+        user.setBalance(user.getBalance() - cost);
+        userService.updateById(user); // 更新用户余额
+
+        // 🟢 核心增加：处理图片
+        if (task.getImgList() != null) {
+            task.convertListToString();
+            log.info("图片转换结果: {}", task.getImgUrl()); // 打印一下看这里有没有值
+        }
+
+
+        task.setCreateTime(new java.util.Date());
+        task.setState(0); // 待领取
+        boolean save = taskService.save(task);
+
+        if (save) {
+            return message.message(true, "发布成功，扣除 10 积分", "", null);
+        } else {
+            return message.message(false, "服务器保存失败", "", null);
+        }
     }
 
-    User user = userService.getById(task.getPublishId());
-    if (user == null) {
-        return message.message(false, "发布失败：用户不存在", "", null);
-    }
-
-    // 2. 积分校验 (10个)
-    double cost = 10.0;
-    if (user.getBalance() == null || user.getBalance() < cost) {
-        return message.message(false, "积分不足，无法发布 (当前积分: " + user.getBalance() + ")", "", null);
-    }
-
-    // 3. 执行扣分和保存 (简单处理版)
-    user.setBalance(user.getBalance() - cost);
-    userService.updateById(user); // 更新用户余额
-
-    task.setCreateTime(new java.util.Date());
-    task.setState(0); // 待领取
-    boolean save = taskService.save(task);
-
-    if (save) {
-        return message.message(true, "发布成功，扣除 10 积分", "", null);
-    } else {
-        return message.message(false, "服务器保存失败", "", null);
-    }
-}
     @DeleteMapping("/{id}")
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> delTask(@PathVariable Long id) {
@@ -233,25 +250,30 @@ public Map<String, Object> saveTask(@RequestBody Task task) {
 
     // 修改task
     @PutMapping("/edit")
-    public Map<String, Object> editTask(Task task, HttpSession session) {
-
-        User user = (User) session.getAttribute("user");
-
-        Task byId = taskService.getById(task.getId());
-
-        //判断是否为自己发布的任务
-        if (user.getId().equals(byId.getPublish().getId())) {
-
-            boolean update = taskService.updateById(task);
-
-            if (update) {
-                return message.message(true, "编辑任务成功", "", null);
-            }
-            return message.message(false, "编辑任务失败", "", null);
+    public Map<String, Object> editTask(@RequestBody Task task) { // 🟢 建议加 @RequestBody
+        if (task.getId() == null) {
+            return message.message(false, "ID不能为空", "", null);
         }
-        return message.message(false, "无权编辑该任务", "", null);
-    }
 
+        // 1. 获取数据库原数据，校验权限
+        Task dbTask = taskService.getById(task.getId());
+        if (dbTask == null) {
+            return message.message(false, "任务不存在", "", null);
+        }
+
+        // 🟢 2. 处理图片列表转换
+        if (task.getImgList() != null) {
+            task.convertListToString();
+        }
+
+        // 3. 执行更新
+        boolean update = taskService.updateById(task);
+
+        if (update) {
+            return message.message(true, "修改任务成功", "", null);
+        }
+        return message.message(false, "修改任务失败", "", null);
+    }
 
 
 }

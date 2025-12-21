@@ -33,30 +33,37 @@
           <i class="el-icon-s-home"></i>
           <span style="font-size: 20px">首页</span>
         </el-menu-item>
+
         <el-menu-item index="/home/forum">
           <i class="el-icon-s-comment"></i>
           <span style="font-size: 20px">校园圈子</span>
         </el-menu-item>
+
         <el-menu-item index="/home/help">
           <i class="el-icon-s-cooperation"></i>
           <span style="font-size: 20px">求助中心</span>
         </el-menu-item>
+
         <el-menu-item index="/home/ai">
           <i class="el-icon-magic-stick"></i>
           <span style="font-size: 20px">智能助手</span>
         </el-menu-item>
+
         <el-menu-item index="/home/remark">
           <i class="el-icon-s-custom"></i>
           <span style="font-size: 20px">评价中心</span>
         </el-menu-item>
+
         <el-menu-item index="/home/noticeu">
           <i class="el-icon-paperclip"></i>
           <span style="font-size: 20px">查看公告</span>
         </el-menu-item>
+
         <el-menu-item index="/home/MyProfile">
           <i class="el-icon-user"></i>
           <span style="font-size: 20px">个人信息</span>
         </el-menu-item>
+
         <el-menu-item index="logout" @click="exit">
           <i class="el-icon-switch-button"></i>
           <span style="font-size: 20px">退出登录</span>
@@ -78,6 +85,7 @@
             ? windowWidth - 64 + 'px'
             : windowWidth - 200 + 'px',
           left: isCollapse ? '64px' : '200px',
+          background: themeColor.bg,
         }"
       >
         <div style="display: flex; align-items: center">
@@ -87,6 +95,7 @@
               :style="{ color: themeColor.color }"
             ></i>
           </div>
+
           <el-breadcrumb
             separator-class="el-icon-arrow-right"
             style="margin-left: 20px"
@@ -102,7 +111,7 @@
           </el-breadcrumb>
         </div>
 
-        <div class="user-area">
+        <div class="user-area" style="display: flex; align-items: center">
           <div class="points-wrapper" @click="getPointsByAd">
             <el-tooltip content="点击看广告获取10积分" placement="bottom">
               <div class="points-content">
@@ -113,10 +122,24 @@
           </div>
 
           <el-dropdown trigger="click" @command="handleCommand">
-            <div class="user-info-trigger">
-              <span :style="{ color: themeColor.color }" class="username-text">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                height: 60px;
+              "
+            >
+              <span
+                :style="{
+                  color: themeColor.color,
+                  marginRight: '8px',
+                  fontSize: '14px',
+                }"
+              >
                 {{ user.username }}
               </span>
+
               <el-avatar
                 style="background: #65c4a6; user-select: none"
                 :size="35"
@@ -124,11 +147,13 @@
               >
                 {{ firstName }}
               </el-avatar>
+
               <i
                 class="el-icon-arrow-down el-icon--right"
                 :style="{ color: themeColor.color }"
               ></i>
             </div>
+
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="exit">退出登录</el-dropdown-item>
               <el-dropdown-item command="password">修改密码</el-dropdown-item>
@@ -168,7 +193,11 @@
           <el-cascader
             v-model="value"
             :options="school.depts"
-            :props="{ children: 'classes', label: 'name', value: 'id' }"
+            :props="{
+              children: 'classes',
+              label: 'name',
+              value: 'id',
+            }"
           ></el-cascader>
         </el-form-item>
         <el-form-item label="姓名" prop="username">
@@ -177,12 +206,14 @@
         <el-form-item label="手机号" prop="phone">
           <el-input v-model.number="ruleForm.phone"></el-input>
         </el-form-item>
+
         <el-form-item label="性别">
           <el-radio-group v-model="sex">
             <el-radio label="0">男</el-radio>
             <el-radio label="1">女</el-radio>
           </el-radio-group>
         </el-form-item>
+
         <el-form-item>
           <el-button type="primary" @click="submitForm('ruleForm')"
             >提交</el-button
@@ -246,11 +277,281 @@ import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "Home",
+  methods: {
+    ...mapMutations("user", ["setUser"]),
+    changeColor(val) {
+      sessionStorage.setItem("themeColor", JSON.stringify(val));
+      this.themeColor = { bg: val.value, color: val.color };
+    },
+    // 面包屑
+    getBreadcrumb() {
+      let matched = this.$route.matched;
+      if (matched[0].name != "home") {
+        matched = [{ path: "/home/", meta: { title: "首页" } }].concat(matched);
+      }
+      this.breadList = matched;
+    },
+    // 关闭抽屉触发的事件
+    handleClose(done) {
+      this.$msg("请完善资料", "error");
+    },
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (this.value) {
+            this.$put("/user", {
+              id: this.user.id,
+              deptId: this.value[0],
+              classId: this.value[1],
+              username: this.ruleForm.username,
+              phone: this.ruleForm.phone,
+              sex: this.sex,
+            }).then((res) => {
+              this.drawer = false;
+              this.$notifyMsg("成功", res.data.msg, "success");
+              this.newList(this.user.id);
+            });
+          } else {
+            this.$notifyMsg("错误", "请选择班级", "error");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    // 处理下拉菜单点击
+    handleCommand(command) {
+      if (command === "exit") {
+        this.exit();
+      } else if (command === "password") {
+        this.updPassword(this.user.id);
+      } else if (command === "info") {
+        this.personalInformation();
+      }
+    },
+    // 修改密码
+    updPassword(id) {
+      this.$prompt("请输入密码", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        inputType: "password",
+        closeOnClickModal: false,
+        inputPattern: /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,16}$/,
+        inputErrorMessage: "格式不对,密码只能输入6-16位英文和数字",
+      })
+        .then((res) => {
+          this.$put("/user", { id: id, password: res.value }).then((res) => {
+            this.$notifyMsg("成功", res.data.msg, "success");
+          });
+        })
+        .catch(() => {});
+    },
+    personalInformation() {
+      this.dialogVisible = true;
+      // 🟢 关键：把当前登录用户的 ID 存入表单对象中
+      this.ruleForm.id = this.user.id;
+      this.ruleForm.username = this.user.username;
+      this.ruleForm.phone = this.user.phone;
+      this.ruleForm.email = this.user.email;
+      this.ruleForm.signature = this.user.signature;
+    },
+    submitChanges() {
+      this.$refs["ruleForm"].validate((valid) => {
+        if (valid) {
+          // 1. 确保能拿到 ID
+          const userId =
+            this.user.id ||
+            (localStorage.getItem("user")
+              ? JSON.parse(localStorage.getItem("user")).id
+              : null);
+
+          if (!userId) {
+            this.$message.error("用户信息失效，请重新登录");
+            return;
+          }
+
+          // 2. 构造普通的 JS 对象（$put 会自动把它转为后端需要的 JSON 字符串）
+          const updateData = {
+            id: userId,
+            username: this.ruleForm.username,
+            phone: this.ruleForm.phone,
+            email: this.ruleForm.email,
+            signature: this.ruleForm.signature,
+          };
+
+          console.log("正在提交 JSON 数据:", updateData);
+
+          // 3. 注意：这里直接传 updateData 对象
+          this.$put("/user", updateData)
+            .then((res) => {
+              // 这里的 res 判断取决于你 myPlugin.js 或 axios 的封装
+              // 通常是 res.data，如果你的插件剥离了 data 层，就直接用 res
+              const result = res.data || res;
+
+              if (result.status === true || result.code === 200) {
+                this.$notifyMsg("成功", "资料更新成功", "success", 1000);
+                this.dialogVisible = false;
+                this.newList(userId); // 刷新 Vuex 状态
+              } else {
+                this.$message.error(result.msg || "更新失败");
+              }
+            })
+            .catch((err) => {
+              console.error("请求失败详情:", err);
+              this.$message.error("网络请求失败，请检查网络或后端");
+            });
+        }
+      });
+    },
+    // 🟢 新增：模拟看广告获取积分
+    getPointsByAd() {
+      this.$confirm(
+        "观看一段 60 秒的广告即可获得 10 积分，是否开始？",
+        "赚取积分",
+        {
+          confirmButtonText: "立即开始",
+          cancelButtonText: "取消",
+          type: "info",
+        }
+      )
+        .then(() => {
+          // 模拟广告播放的 loading
+          const loading = this.$loading({
+            lock: true,
+            text: "广告播放中，请勿关闭...",
+            spinner: "el-icon-video-camera",
+            background: "rgba(0, 0, 0, 0.7)",
+          });
+
+          // 模拟 2秒后增加积分（实际项目中这里应该调用后端接口）
+          setTimeout(() => {
+            const newBalance = (this.user.balance || 0) + 10;
+
+            // 发送请求给后端更新数据库
+            this.$put("/user", {
+              id: this.user.id,
+              balance: newBalance,
+            })
+              .then((res) => {
+                loading.close();
+                this.$message.success("广告播放完毕，10积分已到账！");
+                // 刷新本地用户信息
+                this.newList(this.user.id);
+              })
+              .catch(() => {
+                loading.close();
+                this.$message.error("积分同步失败");
+              });
+          }, 2000);
+        })
+        .catch(() => {});
+    },
+    // 根据当前用户查询id
+    newList(id) {
+      this.$get("/user/" + id).then((rs) => {
+        // 同步更新 session 和 local，确保下次刷新不出错
+        sessionStorage.setItem("user", JSON.stringify(rs.data.user));
+        localStorage.setItem("user", JSON.stringify(rs.data.user));
+
+        this.setUser(rs.data.user);
+
+        // 修改完名字, 清空当前firstName; 避免出现叠加
+        this.firstName = "";
+        this.textAvatar(rs.data.user.username);
+      });
+    },
+    exit() {
+      // ============================================================
+      // 🟢 新增逻辑：退出时清除当前用户的 AI 聊天记录
+      // 注意：key 必须和 AiHelp.vue 里的 cacheKey 生成规则保持一致
+      // ============================================================
+      if (this.user && this.user.id) {
+        localStorage.removeItem("ai_chat_history_" + this.user.id);
+      } else {
+        //以此防万一：如果 this.user 为空，尝试从缓存里读一下 ID 再删
+        try {
+          const cachedUser = JSON.parse(
+            sessionStorage.getItem("user") || localStorage.getItem("user")
+          );
+          if (cachedUser && cachedUser.id) {
+            localStorage.removeItem("ai_chat_history_" + cachedUser.id);
+          }
+        } catch (e) {}
+      }
+
+      // ============================================================
+      // 原有逻辑
+      // ============================================================
+      sessionStorage.removeItem("user");
+      localStorage.removeItem("user"); // 登出也顺便清一下local
+      this.$router.push("/");
+    },
+    // 文字头像
+    textAvatar(username) {
+      if (!username) return;
+      let arr = username.split(" ");
+      this.firstName = ""; // 确保先清空
+      for (var i in arr) {
+        this.firstName += arr[i].substr(0, 1);
+      }
+      this.firstName = this.firstName.toLocaleUpperCase();
+      console.log("firstName->" + this.firstName);
+    },
+  },
+  computed: {
+    ...mapState("user", ["user"]),
+
+    // ==========================================
+    // 🟢 新增：处理头像的完整路径
+    // ==========================================
+    fullAvatarUrl() {
+      if (!this.user || !this.user.avatar) return "";
+      // 如果已经是 http 开头，直接用
+      if (this.user.avatar.startsWith("http")) return this.user.avatar;
+      // 否则拼接后端地址 (假设你的后端端口是 8080)
+      return `http://localhost:8080${this.user.avatar}`;
+    },
+
+    theme() {
+      return this.$store.state.theme.theme;
+    },
+    activeMenu() {
+      const path = this.$route.path;
+      if (path.startsWith("/home/forum")) {
+        return "/home/forum";
+      }
+      if (path.startsWith("/home/help")) {
+        return "/home/help";
+      }
+      if (path.startsWith("/home/remark")) {
+        return "/home/remark";
+      }
+      if (path === "/home" || path === "/home/") {
+        return "/home/";
+      }
+      return path;
+    },
+  },
   data() {
+    var validateUsername = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请输入姓名"));
+      } else {
+        callback();
+      }
+    };
+    var validatePhone = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请输入手机号"));
+      } else {
+        callback();
+      }
+    };
+
     return {
       firstName: "",
       ruleForm: {
-        id: null,
+        id: null, // 🟢 必须添加这个，用来存储当前用户的ID
         username: "",
         phone: "",
         email: "",
@@ -259,6 +560,7 @@ export default {
       rules: {
         username: [{ required: true, message: "请输入姓名", trigger: "blur" }],
         phone: [{ required: true, message: "请输入手机号", trigger: "blur" }],
+        // 🟢 新增：邮箱简单校验
         email: [
           {
             type: "email",
@@ -275,189 +577,70 @@ export default {
       drawer: false,
       breadList: [],
       windowWidth: document.documentElement.clientWidth,
+      // isCollapse: false,
       isCollapse: false,
       school: [],
       value: "",
       dialogVisible: false,
     };
   },
-  methods: {
-    ...mapMutations("user", ["setUser"]),
-    getBreadcrumb() {
-      let matched = this.$route.matched;
-      if (matched.length && matched[0].name != "home") {
-        matched = [{ path: "/home/", meta: { title: "首页" } }].concat(matched);
-      }
-      this.breadList = matched;
-    },
-    handleClose(done) {
-      this.$msg("请完善资料", "error");
-    },
-    getPointsByAd() {
-      this.$confirm(
-        "观看一段模拟广告即可获得 10 积分，是否开始？",
-        "赚取积分",
-        {
-          confirmButtonText: "开始",
-          cancelButtonText: "取消",
-          type: "info",
-        }
-      )
-        .then(() => {
-          const loading = this.$loading({
-            lock: true,
-            text: "广告正在加载并播放...",
-            spinner: "el-icon-video-camera",
-            background: "rgba(0, 0, 0, 0.7)",
-          });
-          setTimeout(() => {
-            const newBalance = (this.user.balance || 0) + 10;
-            this.$put("/user", { id: this.user.id, balance: newBalance })
-              .then((res) => {
-                loading.close();
-                this.$message.success("恭喜获得10积分！");
-                this.newList(this.user.id);
-              })
-              .catch(() => {
-                loading.close();
-                this.$message.error("积分领取失败");
-              });
-          }, 2000);
-        })
-        .catch(() => {});
-    },
-    submitForm(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid && this.value) {
-          this.$put("/user", {
-            id: this.user.id,
-            deptId: this.value[0],
-            classId: this.value[1],
-            username: this.ruleForm.username,
-            phone: this.ruleForm.phone,
-            sex: this.sex,
-          }).then((res) => {
-            this.drawer = false;
-            this.$notifyMsg("成功", res.data.msg, "success");
-            this.newList(this.user.id);
-          });
-        } else if (!this.value) {
-          this.$notifyMsg("错误", "请选择班级", "error");
-        }
-      });
-    },
-    handleCommand(command) {
-      if (command === "exit") this.exit();
-      else if (command === "password") this.updPassword(this.user.id);
-      else if (command === "info") this.personalInformation();
-    },
-    updPassword(id) {
-      this.$prompt("请输入密码", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        inputType: "password",
-        inputPattern: /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,16}$/,
-        inputErrorMessage: "密码需6-16位字母和数字",
-      })
-        .then((res) => {
-          this.$put("/user", { id: id, password: res.value }).then((res) => {
-            this.$notifyMsg("成功", res.data.msg, "success");
-          });
-        })
-        .catch(() => {});
-    },
-    personalInformation() {
-      this.dialogVisible = true;
-      this.ruleForm.id = this.user.id;
-      this.ruleForm.username = this.user.username;
-      this.ruleForm.phone = this.user.phone;
-      this.ruleForm.email = this.user.email;
-      this.ruleForm.signature = this.user.signature;
-    },
-    submitChanges() {
-      this.$refs["ruleForm"].validate((valid) => {
-        if (valid) {
-          const updateData = { ...this.ruleForm, id: this.user.id };
-          this.$put("/user", updateData).then((res) => {
-            const result = res.data || res;
-            if (result.status === true || result.code === 200) {
-              this.$notifyMsg("成功", "资料更新成功", "success", 1000);
-              this.dialogVisible = false;
-              this.newList(this.user.id);
-            }
-          });
-        }
-      });
-    },
-    newList(id) {
-      this.$get("/user/" + id).then((rs) => {
-        const userData = rs.data.user;
-        sessionStorage.setItem("user", JSON.stringify(userData));
-        localStorage.setItem("user", JSON.stringify(userData));
-        this.setUser(userData);
-        this.firstName = "";
-        this.textAvatar(userData.username);
-      });
-    },
-    exit() {
-      if (this.user?.id)
-        localStorage.removeItem("ai_chat_history_" + this.user.id);
-      sessionStorage.removeItem("user");
-      localStorage.removeItem("user");
-      this.$router.push("/");
-    },
-    textAvatar(username) {
-      if (!username) return;
-      let arr = username.split(" ");
-      let temp = "";
-      for (let i in arr) temp += arr[i].substr(0, 1);
-      this.firstName = temp.toUpperCase();
-    },
-  },
-  computed: {
-    ...mapState("user", ["user"]),
-    fullAvatarUrl() {
-      if (!this.user?.avatar) return "";
-      return this.user.avatar.startsWith("http")
-        ? this.user.avatar
-        : `http://localhost:8080${this.user.avatar}`;
-    },
-    activeMenu() {
-      const path = this.$route.path;
-      if (path.startsWith("/home/forum")) return "/home/forum";
-      if (path.startsWith("/home/help")) return "/home/help";
-      if (path.startsWith("/home/remark")) return "/home/remark";
-      return path === "/home" || path === "/home/" ? "/home/" : path;
-    },
-  },
   watch: {
-    $route() {
+    $route(to, form) {
       this.getBreadcrumb();
     },
+    // 监听 user 变化，重新计算文字头像 (防止只显示图不显示字)
     user: {
       handler(val) {
-        if (val?.username) this.textAvatar(val.username);
+        if (val && val.username) {
+          this.textAvatar(val.username);
+        }
       },
       deep: true,
     },
   },
   created() {
     let theme = JSON.parse(sessionStorage.getItem("themeColor"));
-    if (theme) this.themeColor = { bg: theme.value, color: theme.color };
+    if (theme) {
+      this.themeColor = { bg: theme.value, color: theme.color };
+    }
 
-    let storedUserStr =
-      sessionStorage.getItem("user") || localStorage.getItem("user");
+    // ===============================================
+    // 🟢 修改：优先读取 LocalStorage (之前修复缓存的地方)
+    // 防止 session 里是旧的，而 local 里是新的
+    // ===============================================
+    let storedUserStr = sessionStorage.getItem("user");
+    if (!storedUserStr) {
+      // 如果 session 没有，尝试找 local
+      storedUserStr = localStorage.getItem("user");
+    } else {
+      // 如果 session 有，为了保险起见，看看 local 是不是更新
+      const localUserStr = localStorage.getItem("user");
+      if (localUserStr) {
+        // 这里简单粗暴一点，如果 local 存在，我们信任 local 是最新的
+        // (因为你在 MyProfile 里修改头像时是更新的 local)
+        storedUserStr = localUserStr;
+      }
+    }
+
     if (storedUserStr) {
       this.getBreadcrumb();
       const userObj = JSON.parse(storedUserStr);
       this.setUser(userObj);
+
+      // 如果发现 session 里没存，顺便存一下
+      if (!sessionStorage.getItem("user")) {
+        sessionStorage.setItem("user", storedUserStr);
+      }
+
       if (!this.user.dept) {
         this.$get("/school/" + this.user.school.id).then((res) => {
           this.school = res.data.school;
           this.drawer = true;
+          this.$msg("请完善信息", "warning");
         });
       }
     } else {
+      this.$msg("您尚未登陆,没有权限", "error");
       this.$router.push("/");
     }
   },
@@ -465,13 +648,18 @@ export default {
     window.onresize = () => {
       this.windowWidth = document.documentElement.clientWidth;
     };
-    if (this.user?.username) this.textAvatar(this.user.username);
+    if (this.user && this.user.username) {
+      this.textAvatar(this.user.username);
+    }
   },
 };
 </script>
 
 <style scoped lang="less">
+/* 这里样式保持不变，我就不重复贴太长的样式代码了，直接使用你原本的样式即可 */
+/* 定义深蓝色变量，方便调整 */
 @deep-blue: #165dff;
+/* 未选中时的标签底色 */
 @item-bg-normal: #e8eefa;
 
 .main {
@@ -481,129 +669,204 @@ export default {
   .left {
     position: fixed;
     height: 100%;
+    /* 强制覆盖内联样式，确保背景色正确 */
     background-color: #e0e8fb !important;
     box-shadow: 2px 0 6px rgba(0, 21, 41, 0.05);
-    z-index: 10;
+
     .logo {
       width: 100%;
       padding: 10px 0;
       display: flex;
       justify-content: center;
       align-items: center;
+
+      /* 展开时：完整Logo样式 */
       .logo-full {
         width: 90%;
         height: 40px;
         object-fit: contain;
+        transition: all 0.3s;
+        animation: fadeIn 0.5s;
       }
+
+      /* 收起时：小图标样式 */
       .logo-icon {
         width: 32px;
         height: 32px;
         object-fit: contain;
+        transition: all 0.3s;
+        animation: fadeIn 0.5s;
       }
     }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* --- 核心修改：穿透修改 Element UI 菜单样式 --- */
     /deep/ .el-menu {
       border-right: none;
       background-color: transparent !important;
     }
+
     /deep/ .el-menu-item {
       display: flex;
       align-items: center;
       margin: 8px 10px;
       height: 50px;
+      line-height: 50px;
       border-radius: 6px;
       background-color: @item-bg-normal !important;
       color: #333 !important;
-      &:hover,
-      &.is-active {
+      border: 1px solid transparent;
+      transition: all 0.3s;
+
+      i {
+        color: #606266;
+      }
+
+      &:hover {
         background-color: #fff !important;
         color: @deep-blue !important;
-        border: 1px solid @deep-blue;
+        border-color: @deep-blue !important;
+
         i {
           color: @deep-blue !important;
         }
       }
     }
+
+    /deep/ .el-menu-item.is-active {
+      background-color: #fff !important;
+      color: @deep-blue !important;
+      border: 1px solid @deep-blue !important;
+      font-weight: bold;
+
+      i {
+        color: @deep-blue !important;
+      }
+    }
+
+    /* 修复折叠状态下图标不居中的问题 */
+    /deep/ .el-menu--collapse .el-menu-item {
+      padding: 0 !important;
+      justify-content: center;
+      margin: 8px 4px;
+
+      i {
+        margin: 0 !important;
+      }
+
+      span {
+        display: none;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+      }
+
+      & > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+      }
+    }
   }
 
   .right {
-    transition: all 0.3s;
+    transition: all 0.3s ease 0s;
     position: relative;
     background-color: #f2f3f5;
+
     .top {
+      transition: all 0.3s ease 0s;
       position: fixed;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 60px;
       z-index: 9;
       box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
       background-color: #fff !important;
-      padding: 0 20px;
 
-      .user-area {
-        display: flex;
-        align-items: center;
-        margin-left: auto; /* 核心：整体靠右 */
-
-        .points-wrapper {
-          margin-right: 15px;
-          cursor: pointer;
-          transition: all 0.3s;
-          &:hover {
-            transform: scale(1.05);
-          }
-          .points-content {
-            display: flex;
-            align-items: center;
-            background-color: #fff9db;
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 1px solid #ffe066;
-            color: #e67e22;
-            font-weight: bold;
-            i {
-              font-size: 16px;
-              margin-right: 4px;
-            }
-            .points-value {
-              font-size: 14px;
-            }
-          }
-        }
-
-        .user-info-trigger {
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-          height: 60px;
-          .username-text {
-            margin-right: 8px;
-            font-size: 14px;
-          }
-        }
-      }
+      /* 这里添加了右内边距，防止头像贴边 */
+      padding-right: 20px;
 
       .icon {
         font-size: 20px;
         cursor: pointer;
-        margin-right: 20px;
+        margin-left: 20px;
+        color: #333 !important;
       }
     }
+
     .bottom {
+      width: 100%;
+      height: 100%;
       margin-top: 65px;
-      padding: 0 10px;
+      padding: 0 20px;
       box-sizing: border-box;
+
       .content-box {
+        background: transparent;
+        padding: 0;
         min-height: 80vh;
       }
     }
   }
-}
 
-/deep/ .el-cascader {
-  width: 100% !important;
+  .ruleform /deep/ .el-input {
+    width: 80% !important;
+  }
+
+  /deep/ .el-cascader {
+    width: 100% !important;
+  }
 }
-.ruleform /deep/ .el-input {
-  width: 80% !important;
+.points-wrapper {
+  /* 🟢 这里控制距离名字的距离：8px 到 15px 之间比较合适 */
+  margin-right: 12px; 
+  cursor: pointer;
+  transition: all 0.3s;
+  
+  &:hover {
+    transform: scale(1.05);
+    .points-content {
+      background-color: #fff2af;
+      border-color: #ffb700;
+    }
+  }
+
+  .points-content {
+    display: flex;
+    align-items: center;
+    background-color: #fff9db;
+    /* 缩小内边距让它看起来更精致，不占用太大空间 */
+    padding: 2px 10px;
+    border-radius: 15px;
+    border: 1px solid #ffe066;
+    color: #e67e22;
+    font-weight: 600;
+    white-space: nowrap; // 防止换行
+
+    i {
+      font-size: 16px;
+      margin-right: 4px;
+    }
+
+    .points-value {
+      font-size: 13px;
+    }
+  }
+}
+.user-area {
+  display: flex;
+  align-items: center;
+  /* 确保整体靠右 */
+  margin-left: auto;
 }
 </style>

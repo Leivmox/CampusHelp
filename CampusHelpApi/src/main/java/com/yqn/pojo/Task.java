@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-// 去掉了 import lombok.Data; 避免依赖插件
+
 import java.util.Date;
 
 /**
@@ -32,7 +32,7 @@ public class Task {
     private String taskTitle;
     private String taskContext;
     private Integer state;
-
+    private String imgUrl; // 对应数据库字段
 
 
     // ==========================================
@@ -164,6 +164,45 @@ public class Task {
     public void setSchool(School school) {
         this.school = school;
     }
+
+    @TableField(exist = false)
+    private java.util.List<String> imgList; // 对应前端数组
+
+    // 转换方法：String -> List (查询时用)
+    public void convertStringToList() {
+        if (this.imgUrl != null && !this.imgUrl.trim().isEmpty()) {
+            this.imgList = java.util.Arrays.asList(this.imgUrl.split(","));
+        } else {
+            this.imgList = new java.util.ArrayList<>();
+        }
+    }
+
+    // 转换方法：List -> String (保存/修改时用)
+    public void convertListToString() {
+        if (this.imgList != null && !this.imgList.isEmpty()) {
+            this.imgUrl = String.join(",", this.imgList);
+        } else {
+            this.imgUrl = "";
+        }
+    }
+
+    // 手动补充 Getter 和 Setter
+    public String getImgUrl() {
+        return imgUrl;
+    }
+
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
+
+    public java.util.List<String> getImgList() {
+        return imgList;
+    }
+
+    public void setImgList(java.util.List<String> imgList) {
+        this.imgList = imgList;
+    }
+
 
     @Override
     public String toString() {

@@ -1,186 +1,249 @@
 <template>
-  <div class="published-container">
+  <div class="content">
+    <el-alert
+      :title="'管理中心 - 您已累计发布 ' + tasks.length + ' 个求助项目'"
+      :closable="false"
+      type="success"
+      style="margin-bottom: 15px"
+      show-icon
+    ></el-alert>
+
     <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
-        <span style="font-size: 18px; font-weight: bold">已发布求助</span>
+        <span style="font-size: 18px; font-weight: bold">我发布的求助</span>
+        <el-button
+          style="float: right; padding: 3px 0"
+          type="text"
+          icon="el-icon-refresh"
+          @click="retrieveData"
+          >刷新</el-button
+        >
       </div>
 
       <div v-if="tasks.length > 0">
-        <div v-for="(item, index) in tasks" :key="item.id" class="task-item">
-          <div class="item-header">
-            <div class="title-section">
+        <div
+          v-for="(item, index) in tasks"
+          :key="item.id"
+          class="published-item"
+        >
+          <div class="item-main" @click="goToDetail(item.id)">
+            <div class="status-bar">
               <el-tag
                 :type="
                   item.state == 0
-                    ? 'danger'
+                    ? 'success'
                     : item.state == 1
                     ? 'warning'
-                    : 'success'
+                    : 'info'
                 "
                 effect="dark"
                 size="small"
-                style="margin-right: 10px"
               >
                 {{
                   item.state == 0
-                    ? "待解决"
+                    ? "待接取"
                     : item.state == 1
                     ? "服务中"
                     : "已完成"
                 }}
               </el-tag>
-              <span class="task-title">{{ item.taskTitle }}</span>
+              <span class="post-time"
+                ><i class="el-icon-time"></i> 发布于:
+                {{ item.createTime | formatDate }}</span
+              >
             </div>
 
-            <div class="action-section">
-              <el-button
-                v-show="item.state == 2"
-                type="text"
-                icon="el-icon-star-off"
-                @click="remark(item)"
-              >
-                订单评价
-              </el-button>
+            <div class="item-body">
+              <div class="text-info">
+                <h4 class="title" :class="{ 'text-muted': item.state == 2 }">
+                  {{ item.taskTitle }}
+                </h4>
+                <p class="summary">{{ item.taskContext }}</p>
 
-              <el-button
-                v-show="item.state != 0"
-                type="text"
-                icon="el-icon-user"
+                <div class="mini-steps">
+                  <span :class="{ active: item.state >= 0 }"
+                    ><i class="el-icon-circle-check"></i> 已发布</span
+                  >
+                  <span class="line"></span>
+                  <span :class="{ active: item.state >= 1 }">
+                    <i
+                      :class="
+                        item.state >= 1
+                          ? 'el-icon-circle-check'
+                          : 'el-icon-loading'
+                      "
+                    ></i>
+                    {{ item.state >= 1 ? "已接单" : "等待中" }}
+                  </span>
+                  <span class="line"></span>
+                  <span :class="{ active: item.state == 2 }">
+                    <i
+                      :class="
+                        item.state == 2
+                          ? 'el-icon-circle-check'
+                          : 'el-icon-time'
+                      "
+                    ></i>
+                    结束
+                  </span>
+                </div>
+              </div>
+
+              <div
+                class="image-box"
+                v-if="item.imgList && item.imgList.length > 0"
+              >
+                <el-image
+                  :src="getResUrl(item.imgList[0])"
+                  fit="cover"
+                  class="side-img"
+                >
+                  <div slot="error" class="image-slot">
+                    <i class="el-icon-picture-outline"></i>
+                  </div>
+                </el-image>
+                <div class="img-tag" v-if="item.imgList.length > 1">
+                  {{ item.imgList.length }}张
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="item-footer">
+            <div class="left-actions">
+              <span
+                v-if="item.state == 1"
+                class="helper-info"
                 @click="receiver(item)"
               >
-                查看接受人
-              </el-button>
+                <i class="el-icon-user"></i> 帮助者:
+                {{ item.accept ? item.accept.username : "查看详情" }}
+              </span>
+            </div>
 
+            <div class="right-buttons">
               <el-popconfirm
-                title="确定取消这条求助吗？"
+                v-if="item.state == 0"
+                title="确定取消并下架这条求助吗？"
                 @confirm="cancel(item.id)"
-                @onConfirm="cancel(item.id)"
-                v-show="item.state == 0"
               >
-                <el-button slot="reference" type="text" style="color: #f56c6c"
+                <el-button
+                  slot="reference"
+                  type="danger"
+                  size="mini"
+                  plain
+                  icon="el-icon-delete"
                   >取消求助</el-button
                 >
               </el-popconfirm>
+
+              <el-button
+                v-if="item.state == 1"
+                type="primary"
+                size="mini"
+                icon="el-icon-success"
+                @click="completeTask(item.id)"
+                >确认解决</el-button
+              >
+
+              <el-button
+                v-if="item.state == 2"
+                type="warning"
+                size="mini"
+                plain
+                icon="el-icon-star-off"
+                @click="remark(item)"
+                >评价服务</el-button
+              >
+
+              <el-button
+                size="mini"
+                icon="el-icon-arrow-right"
+                @click="goToDetail(item.id)"
+                >详情</el-button
+              >
             </div>
           </div>
 
-          <div class="step-wrapper">
-            <el-steps
-              :active="item.state + 1"
-              finish-status="success"
-              align-center
-              size="small"
-            >
-              <el-step
-                title="发布成功"
-                :description="item.createTime | formatDate"
-              ></el-step>
-              <el-step
-                title="服务中"
-                :description="
-                  item.orderTime ? transform(item.orderTime) : '等待接单'
-                "
-              ></el-step>
-              <el-step
-                title="已完成"
-                :description="item.endTime ? transform(item.endTime) : ''"
-              ></el-step>
-            </el-steps>
-          </div>
-
-          <el-collapse v-model="activeNames" class="custom-collapse">
-            <el-collapse-item name="1">
-              <template slot="title">
-                <i class="el-icon-document"></i> 展开详情内容
-              </template>
-              <div class="detail-content">
-                <p><strong>求助内容：</strong>{{ item.taskContext }}</p>
-              </div>
-            </el-collapse-item>
-          </el-collapse>
-
-          <div class="item-footer" v-show="item.state == 1">
-            <el-button
-              type="primary"
-              size="small"
-              plain
-              @click="completeTask(item.id)"
-              icon="el-icon-check"
-            >
-              确认完成求助
-            </el-button>
-          </div>
-
-          <el-divider v-if="index !== tasks.length - 1"></el-divider>
+          <el-divider></el-divider>
         </div>
       </div>
-
-      <el-empty v-else description="你还没有发布过求助"></el-empty>
+      <el-empty v-else description="您还没有发布过任何求助信息"></el-empty>
     </el-card>
 
     <el-drawer
-      title="接受人信息"
+      title="帮助者详细信息"
       :visible.sync="drawer"
       direction="rtl"
-      size="30%"
+      size="320px"
     >
-      <div class="content_drawer">
-        <el-card shadow="never" class="info-card" v-if="recipientInformation">
-          <div class="info-row">
-            <label>姓名：</label>
-            <span>{{ recipientInformation.username }}</span>
+      <div class="drawer-content" v-if="recipientInformation">
+        <div class="user-profile-header">
+          <el-avatar :size="60" icon="el-icon-user"></el-avatar>
+          <h3>{{ recipientInformation.username }}</h3>
+        </div>
+        <div class="info-list">
+          <div class="info-item">
+            <label>手机号</label
+            ><span>{{ recipientInformation.phone || "未绑定" }}</span>
           </div>
-          <div class="info-row">
-            <label>电话：</label> <span>{{ recipientInformation.phone }}</span>
-          </div>
-          <div class="info-row">
-            <label>学校：</label>
-            <span>{{
+          <div class="info-item">
+            <label>所属学校</label
+            ><span>{{
               recipientInformation.school
                 ? recipientInformation.school.name
                 : "-"
             }}</span>
           </div>
-          <div class="info-row">
-            <label>系部：</label>
-            <span>{{
+          <div class="info-item">
+            <label>院系</label
+            ><span>{{
               recipientInformation.dept ? recipientInformation.dept.name : "-"
             }}</span>
           </div>
-          <div class="info-row">
-            <label>班级：</label>
-            <span>{{
+          <div class="info-item">
+            <label>班级</label
+            ><span>{{
               recipientInformation.aclass
                 ? recipientInformation.aclass.name
                 : "-"
             }}</span>
           </div>
-        </el-card>
+        </div>
+        <div class="drawer-tip">注：请先通过电话与对方取得联系确认细节。</div>
       </div>
     </el-drawer>
 
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="星级" prop="star">
+    <el-dialog
+      :title="title"
+      :visible.sync="open"
+      width="400px"
+      append-to-body
+      border-radius="8px"
+    >
+      <el-form ref="form" :model="form" :rules="rules" label-position="top">
+        <el-form-item label="服务评分">
           <el-rate v-model="form.star" show-text></el-rate>
         </el-form-item>
-        <el-form-item label="评价内容" prop="remark">
+        <el-form-item label="心得评价">
           <el-input
             type="textarea"
+            :rows="4"
             v-model="form.remark"
-            placeholder="请输入评价内容"
+            placeholder="对方帮到您了吗？说点感谢的话吧..."
           />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="exit">取 消</el-button>
+        <el-button type="primary" @click="submitForm">提交评价</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
+// 此处保留你原有的 script 逻辑，仅在 load 处增加图片分割处理
 import { mapState, mapMutations } from "vuex";
 import { formatDate } from "@/util/date";
 import { addRemark } from "@/api/remark/remark";
@@ -190,26 +253,30 @@ export default {
   data() {
     return {
       open: false,
-      activeNames: [], // 默认不展开，保持页面整洁
       tasks: [],
       drawer: false,
-      recipientInformation: {}, // 初始化为空对象
-      currentTask: null, // 新增：用于存储当前正在操作（评价）的那个任务对象
-      form: {},
+      recipientInformation: {},
+      currentTask: null,
+      form: { star: 5, remark: "" },
       rules: {},
       title: "",
+      baseUrl: "http://localhost:8080",
     };
   },
-  computed: {
-    ...mapState("user", ["user"]),
-  },
+  computed: { ...mapState("user", ["user"]) },
   created() {
     this.retrieveData();
   },
   methods: {
-    ...mapMutations("user", ["setUser"]), // 映射 setUser 方法
+    ...mapMutations("user", ["setUser"]),
 
-    // 更新用户信息（用于刷新积分）
+    getResUrl(url) {
+      if (!url) return "";
+      return url.startsWith("http") ? url : this.baseUrl + url;
+    },
+    goToDetail(id) {
+      this.$router.push({ name: "TaskDetail", params: { id: id } });
+    },
     renew() {
       this.$get("user/" + this.user.id).then((response) => {
         if (response.data.status) {
@@ -218,10 +285,13 @@ export default {
         }
       });
     },
-
     retrieveData() {
       this.$get("/task/published", { id: this.user.id }).then((res) => {
-        this.tasks = res.data.task;
+        let list = res.data.task || [];
+        list.forEach((item) => {
+          if (item.imgUrl) item.imgList = item.imgUrl.split(",");
+        });
+        this.tasks = list;
       });
     },
     receiver(val) {
@@ -229,221 +299,219 @@ export default {
         this.recipientInformation = val.accept;
         this.drawer = true;
       } else {
-        this.$msg("暂无接受人详细信息", "warning");
+        this.$msg("该任务暂无帮助者信息", "warning");
       }
     },
-
-    transform(time) {
-      let date = new Date(time);
-      return formatDate(date, "yyyy-MM-dd hh:mm");
-    },
-
-cancel(id) {
+    cancel(id) {
       this.$del("/task/" + id).then((res) => {
-        // 关键：这里要打印 res 看看后端到底返回了什么
-        console.log("删除请求返回：", res);
-        
         if (res.data.status) {
           this.$msg(res.data.msg, "success");
-          this.retrieveData(); // 刷新列表
-          this.renew();        // 刷新 Vuex 中的积分
+          this.retrieveData();
+          this.renew();
         } else {
-          // 如果后端返回 message.message(false, ...)，会走这里
           this.$msg(res.data.msg || "取消失败", "error");
         }
-      }).catch((err) => {
-        console.error("请求报错：", err);
-        this.$msg("网络异常或权限不足", "error");
       });
     },
-
     completeTask(id) {
-      this.$msgbox({
-        title: "确认完成",
-        message: "确定接受人已经解决了您的问题吗？",
-        showCancelButton: true,
-        confirmButtonText: "确定完成",
-        cancelButtonText: "取消",
-        type: "success",
-        beforeClose: (action, instance, done) => {
-          if (action == "confirm") {
-            instance.confirmButtonText = "执行中...";
-            instance.confirmButtonLoading = true;
-            this.$put("task/" + id).then((res) => {
-              done();
-              instance.confirmButtonLoading = false;
-              this.$msg(res.data.msg, "success");
-              this.retrieveData();
-            });
-          } else {
-            done();
-          }
-        },
-      }).catch(() => {});
+      this.$confirm(
+        "确认该同学已帮您解决了问题？确认后积分将转给对方。",
+        "确认结算",
+        {
+          type: "success",
+        }
+      )
+        .then(() => {
+          this.$put("task/" + id).then((res) => {
+            this.$msg(res.data.msg, "success");
+            this.retrieveData();
+          });
+        })
+        .catch(() => {});
     },
-
-    // 打开评价弹窗
     remark(item) {
-      this.currentTask = item; // 关键：保存当前操作的任务
-      this.reset();
+      this.currentTask = item;
+      this.form = { star: 5, remark: "" };
       this.open = true;
-      this.title = "评价服务";
+      this.title = "评价校友服务";
     },
-
-    // 提交评价
     submitForm() {
-      // 这里的 val 已经没用了，使用 this.currentTask
+      if (!this.form.remark) return this.$message.warning("请写下您的评价");
       const val = this.currentTask;
-
-      if (!this.form.star) {
-        this.$message("请选择星级评分");
-        return;
-      } else if (!this.form.remark) {
-        this.$message("请输入评价内容");
-        return;
-      }
-
-      const aid = val.accept.id;
-      const taskid = val.id;
-      const pid = val.publish.id;
-
       addRemark({
         star: this.form.star,
         remark: this.form.remark,
-        acceptId: aid,
-        publishId: pid,
-        taskId: taskid,
-      }).then((response) => {
-        this.$message.success("评价成功");
+        acceptId: val.accept.id,
+        publishId: val.publish.id,
+        taskId: val.id,
+      }).then(() => {
+        this.$message.success("感谢您的评价！");
         this.open = false;
-        // 评价完可能需要刷新列表状态，防止重复评价
-        // this.retrieveData();
+        this.retrieveData();
       });
     },
-
     exit() {
       this.open = false;
-      this.reset();
-    },
-
-    reset() {
-      this.form = {
-        id: null,
-        star: null,
-        remark: null,
-      };
     },
   },
   filters: {
     formatDate(time) {
-      let date = new Date(time);
-      return formatDate(date, "yyyy-MM-dd hh:mm");
+      return formatDate(new Date(time), "yyyy-MM-dd hh:mm");
     },
   },
 };
 </script>
 
 <style scoped lang="less">
-/* 1. 容器样式 */
-.published-container {
-  background: transparent;
+.content {
   padding: 10px 0;
+}
+.published-item {
+  margin-bottom: 10px;
 
-  /* 2. 主卡片样式 */
-  .box-card {
+  .item-main {
+    cursor: pointer;
+    padding: 12px;
     border-radius: 8px;
-    border: none;
+    transition: all 0.2s;
+    &:hover {
+      background: #f9f9f9;
+    }
 
-    /* 列表项 */
-    .task-item {
-      padding: 10px 0;
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      .post-time {
+        font-size: 12px;
+        color: #999;
+      }
+    }
 
-      .item-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
+    .item-body {
+      display: flex;
+      justify-content: space-between;
+      .text-info {
+        flex: 1;
+        padding-right: 15px;
+        .title {
+          margin: 0 0 8px 0;
+          font-size: 17px;
+          color: #333;
+        }
+        .text-muted {
+          color: #999;
+          text-decoration: line-through;
+        }
+        .summary {
+          font-size: 14px;
+          color: #666;
+          line-height: 1.5;
+          margin-bottom: 15px;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          overflow: hidden;
+        }
 
-        .title-section {
+        /* 进度条样式 */
+        .mini-steps {
           display: flex;
           align-items: center;
-          .task-title {
-            font-size: 16px;
+          gap: 8px;
+          font-size: 12px;
+          color: #c0c4cc;
+          .active {
+            color: #67c23a;
             font-weight: bold;
-            color: #303133;
           }
-        }
-
-        .action-section {
-          .el-button {
-            margin-left: 10px;
-            font-size: 14px;
+          .line {
+            width: 20px;
+            height: 1px;
+            background: #ebeef5;
           }
         }
       }
-
-      .step-wrapper {
-        padding: 0 20px;
-        margin-bottom: 20px;
-      }
-
-      /* 自定义折叠面板样式，使其不那么突兀 */
-      .custom-collapse {
-        border-top: none;
-        border-bottom: none;
-
-        /deep/ .el-collapse-item__header {
-          border-bottom: none;
-          color: #909399;
-          font-size: 13px;
-          height: 35px;
-          line-height: 35px;
+      .image-box {
+        position: relative;
+        .side-img {
+          width: 110px;
+          height: 85px;
+          border-radius: 6px;
+          border: 1px solid #f0f0f0;
         }
-
-        /deep/ .el-collapse-item__wrap {
-          border-bottom: none;
+        .img-tag {
+          position: absolute;
+          right: 5px;
+          bottom: 5px;
+          background: rgba(0, 0, 0, 0.6);
+          color: #fff;
+          font-size: 10px;
+          padding: 2px 5px;
+          border-radius: 3px;
         }
-
-        .detail-content {
-          padding: 10px 20px;
-          background-color: #f8f8f8;
-          border-radius: 4px;
-          color: #606266;
-          font-size: 14px;
-        }
-      }
-
-      .item-footer {
-        text-align: right;
-        margin-top: 10px;
       }
     }
   }
 
-  /* 抽屉内容 */
-  .content_drawer {
-    padding: 20px;
+  .item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-top: 5px;
 
-    .info-card {
-      border: 1px solid #ebeef5;
-
-      .info-row {
-        margin-bottom: 15px;
-        font-size: 14px;
-        display: flex;
-
-        label {
-          color: #909399;
-          width: 60px;
-          text-align: right;
-          margin-right: 10px;
-        }
-        span {
-          color: #303133;
-          flex: 1;
+    .left-actions {
+      .helper-info {
+        font-size: 13px;
+        color: #409eff;
+        cursor: pointer;
+        &:hover {
+          text-decoration: underline;
         }
       }
     }
+    .right-buttons {
+      display: flex;
+      gap: 8px;
+    }
+  }
+}
+
+/* 抽屉样式优化 */
+.drawer-content {
+  padding: 20px;
+  .user-profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+    h3 {
+      margin-top: 10px;
+      color: #303133;
+    }
+  }
+  .info-list {
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      font-size: 14px;
+      label {
+        color: #909399;
+      }
+      span {
+        color: #303133;
+        font-weight: 500;
+      }
+    }
+  }
+  .drawer-tip {
+    margin-top: 40px;
+    font-size: 12px;
+    color: #e6a23c;
+    background: #fff7e6;
+    padding: 10px;
+    border-radius: 4px;
   }
 }
 </style>

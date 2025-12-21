@@ -1,7 +1,10 @@
 <template>
   <div class="profile-container">
     <el-card class="top-card" shadow="hover" :body-style="{ padding: '0px' }">
-      <div class="user-header-bg" :style="{ backgroundImage: `url(${userBgImg})` }">
+      <div
+        class="user-header-bg"
+        :style="{ backgroundImage: `url(${userBgImg})` }"
+      >
         <el-button
           class="edit-btn"
           type="primary"
@@ -26,8 +29,14 @@
             :headers="headers"
           >
             <div class="avatar-hover-mask"><i class="el-icon-camera"></i></div>
-            <el-avatar :size="90" class="user-avatar" :src="fullAvatarUrl">
-              {{ user.username ? user.username.slice(0, 1).toUpperCase() : "U" }}
+            <el-avatar
+              :size="90"
+              :class="['user-avatar', !user.avatar ? 'default-avatar' : '']"
+              :src="fullAvatarUrl"
+            >
+              {{
+                user.username ? user.username.slice(0, 1).toUpperCase() : "U"
+              }}
             </el-avatar>
           </el-upload>
         </div>
@@ -35,7 +44,9 @@
         <div class="info-section">
           <div class="name-row">
             <span class="username">{{ user.username }}</span>
-            <el-tag size="mini" type="primary" effect="dark" class="role-tag">学生</el-tag>
+            <el-tag size="mini" type="primary" effect="dark" class="role-tag"
+              >学生</el-tag
+            >
           </div>
           <div class="bio-row" :title="user.signature">
             {{ user.signature || "这个人很懒，什么都没有留下..." }}
@@ -69,31 +80,45 @@
           </div>
           <el-descriptions :column="1" border size="medium">
             <el-descriptions-item>
-              <template slot="label"><i class="el-icon-user"></i> 学号</template>
+              <template slot="label"
+                ><i class="el-icon-user"></i> 学号</template
+              >
               {{ user.studentId }}
             </el-descriptions-item>
             <el-descriptions-item>
-              <template slot="label"><i class="el-icon-message"></i> 邮箱</template>
+              <template slot="label"
+                ><i class="el-icon-message"></i> 邮箱</template
+              >
               {{ user.email || "未公开" }}
             </el-descriptions-item>
             <el-descriptions-item>
-              <template slot="label"><i class="el-icon-mobile-phone"></i> 手机</template>
+              <template slot="label"
+                ><i class="el-icon-mobile-phone"></i> 手机</template
+              >
               {{ user.phone }}
             </el-descriptions-item>
             <el-descriptions-item>
-              <template slot="label"><i class="el-icon-school"></i> 学校</template>
+              <template slot="label"
+                ><i class="el-icon-school"></i> 学校</template
+              >
               {{ user.school ? user.school.name : "未设置" }}
             </el-descriptions-item>
             <el-descriptions-item>
-              <template slot="label"><i class="el-icon-office-building"></i> 系别</template>
+              <template slot="label"
+                ><i class="el-icon-office-building"></i> 系别</template
+              >
               {{ user.dept ? user.dept.name : "未设置" }}
             </el-descriptions-item>
             <el-descriptions-item>
-              <template slot="label"><i class="el-icon-collection-tag"></i> 班级</template>
+              <template slot="label"
+                ><i class="el-icon-collection-tag"></i> 班级</template
+              >
               {{ user.aclass ? user.aclass.name : "未设置" }}
             </el-descriptions-item>
             <el-descriptions-item>
-              <template slot="label"><i class="el-icon-date"></i> 注册</template>
+              <template slot="label"
+                ><i class="el-icon-date"></i> 注册</template
+              >
               {{ user.createTime || "2023-09-01" }}
             </el-descriptions-item>
           </el-descriptions>
@@ -103,20 +128,22 @@
       <el-col :span="16">
         <el-card shadow="hover" class="history-card">
           <div slot="header" class="clearfix">
-            <span class="card-title">我的历史动态 ({{ historyList.length }})</span>
+            <span class="card-title"
+              >我的历史动态 ({{ historyList.length }})</span
+            >
           </div>
-          
+
           <div class="history-content">
             <div v-if="historyList.length > 0">
-              <div 
-                v-for="(item, index) in historyList" 
-                :key="index" 
+              <div
+                v-for="(item, index) in historyList"
+                :key="index"
                 class="history-item"
                 @click="goToDetail(item.id)"
               >
                 <div class="item-thumb" v-if="hasImage(item)">
-                   <el-image 
-                    :src="getFirstImage(item)" 
+                  <el-image
+                    :src="getFirstImage(item)"
                     fit="cover"
                     class="thumb-img"
                   >
@@ -124,18 +151,27 @@
                 </div>
 
                 <div class="item-main">
-                   <div class="item-title">{{ item.title }}</div>
-                   <div class="item-desc">{{ item.content }}</div>
+                  <div class="item-title">{{ item.title }}</div>
+                  <div class="item-desc">{{ item.content }}</div>
                 </div>
 
                 <div class="item-meta">
-                  <span class="time"><i class="el-icon-time"></i> {{ item.createTime | formatDate }}</span>
-                  <span class="likes"><i class="el-icon-thumb"></i> {{ item.likeCount || 0 }}</span>
+                  <span class="time"
+                    ><i class="el-icon-time"></i>
+                    {{ item.createTime | formatDate }}</span
+                  >
+                  <span class="likes"
+                    ><i class="el-icon-thumb"></i>
+                    {{ item.likeCount || 0 }}</span
+                  >
                 </div>
               </div>
             </div>
 
-            <el-empty v-else description="暂无历史动态，快去发布吧！"></el-empty>
+            <el-empty
+              v-else
+              description="暂无历史动态，快去发布吧！"
+            ></el-empty>
           </div>
         </el-card>
       </el-col>
@@ -147,7 +183,7 @@
 import { mapState } from "vuex";
 import { listPublished, listAccepted } from "@/api/task/task";
 import { updateUserAvatar } from "@/api/system/user";
-import { formatDate } from "@/util/date"; 
+import { formatDate } from "@/util/date";
 
 export default {
   name: "MyProfile",
@@ -184,37 +220,38 @@ export default {
   methods: {
     hasImage(item) {
       if (item.imgList && item.imgList.length > 0) return true;
-      if (item.imgUrl && item.imgUrl !== '') return true;
+      if (item.imgUrl && item.imgUrl !== "") return true;
       return false;
     },
     getFirstImage(item) {
-        let url = "";
-        if (item.imgList && item.imgList.length > 0) {
-            url = item.imgList[0];
-        } 
-        else if (item.imgUrl) {
-            url = item.imgUrl.split(',')[0];
-        }
-        
-        if (!url) return "";
-        if (url.startsWith("http")) return url;
-        return `http://localhost:8080${url}`;
+      let url = "";
+      if (item.imgList && item.imgList.length > 0) {
+        url = item.imgList[0];
+      } else if (item.imgUrl) {
+        url = item.imgUrl.split(",")[0];
+      }
+
+      if (!url) return "";
+      if (url.startsWith("http")) return url;
+      return `http://localhost:8080${url}`;
     },
     getMyPosts() {
       if (!this.user || !this.user.id) return;
       this.$get("/post", {
         schoolId: this.user.school ? this.user.school.id : null,
-        userId: this.user.id 
-      }).then((res) => {
-        if (res.data.status) {
-          this.historyList = res.data.posts;
-        }
-      }).catch(err => {
-        console.error("获取帖子失败", err);
-      });
+        userId: this.user.id,
+      })
+        .then((res) => {
+          if (res.data.status) {
+            this.historyList = res.data.posts;
+          }
+        })
+        .catch((err) => {
+          console.error("获取帖子失败", err);
+        });
     },
     goToDetail(id) {
-        this.$router.push({ name: 'PostDetail', params: { id: id } });
+      this.$router.push({ name: "PostDetail", params: { id: id } });
     },
     getUserStats() {
       if (!this.user.id) return;
@@ -239,7 +276,8 @@ export default {
         });
     },
     beforeAvatarUpload(file) {
-      const isJPGOrPNG = file.type === "image/jpeg" || file.type === "image/png";
+      const isJPGOrPNG =
+        file.type === "image/jpeg" || file.type === "image/png";
       const isLt2M = file.size / 1024 / 1024 < 5;
       if (!isJPGOrPNG) {
         this.$message.error("上传头像图片只能是 JPG/PNG 格式!");
@@ -262,11 +300,11 @@ export default {
           this.$set(this.user, "avatar", uploadedUrl);
           let localUserStr = localStorage.getItem("user");
           if (localUserStr) {
-              try {
-                  let localUser = JSON.parse(localUserStr);
-                  localUser.avatar = uploadedUrl;
-                  localStorage.setItem("user", JSON.stringify(localUser));
-              } catch (e) {}
+            try {
+              let localUser = JSON.parse(localUserStr);
+              localUser.avatar = uploadedUrl;
+              localStorage.setItem("user", JSON.stringify(localUser));
+            } catch (e) {}
           }
         });
       } else {
@@ -284,45 +322,224 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
 }
-.top-card { border-radius: 8px; margin-bottom: 20px; overflow: visible; }
+.top-card {
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow: visible;
+}
 .user-header-bg {
   height: 280px;
   background-size: cover;
   background-position: center;
   position: relative;
   background-color: #a0cfff;
-  .edit-btn { position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.4); border: none; color: #333; &:hover { background: #fff; } }
+  .edit-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.4);
+    border: none;
+    color: #333;
+    &:hover {
+      background: #fff;
+    }
+  }
 }
 .user-profile-row {
-  display: flex; align-items: flex-end; padding: 0 30px 20px 30px; margin-top: -25px; position: relative; z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 30px 20px 30px;
+  margin-top: -25px;
+  position: relative;
+  z-index: 2;
   .avatar-section {
-    position: relative; margin-right: 20px;
-    .user-avatar { border: 4px solid #fff; background-color: #fff; box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1); }
-    .avatar-uploader { position: relative; border-radius: 50%; overflow: hidden; display: block; }
-    .avatar-hover-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); color: #fff; display: flex; justify-content: center; align-items: center; font-size: 24px; opacity: 0; transition: opacity 0.3s; border-radius: 50%; }
-    &:hover .avatar-hover-mask { opacity: 1; }
+    position: relative;
+    margin-right: 20px;
+    .user-avatar {
+      border: 4px solid #fff;
+      background-color: #fff;
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    }
+    .avatar-uploader {
+      position: relative;
+      border-radius: 50%;
+      overflow: hidden;
+      display: block;
+    }
+    .avatar-hover-mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      border-radius: 50%;
+    }
+    &:hover .avatar-hover-mask {
+      opacity: 1;
+    }
   }
   .info-section {
-    flex: 1; padding-bottom: 5px;
-    .name-row { display: flex; align-items: center; margin-bottom: 8px; .username { font-size: 24px; font-weight: bold; color: #303133; margin-right: 10px; text-shadow: 0 1px 2px rgba(255,255,255,0.8); } }
-    .bio-row { font-size: 14px; color: #606266; max-width: 500px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    flex: 1;
+    padding-bottom: 5px;
+    .name-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      .username {
+        font-size: 24px;
+        font-weight: bold;
+        color: #303133;
+        margin-right: 10px;
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+      }
+    }
+    .bio-row {
+      font-size: 14px;
+      color: #606266;
+      max-width: 500px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
   .stats-section {
-    display: flex; align-items: center; padding-bottom: 5px;
-    .stat-item { text-align: center; padding: 0 20px; .num { font-size: 24px; font-weight: bold; color: #303133; &.highlight { color: #ff9900; } } .label { font-size: 12px; color: #909399; margin-top: 2px; } }
-    .stat-divider { height: 40px; }
+    display: flex;
+    align-items: center;
+    padding-bottom: 5px;
+    .stat-item {
+      text-align: center;
+      padding: 0 20px;
+      .num {
+        font-size: 24px;
+        font-weight: bold;
+        color: #303133;
+        &.highlight {
+          color: #ff9900;
+        }
+      }
+      .label {
+        font-size: 12px;
+        color: #909399;
+        margin-top: 2px;
+      }
+    }
+    .stat-divider {
+      height: 40px;
+    }
   }
 }
-.bottom-section { .detail-card, .history-card { border-radius: 8px; height: 100%; min-height: 400px; } .card-title { font-weight: bold; font-size: 16px; } }
+.bottom-section {
+  .detail-card,
+  .history-card {
+    border-radius: 8px;
+    height: 100%;
+    min-height: 400px;
+  }
+  .card-title {
+    font-weight: bold;
+    font-size: 16px;
+  }
+}
 .history-content {
-  max-height: 450px; overflow-y: auto; padding: 0 10px;
+  max-height: 450px;
+  overflow-y: auto;
+  padding: 0 10px;
   .history-item {
-    padding: 15px 0; border-bottom: 1px solid #ebeef5; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; transition: background-color 0.2s;
-    &:hover { background-color: #f9f9f9; padding-left: 5px; }
-    .item-thumb { width: 100px; height: 70px; margin-right: 15px; flex-shrink: 0; border-radius: 4px; overflow: hidden; border: 1px solid #eee; .thumb-img { width: 100%; height: 100%; } }
-    .item-main { flex: 1; min-width: 0; padding-right: 15px; .item-title { font-size: 15px; font-weight: bold; color: #303133; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .item-desc { font-size: 13px; color: #909399; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.5; } }
-    .item-meta { display: flex; flex-direction: column; align-items: flex-end; min-width: 90px; font-size: 12px; color: #c0c4cc; .time { margin-bottom: 5px; } .likes i { margin-right: 3px; color: #F56C6C; } }
+    padding: 15px 0;
+    border-bottom: 1px solid #ebeef5;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: background-color 0.2s;
+    &:hover {
+      background-color: #f9f9f9;
+      padding-left: 5px;
+    }
+    .item-thumb {
+      width: 100px;
+      height: 70px;
+      margin-right: 15px;
+      flex-shrink: 0;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid #eee;
+      .thumb-img {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .item-main {
+      flex: 1;
+      min-width: 0;
+      padding-right: 15px;
+      .item-title {
+        font-size: 15px;
+        font-weight: bold;
+        color: #303133;
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .item-desc {
+        font-size: 13px;
+        color: #909399;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        line-height: 1.5;
+      }
+    }
+    .item-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      min-width: 90px;
+      font-size: 12px;
+      color: #c0c4cc;
+      .time {
+        margin-bottom: 5px;
+      }
+      .likes i {
+        margin-right: 3px;
+        color: #f56c6c;
+      }
+    }
   }
 }
-/deep/ .el-descriptions-item__label { width: 80px; text-align-last: justify; }
+/deep/ .el-descriptions-item__label {
+  width: 80px;
+  text-align-last: justify;
+}
+.avatar-section {
+  position: relative;
+  margin-right: 20px;
+
+  .user-avatar {
+    border: 4px solid #fff;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+    font-size: 32px; /* 调大首字的字号 */
+    font-weight: bold;
+    color: #fff;     /* 文字颜色为白色 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* 重点：没有头像时的背景色 */
+  .default-avatar {
+    background-color: #67C23A !important; /* Element UI 标准成功绿 */
+    /* 或者使用更有质感的绿色：background: linear-gradient(135deg, #67C23A 0%, #3ca510 100%); */
+  }
+}
 </style>

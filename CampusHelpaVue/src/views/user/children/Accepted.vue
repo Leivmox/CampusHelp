@@ -1,78 +1,59 @@
 <template>
   <div class="content">
+    <el-alert
+      title="我接受的求助 - 请秉持诚信、友好的态度协助同学解决问题"
+      :closable="false"
+      type="warning"
+      style="margin-bottom: 10px;"
+    ></el-alert>
+
     <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
-        <span style="font-size: 18px; font-weight: bold;">已接收求助</span>
+        <span style="font-size: 18px; font-weight: bold;">我的服务进度</span>
+        <el-button style="float: right; padding: 3px 0;" type="text" icon="el-icon-refresh" @click="loadAcceptedTasks">刷新</el-button>
       </div>
 
-      <div v-if="tasks.length > 0">
-        <div v-for="(item, index) in tasks" :key="item.id" class="task-item">
+      <div v-if="acceptedTasks.length > 0">
+        <div v-for="item in acceptedTasks" :key="item.id" class="accepted-item">
           
-          <div class="item-header">
-            <div class="title-wrapper">
-              <el-tag
-                :type="item.state == 0 ? 'danger':(item.state == 1 ? 'warning':'success')"
-                effect="dark"
-                size="small"
-                style="margin-right: 10px"
-              >
-                {{item.state == 0 ? '待解决':(item.state == 1 ? '服务中':'已完成')}}
-              </el-tag>
-              <span class="task-title">{{ item.taskTitle }}</span>
+          <div class="item-main" @click="goToDetail(item.id)">
+            <div class="status-bar">
+              <el-tag v-if="item.state == 1" type="warning" effect="dark" size="small">互助中</el-tag>
+              <el-tag v-else type="info" effect="dark" size="small">已完成</el-tag>
+              <span class="order-time">接单时间: {{ item.orderTime | formatDate }}</span>
             </div>
 
-            <div class="action-wrapper">
-               <el-popconfirm 
-                  title="确定取消帮助吗？这将通知发布者。" 
-                  @confirm="del(item.id)"
-                  v-show="item.state != 2"
-                >
-                <el-button slot="reference" type="text" class="cancel-btn" icon="el-icon-circle-close">取消帮助</el-button>
-              </el-popconfirm>
-            </div>
-          </div>
-
-          <div class="task-content">
-            {{ item.taskContext }}
-          </div>
-
-          <el-collapse v-model="activeNames" class="custom-collapse">
-            <el-collapse-item :name="index + ''"> <template slot="title">
-                <i class="el-icon-user-solid"></i> 发布人详细信息
-              </template>
-              
-              <div class="info-wrapper">
-                <el-descriptions title="" :column="3" border size="small">
-                  <el-descriptions-item label="发布人">
-                    {{ item.publish.username }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="电话">
-                    {{ item.publish.phone }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="学校">
-                    {{ item.publish.school.name }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="所在系">
-                    {{ item.publish.dept.name }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="所在班级">
-                    {{ item.publish.aclass.name }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="接单时间">
-                    {{ item.orderTime | formatDate }}
-                  </el-descriptions-item>
-                </el-descriptions>
-                
+            <div class="item-body">
+              <div class="text-info">
+                <h4 class="title" :class="{ 'text-muted': item.state == 2 }">{{ item.taskTitle }}</h4>
+                <p class="summary">{{ item.taskContext }}</p>
+                <div class="publisher">
+                  <el-avatar :size="20" icon="el-icon-user" style="margin-right: 5px"></el-avatar>
+                  <span>求助者: {{ item.publish.username }}</span>
                 </div>
-            </el-collapse-item>
-          </el-collapse>
+              </div>
+              
+              <div class="image-box" v-if="item.imgList && item.imgList.length > 0">
+                <el-image :src="getResUrl(item.imgList[0])" fit="cover" class="side-img"></el-image>
+              </div>
+            </div>
+          </div>
 
-          <el-divider v-if="index !== tasks.length - 1"></el-divider>
+          <div class="item-footer" v-if="item.state == 1">
+            <span class="tip"><i class="el-icon-info"></i> 如果无法解决，请及时沟通并取消接单</span>
+            <el-button 
+              type="danger" 
+              size="mini" 
+              plain 
+              icon="el-icon-circle-close" 
+              @click.stop="cancelAccept(item.id)"
+            >取消接单</el-button>
+          </div>
+
+          <el-divider></el-divider>
         </div>
       </div>
-
-      <el-empty v-else description="你还没有接收任何求助，快去广场看看吧"></el-empty>
-
+      <el-empty v-else description="您目前还没有接受任何求助"></el-empty>
     </el-card>
   </div>
 </template>
@@ -82,113 +63,85 @@ import { mapState } from "vuex";
 import { formatDate } from "@/util/date";
 
 export default {
-  name: "Accepted",
+  name: "AcceptedTasks",
   data() {
     return {
-      activeNames: [], // 控制折叠面板
-      tasks: [],
+      acceptedTasks: [],
+      baseUrl: "http://localhost:8080"
     };
   },
-  computed: {
-    ...mapState("user", ["user"]),
-  },
-  created() {
-    this.newList();
-  },
+  computed: { ...mapState("user", ["user"]) },
   methods: {
-    del(id) {
-      this.$put("/task/takerCancel/" + id).then((res) => {
-        this.$notifyMsg("成功", "已取消帮助", "success");
-        this.newList();
-      });
+    getResUrl(url) {
+      if (!url) return "";
+      return url.startsWith("http") ? url : this.baseUrl + url;
     },
-    newList() {
+    goToDetail(id) {
+      this.$router.push({ name: 'TaskDetail', params: { id: id } });
+    },
+    loadAcceptedTasks() {
+      // 假设后端接口为 /task/accepted?id=xxx
       this.$get("/task/accepted", { id: this.user.id }).then((res) => {
-        this.tasks = res.data.task;
+        if (res.data.status) {
+          let list = res.data.task;
+          list.forEach(item => {
+            if (item.imgUrl) item.imgList = item.imgUrl.split(",");
+          });
+          // 互助中的排在最上面
+          this.acceptedTasks = list.sort((a, b) => a.state - b.state);
+        }
       });
     },
+    cancelAccept(taskId) {
+      this.$confirm("确定要取消此项求助的接单吗？这可能会影响您的信誉。", "提示", {
+        confirmButtonText: "确定取消",
+        cancelButtonText: "点错了",
+        type: 'warning'
+      }).then(() => {
+        // 调用后端取消接单接口
+        this.$put("task/takerCancel/" + taskId).then((res) => {
+          if (res.data.status) {
+            this.$msg("已成功取消接单", "success");
+            this.loadAcceptedTasks(); // 重新加载列表
+          }
+        });
+      }).catch(() => {});
+    }
   },
+  created() { this.loadAcceptedTasks(); },
   filters: {
-    formatDate(time) {
-      if (!time) return '暂无';
-      let date = new Date(time);
-      return formatDate(date, "yyyy-MM-dd hh:mm");
-    },
-  },
+    formatDate(time) { return formatDate(new Date(time), "yyyy-MM-dd hh:mm"); }
+  }
 };
 </script>
 
 <style scoped lang="less">
-/* 1. 容器样式 */
-.content {
-  background: transparent;
-  margin: 0;
-  padding: 10px 0;
-
-  /* 2. 主卡片样式 */
-  .box-card {
-    border-radius: 8px;
-    border: none;
-
-    /* 列表项 */
-    .task-item {
-      padding: 10px 0;
-
-      .item-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-
-        .title-wrapper {
-          display: flex;
-          align-items: center;
-          .task-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #303133;
-          }
-        }
-        
-        .cancel-btn {
-            color: #F56C6C;
-            &:hover {
-                color: #f78989;
-            }
-        }
-      }
-
-      .task-content {
-        font-size: 14px;
-        color: #606266;
-        line-height: 1.6;
-        margin-bottom: 15px;
-        padding-left: 5px; /* 稍微缩进一点 */
-      }
-
-      /* 自定义折叠面板样式 */
-      .custom-collapse {
-        border-top: none;
-        border-bottom: none;
-
-        /deep/ .el-collapse-item__header {
-          border-bottom: none;
-          background-color: transparent;
-          font-size: 13px;
-          color: #909399;
-          height: 40px;
-          line-height: 40px;
-        }
-        
-        /deep/ .el-collapse-item__wrap {
-          border-bottom: none;
-        }
-
-        .info-wrapper {
-            padding: 10px 0;
-        }
-      }
+.content { padding: 10px 0; }
+.accepted-item {
+  margin-bottom: 5px;
+  .item-main {
+    cursor: pointer; padding: 10px; border-radius: 6px; transition: background 0.2s;
+    &:hover { background: #fcfcfc; }
+    .status-bar {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+      .order-time { font-size: 12px; color: #999; }
     }
+    .item-body {
+      display: flex; justify-content: space-between;
+      .text-info {
+        flex: 1; padding-right: 20px;
+        .title { margin: 0 0 8px 0; font-size: 17px; color: #333; }
+        .text-muted { color: #999; text-decoration: line-through; }
+        .summary { font-size: 14px; color: #666; line-height: 1.4; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-bottom: 10px; }
+        .publisher { display: flex; align-items: center; font-size: 13px; color: #409eff; }
+      }
+      .image-box { .side-img { width: 100px; height: 75px; border-radius: 4px; border: 1px solid #eee; } }
+    }
+  }
+  .item-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; padding: 8px 12px; background: #fffcf5; border-radius: 4px;
+    .tip { font-size: 12px; color: #e6a23c; }
   }
 }
 </style>

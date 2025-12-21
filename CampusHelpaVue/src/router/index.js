@@ -55,11 +55,18 @@ const routes = [
 // 🟢 新增：帖子详情页路由 (放在 home 下面，与 forum 平级)
       // 这样跳转后 url 是 /home/post/detail/123
       {
-        path: "post/detail/:id",
+        path: "post/postdetail/:id",
         name: "PostDetail",
         meta: { title: "帖子详情" },
         // 请确保你新建的文件放在了这个路径下: src/views/user/children/PostDetail.vue
         component: () => import("@v/user/children/PostDetail.vue"),
+      },
+
+      {
+        path: "post/taskdetail/:id",
+        name: "TaskDetail",
+        meta: { title: "详情" },
+        component: () => import("@v/user/children/TaskDetail.vue"),
       },
 
       // --- 求助中心 (HelpCenter) ---
