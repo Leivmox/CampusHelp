@@ -1,7 +1,7 @@
 package com.yqn.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper; // 必须导入这个
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.yqn.common.core.domain.AjaxResult;
 import com.yqn.common.tools.MessageTools;
 import com.yqn.common.tools.PocketMoney;
@@ -83,12 +83,20 @@ public class UserController {
 
     // 更新信息
     @PutMapping
-    public Map<String, Object> putUser(User user) {
+//    public Map<String, Object> putUser(User user) {
+    public Map<String, Object> putUser(@RequestBody User user) {
+        if (user.getId() == null) {
+            return message.message(false, "更新失败：缺少用户ID", "", null);
+        }
+
+        // updateById 只会更新实体类中非 null 的字段
         boolean update = userService.updateById(user);
         if (update) {
-            return message.message(true, "更新信息成功", "", null);
+            // 更新成功后，建议返回最新的用户信息，方便前端同步状态
+            User newUser = userService.getById(user.getId());
+            return message.message(true, "更新成功", "user", newUser);
         }
-        return message.message(false, "error, 更新信息失败", "", null);
+        return message.message(false, "更新失败", "", null);
     }
 
     // 删除学生
@@ -136,5 +144,22 @@ public class UserController {
         } else {
             return AjaxResult.error("更新失败：数据库中不存在 ID=" + user.getId() + " 的用户");
         }
+    }
+
+    @PostMapping("/updateProfile")
+    public AjaxResult updateProfile(@RequestBody User user) {
+        if (user.getId() == null) {
+            return AjaxResult.error("ID不能为空");
+        }
+
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", user.getId());
+
+        // 动态判断，只更新传过来的字段
+        if (user.getSignature() != null) updateWrapper.set("signature", user.getSignature());
+        if (user.getEmail() != null) updateWrapper.set("email", user.getEmail());
+
+        boolean success = userService.update(updateWrapper);
+        return success ? AjaxResult.success("资料更新成功") : AjaxResult.error("更新失败");
     }
 }

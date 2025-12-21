@@ -212,18 +212,44 @@
     </el-drawer>
 
     <el-dialog
-      title="修改信息"
+      title="修改个人资料"
       :visible.sync="dialogVisible"
       :close-on-click-modal="false"
+      width="450px"
     >
-      <el-form :model="ruleForm" :rules="rules" ref="ruleForm">
+      <el-form
+        :model="ruleForm"
+        :rules="rules"
+        ref="ruleForm"
+        label-width="80px"
+      >
         <el-form-item label="姓名" prop="username">
-          <el-input v-model.number="ruleForm.username"></el-input>
+          <el-input
+            v-model="ruleForm.username"
+            placeholder="请输入姓名"
+          ></el-input>
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
           <el-input
             v-model.number="ruleForm.phone"
             oninput="if(value.length>11)value=value.slice(0,11)"
+            placeholder="请输入手机号"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input
+            v-model="ruleForm.email"
+            placeholder="请输入电子邮箱"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="简介" prop="signature">
+          <el-input
+            type="textarea"
+            :rows="3"
+            v-model="ruleForm.signature"
+            placeholder="写点什么介绍一下自己吧..."
+            maxlength="100"
+            show-word-limit
           ></el-input>
         </el-form-item>
       </el-form>
@@ -311,20 +337,57 @@ export default {
     },
     personalInformation() {
       this.dialogVisible = true;
+      // 🟢 关键：把当前登录用户的 ID 存入表单对象中
+      this.ruleForm.id = this.user.id;
       this.ruleForm.username = this.user.username;
       this.ruleForm.phone = this.user.phone;
+      this.ruleForm.email = this.user.email;
+      this.ruleForm.signature = this.user.signature;
     },
-    submitChanges() {
-      this.$put("/user", {
-        id: this.user.id,
+submitChanges() {
+  this.$refs["ruleForm"].validate((valid) => {
+    if (valid) {
+      // 1. 确保能拿到 ID
+      const userId = this.user.id || (localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).id : null);
+      
+      if (!userId) {
+        this.$message.error("用户信息失效，请重新登录");
+        return;
+      }
+
+      // 2. 构造普通的 JS 对象（$put 会自动把它转为后端需要的 JSON 字符串）
+      const updateData = {
+        id: userId,
         username: this.ruleForm.username,
         phone: this.ruleForm.phone,
-      }).then((res) => {
-        this.$notifyMsg("成功", res.data.msg, "success", 1000);
-        this.dialogVisible = false;
-        this.newList(this.user.id);
-      });
-    },
+        email: this.ruleForm.email,
+        signature: this.ruleForm.signature
+      };
+
+      console.log("正在提交 JSON 数据:", updateData);
+
+      // 3. 注意：这里直接传 updateData 对象
+      this.$put("/user", updateData)
+        .then((res) => {
+          // 这里的 res 判断取决于你 myPlugin.js 或 axios 的封装
+          // 通常是 res.data，如果你的插件剥离了 data 层，就直接用 res
+          const result = res.data || res;
+          
+          if (result.status === true || result.code === 200) {
+            this.$notifyMsg("成功", "资料更新成功", "success", 1000);
+            this.dialogVisible = false;
+            this.newList(userId); // 刷新 Vuex 状态
+          } else {
+            this.$message.error(result.msg || "更新失败");
+          }
+        })
+        .catch((err) => {
+          console.error("请求失败详情:", err);
+          this.$message.error("网络请求失败，请检查网络或后端");
+        });
+    }
+  });
+},
     // 根据当前用户查询id
     newList(id) {
       this.$get("/user/" + id).then((rs) => {
@@ -428,15 +491,28 @@ export default {
     };
 
     return {
-      // 文字头像
       firstName: "",
       ruleForm: {
+        id: null, // 🟢 必须添加这个，用来存储当前用户的ID
         username: "",
         phone: "",
+        email: "",
+        signature: "",
       },
       rules: {
-        username: [{ validator: validateUsername, trigger: "blur" }],
-        phone: [{ validator: validatePhone, trigger: "blur" }],
+        username: [{ required: true, message: "请输入姓名", trigger: "blur" }],
+        phone: [{ required: true, message: "请输入手机号", trigger: "blur" }],
+        // 🟢 新增：邮箱简单校验
+        email: [
+          {
+            type: "email",
+            message: "请输入正确的邮箱地址",
+            trigger: ["blur", "change"],
+          },
+        ],
+        signature: [
+          { max: 100, message: "简介不能超过100个字符", trigger: "blur" },
+        ],
       },
       themeColor: { bg: "#E0E8FB", color: "#000" },
       sex: "0",

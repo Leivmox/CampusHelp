@@ -32,6 +32,11 @@ public class User {
     private Date createTime;
     private Double balance;
     private Integer state;
+    /** 个人简介 (新增) */
+    private String signature;
+
+    /** 电子邮箱 (新增) */
+    private String email;
 
     @TableField(exist = false)
     private School school;

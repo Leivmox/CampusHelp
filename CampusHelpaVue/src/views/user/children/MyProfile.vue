@@ -37,7 +37,7 @@
             <span class="username">{{ user.username }}</span>
             <el-tag size="mini" type="primary" effect="dark" class="role-tag">学生</el-tag>
           </div>
-          <div class="bio-row">
+          <div class="bio-row" :title="user.signature">
             {{ user.signature || "这个人很懒，什么都没有留下..." }}
           </div>
         </div>
@@ -71,6 +71,10 @@
             <el-descriptions-item>
               <template slot="label"><i class="el-icon-user"></i> 学号</template>
               {{ user.studentId }}
+            </el-descriptions-item>
+            <el-descriptions-item>
+              <template slot="label"><i class="el-icon-message"></i> 邮箱</template>
+              {{ user.email || "未公开" }}
             </el-descriptions-item>
             <el-descriptions-item>
               <template slot="label"><i class="el-icon-mobile-phone"></i> 手机</template>
@@ -178,34 +182,26 @@ export default {
     this.getMyPosts();
   },
   methods: {
-    // 🟢 判断是否有图 (兼容 list 和 string 两种后端返回格式)
     hasImage(item) {
       if (item.imgList && item.imgList.length > 0) return true;
       if (item.imgUrl && item.imgUrl !== '') return true;
       return false;
     },
-
-    // 🟢 获取第一张图并处理 URL
     getFirstImage(item) {
         let url = "";
-        // 优先取 List
         if (item.imgList && item.imgList.length > 0) {
             url = item.imgList[0];
         } 
-        // 其次取 String
         else if (item.imgUrl) {
             url = item.imgUrl.split(',')[0];
         }
         
         if (!url) return "";
         if (url.startsWith("http")) return url;
-        // 拼接本地服务器地址
         return `http://localhost:8080${url}`;
     },
-
     getMyPosts() {
       if (!this.user || !this.user.id) return;
-      
       this.$get("/post", {
         schoolId: this.user.school ? this.user.school.id : null,
         userId: this.user.id 
@@ -217,11 +213,9 @@ export default {
         console.error("获取帖子失败", err);
       });
     },
-
     goToDetail(id) {
         this.$router.push({ name: 'PostDetail', params: { id: id } });
     },
-
     getUserStats() {
       if (!this.user.id) return;
       listPublished(this.user.id)
@@ -245,8 +239,7 @@ export default {
         });
     },
     beforeAvatarUpload(file) {
-      const isJPGOrPNG =
-        file.type === "image/jpeg" || file.type === "image/png";
+      const isJPGOrPNG = file.type === "image/jpeg" || file.type === "image/png";
       const isLt2M = file.size / 1024 / 1024 < 5;
       if (!isJPGOrPNG) {
         this.$message.error("上传头像图片只能是 JPG/PNG 格式!");
@@ -268,13 +261,13 @@ export default {
           this.$message.success("头像修改成功");
           this.$set(this.user, "avatar", uploadedUrl);
           let localUserStr = localStorage.getItem("user");
-            if (localUserStr) {
-                try {
-                    let localUser = JSON.parse(localUserStr);
-                    localUser.avatar = uploadedUrl;
-                    localStorage.setItem("user", JSON.stringify(localUser));
-                } catch (e) {}
-            }
+          if (localUserStr) {
+              try {
+                  let localUser = JSON.parse(localUserStr);
+                  localUser.avatar = uploadedUrl;
+                  localStorage.setItem("user", JSON.stringify(localUser));
+              } catch (e) {}
+          }
         });
       } else {
         this.$message.error(res.msg || "头像上传失败");
@@ -285,145 +278,51 @@ export default {
 </script>
 
 <style scoped lang="less">
+/* ... 原有样式保持不变 ... */
 .profile-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
-
-.top-card {
-  border-radius: 8px;
-  margin-bottom: 20px;
-  overflow: visible;
-}
-
+.top-card { border-radius: 8px; margin-bottom: 20px; overflow: visible; }
 .user-header-bg {
   height: 280px;
   background-size: cover;
   background-position: center;
   position: relative;
   background-color: #a0cfff;
-  
-  .edit-btn {
-    position: absolute; top: 15px; right: 15px;
-    background: rgba(255, 255, 255, 0.4); border: none; color: #333;
-    &:hover { background: #fff; }
-  }
+  .edit-btn { position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.4); border: none; color: #333; &:hover { background: #fff; } }
 }
-
 .user-profile-row {
-  display: flex;
-  align-items: flex-end;
-  padding: 0 30px 20px 30px;
-  margin-top: -25px; 
-  position: relative; 
-  z-index: 2;
-
+  display: flex; align-items: flex-end; padding: 0 30px 20px 30px; margin-top: -25px; position: relative; z-index: 2;
   .avatar-section {
     position: relative; margin-right: 20px;
     .user-avatar { border: 4px solid #fff; background-color: #fff; box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1); }
     .avatar-uploader { position: relative; border-radius: 50%; overflow: hidden; display: block; }
-    .avatar-hover-mask {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.5); color: #fff;
-      display: flex; justify-content: center; align-items: center;
-      font-size: 24px; opacity: 0; transition: opacity 0.3s; border-radius: 50%;
-    }
+    .avatar-hover-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); color: #fff; display: flex; justify-content: center; align-items: center; font-size: 24px; opacity: 0; transition: opacity 0.3s; border-radius: 50%; }
     &:hover .avatar-hover-mask { opacity: 1; }
   }
-
   .info-section {
     flex: 1; padding-bottom: 5px;
-    .name-row {
-      display: flex; align-items: center; margin-bottom: 8px;
-      .username { font-size: 24px; font-weight: bold; color: #303133; margin-right: 10px; text-shadow: 0 1px 2px rgba(255,255,255,0.8); }
-    }
+    .name-row { display: flex; align-items: center; margin-bottom: 8px; .username { font-size: 24px; font-weight: bold; color: #303133; margin-right: 10px; text-shadow: 0 1px 2px rgba(255,255,255,0.8); } }
     .bio-row { font-size: 14px; color: #606266; max-width: 500px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   }
-
   .stats-section {
     display: flex; align-items: center; padding-bottom: 5px;
-    .stat-item {
-      text-align: center; padding: 0 20px;
-      .num { font-size: 24px; font-weight: bold; color: #303133; &.highlight { color: #ff9900; } }
-      .label { font-size: 12px; color: #909399; margin-top: 2px; }
-    }
+    .stat-item { text-align: center; padding: 0 20px; .num { font-size: 24px; font-weight: bold; color: #303133; &.highlight { color: #ff9900; } } .label { font-size: 12px; color: #909399; margin-top: 2px; } }
     .stat-divider { height: 40px; }
   }
 }
-
-.bottom-section {
-  .detail-card, .history-card {
-    border-radius: 8px; height: 100%; min-height: 400px;
-  }
-  .card-title { font-weight: bold; font-size: 16px; }
-}
-
-/* 🟢 历史列表样式更新 - 带图模式 */
+.bottom-section { .detail-card, .history-card { border-radius: 8px; height: 100%; min-height: 400px; } .card-title { font-weight: bold; font-size: 16px; } }
 .history-content {
-  max-height: 450px;
-  overflow-y: auto;
-  padding: 0 10px;
-
+  max-height: 450px; overflow-y: auto; padding: 0 10px;
   .history-item {
-    padding: 15px 0;
-    border-bottom: 1px solid #ebeef5;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start; /* 改为 flex-start 让图片和文字顶部对齐 */
-    transition: background-color 0.2s;
-
-    &:hover {
-      background-color: #f9f9f9;
-      padding-left: 5px;
-    }
-
-    /* 🟢 图片容器样式 */
-    .item-thumb {
-      width: 100px;
-      height: 70px;
-      margin-right: 15px;
-      flex-shrink: 0; /* 防止被挤压 */
-      border-radius: 4px;
-      overflow: hidden;
-      border: 1px solid #eee;
-
-      .thumb-img {
-        width: 100%;
-        height: 100%;
-      }
-    }
-
-    .item-main {
-      flex: 1;
-      min-width: 0;
-      padding-right: 15px;
-      
-      .item-title {
-        font-size: 15px; font-weight: bold; color: #303133; margin-bottom: 6px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      .item-desc {
-        font-size: 13px; color: #909399;
-        display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; /* 两行显示省略号 */
-        line-height: 1.5;
-      }
-    }
-
-    .item-meta {
-      display: flex; flex-direction: column; align-items: flex-end;
-      min-width: 90px;
-      font-size: 12px; color: #c0c4cc;
-      
-      .time { margin-bottom: 5px; }
-      .likes i { margin-right: 3px; color: #F56C6C; }
-    }
+    padding: 15px 0; border-bottom: 1px solid #ebeef5; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; transition: background-color 0.2s;
+    &:hover { background-color: #f9f9f9; padding-left: 5px; }
+    .item-thumb { width: 100px; height: 70px; margin-right: 15px; flex-shrink: 0; border-radius: 4px; overflow: hidden; border: 1px solid #eee; .thumb-img { width: 100%; height: 100%; } }
+    .item-main { flex: 1; min-width: 0; padding-right: 15px; .item-title { font-size: 15px; font-weight: bold; color: #303133; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .item-desc { font-size: 13px; color: #909399; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.5; } }
+    .item-meta { display: flex; flex-direction: column; align-items: flex-end; min-width: 90px; font-size: 12px; color: #c0c4cc; .time { margin-bottom: 5px; } .likes i { margin-right: 3px; color: #F56C6C; } }
   }
 }
-
-.history-content::-webkit-scrollbar { width: 5px; }
-.history-content::-webkit-scrollbar-thumb { background: #dcdfe6; border-radius: 3px; }
-
 /deep/ .el-descriptions-item__label { width: 80px; text-align-last: justify; }
 </style>

@@ -7,6 +7,8 @@
     <resultMap id="userResultMap" type="com.yqn.pojo.User">
         <id column="id" property="id"/>
         <result column="avatar" property="avatar"/>
+        <result column="signature" property="signature"/>
+        <result column="email" property="email"/>
 
         <association property="school" column="school_id" select="findEntitySchoolById"/>
         <association property="dept" column="dept_id" select="findEntityDeptById"/>
