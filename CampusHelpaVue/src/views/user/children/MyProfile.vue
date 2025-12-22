@@ -318,14 +318,14 @@ export default {
 <style scoped lang="less">
 /* ... 原有样式保持不变 ... */
 .profile-container {
-  padding: 20px;
-  max-width: 1200px;
+  padding: 10px 0;
+  // max-width: 1200px;
   margin: 0 auto;
 }
 .top-card {
   border-radius: 8px;
   margin-bottom: 20px;
-  overflow: visible;
+  // overflow: visible;
 }
 .user-header-bg {
   height: 280px;

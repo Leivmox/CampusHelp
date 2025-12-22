@@ -4,50 +4,88 @@
       title="我接受的求助 - 请秉持诚信、友好的态度协助同学解决问题"
       :closable="false"
       type="warning"
-      style="margin-bottom: 10px;"
+      style="margin-bottom: 10px"
     ></el-alert>
 
     <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
-        <span style="font-size: 18px; font-weight: bold;">我的服务进度</span>
-        <el-button style="float: right; padding: 3px 0;" type="text" icon="el-icon-refresh" @click="loadAcceptedTasks">刷新</el-button>
+        <span style="font-size: 18px; font-weight: bold">我的服务进度</span>
+        <el-button
+          style="float: right; padding: 3px 0"
+          type="text"
+          icon="el-icon-refresh"
+          @click="loadAcceptedTasks"
+          >刷新</el-button
+        >
       </div>
 
       <div v-if="acceptedTasks.length > 0">
         <div v-for="item in acceptedTasks" :key="item.id" class="accepted-item">
-          
-          <div class="item-main" @click="goToDetail(item.id)">
-            <div class="status-bar">
-              <el-tag v-if="item.state == 1" type="warning" effect="dark" size="small">互助中</el-tag>
-              <el-tag v-else type="info" effect="dark" size="small">已完成</el-tag>
-              <span class="order-time">接单时间: {{ item.orderTime | formatDate }}</span>
+          <div class="item-wrapper" @click="goToDetail(item.id)">
+            <div class="item-header">
+              <div class="status-tags">
+                <el-tag
+                  v-if="item.state == 1"
+                  type="warning"
+                  effect="dark"
+                  size="small"
+                  >互助中</el-tag
+                >
+                <el-tag v-else type="info" effect="dark" size="small"
+                  >已完成</el-tag
+                >
+              </div>
+
+              <h4 class="title" :class="{ 'text-muted': item.state == 2 }">
+                {{ item.taskTitle }}
+              </h4>
+              <span class="order-time"
+                >{{ item.orderTime | formatDate }} 接单</span
+              >
             </div>
 
             <div class="item-body">
-              <div class="text-info">
-                <h4 class="title" :class="{ 'text-muted': item.state == 2 }">{{ item.taskTitle }}</h4>
-                <p class="summary">{{ item.taskContext }}</p>
-                <div class="publisher">
-                  <el-avatar :size="20" icon="el-icon-user" style="margin-right: 5px"></el-avatar>
-                  <span>求助者: {{ item.publish.username }}</span>
+              <div
+                class="image-box"
+                v-if="item.imgList && item.imgList.length > 0"
+              >
+                <el-image
+                  :src="getResUrl(item.imgList[0])"
+                  fit="cover"
+                  class="side-img"
+                ></el-image>
+                <div class="img-badge" v-if="item.imgList.length > 1">
+                  {{ item.imgList.length }}图
                 </div>
               </div>
-              
-              <div class="image-box" v-if="item.imgList && item.imgList.length > 0">
-                <el-image :src="getResUrl(item.imgList[0])" fit="cover" class="side-img"></el-image>
+              <div class="text-content">
+                <p class="summary">{{ item.taskContext }}</p>
+              </div>
+            </div>
+
+            <div class="item-footer-info">
+              <div class="publisher">
+                <span class="user-info">
+                  <i class="el-icon-user"></i>
+                  求助者:
+                  {{ item.publish ? item.publish.username : "未知用户" }}
+                </span>
               </div>
             </div>
           </div>
 
-          <div class="item-footer" v-if="item.state == 1">
-            <span class="tip"><i class="el-icon-info"></i> 如果无法解决，请及时沟通并取消接单</span>
-            <el-button 
-              type="danger" 
-              size="mini" 
-              plain 
-              icon="el-icon-circle-close" 
+          <div class="action-bar" v-if="item.state == 1">
+            <span class="tip"
+              ><i class="el-icon-info"></i> 无法解决请及时沟通并取消</span
+            >
+            <el-button
+              type="danger"
+              size="mini"
+              plain
+              icon="el-icon-circle-close"
               @click.stop="cancelAccept(item.id)"
-            >取消接单</el-button>
+              >取消接单</el-button
+            >
           </div>
 
           <el-divider></el-divider>
@@ -67,7 +105,7 @@ export default {
   data() {
     return {
       acceptedTasks: [],
-      baseUrl: "http://localhost:8080"
+      baseUrl: "http://localhost:8080",
     };
   },
   computed: { ...mapState("user", ["user"]) },
@@ -77,71 +115,187 @@ export default {
       return url.startsWith("http") ? url : this.baseUrl + url;
     },
     goToDetail(id) {
-      this.$router.push({ name: 'TaskDetail', params: { id: id } });
+      this.$router.push({ name: "TaskDetail", params: { id: id } });
     },
     loadAcceptedTasks() {
-      // 假设后端接口为 /task/accepted?id=xxx
       this.$get("/task/accepted", { id: this.user.id }).then((res) => {
         if (res.data.status) {
           let list = res.data.task;
-          list.forEach(item => {
+          list.forEach((item) => {
             if (item.imgUrl) item.imgList = item.imgUrl.split(",");
           });
-          // 互助中的排在最上面
-          this.acceptedTasks = list.sort((a, b) => a.state - b.state);
+
+          // 排序逻辑：
+          this.acceptedTasks = list.sort((a, b) => {
+            // 1. 状态排序 (state=1 是互助中，state=2 是已完成)
+            // 升序排列：1 会排在 2 之前
+            if (a.state !== b.state) {
+              return a.state - b.state;
+            }
+
+            // 2. 时间排序 (状态相同时，按接单时间倒序)
+            // 使用 orderTime 或 createTime，取决于你想按哪个时间排
+            const timeA = new Date(a.orderTime).getTime();
+            const timeB = new Date(b.orderTime).getTime();
+            return timeB - timeA; // 晚的时间戳更大，排在前面
+          });
         }
       });
     },
     cancelAccept(taskId) {
-      this.$confirm("确定要取消此项求助的接单吗？这可能会影响您的信誉。", "提示", {
-        confirmButtonText: "确定取消",
-        cancelButtonText: "点错了",
-        type: 'warning'
-      }).then(() => {
-        // 调用后端取消接单接口
-        this.$put("task/takerCancel/" + taskId).then((res) => {
-          if (res.data.status) {
-            this.$msg("已成功取消接单", "success");
-            this.loadAcceptedTasks(); // 重新加载列表
-          }
-        });
-      }).catch(() => {});
-    }
+      this.$confirm("确定要取消此项求助的接单吗？", "提示", {
+        type: "warning",
+      })
+        .then(() => {
+          this.$put("task/takerCancel/" + taskId).then((res) => {
+            if (res.data.status) {
+              this.$msg("已成功取消接单", "success");
+              this.loadAcceptedTasks();
+            }
+          });
+        })
+        .catch(() => {});
+    },
   },
-  created() { this.loadAcceptedTasks(); },
+  created() {
+    this.loadAcceptedTasks();
+  },
   filters: {
-    formatDate(time) { return formatDate(new Date(time), "yyyy-MM-dd hh:mm"); }
-  }
+    formatDate(time) {
+      return formatDate(new Date(time), "yyyy-MM-dd hh:mm");
+    },
+  },
 };
 </script>
 
 <style scoped lang="less">
-.content { padding: 10px 0; }
+.content {
+  padding: 10px 0;
+}
+
 .accepted-item {
-  margin-bottom: 5px;
-  .item-main {
-    cursor: pointer; padding: 10px; border-radius: 6px; transition: background 0.2s;
-    &:hover { background: #fcfcfc; }
-    .status-bar {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
-      .order-time { font-size: 12px; color: #999; }
-    }
-    .item-body {
-      display: flex; justify-content: space-between;
-      .text-info {
-        flex: 1; padding-right: 20px;
-        .title { margin: 0 0 8px 0; font-size: 17px; color: #333; }
-        .text-muted { color: #999; text-decoration: line-through; }
-        .summary { font-size: 14px; color: #666; line-height: 1.4; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-bottom: 10px; }
-        .publisher { display: flex; align-items: center; font-size: 13px; color: #409eff; }
-      }
-      .image-box { .side-img { width: 100px; height: 75px; border-radius: 4px; border: 1px solid #eee; } }
+  .item-wrapper {
+    cursor: pointer;
+    padding: 12px;
+    transition: background 0.2s;
+    border-radius: 8px;
+    &:hover {
+      background: #f8f9fa;
     }
   }
-  .item-footer {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-top: 10px; padding: 8px 12px; background: #fffcf5; border-radius: 4px;
-    .tip { font-size: 12px; color: #e6a23c; }
+
+  // 第一部分：标题行
+  .item-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 10px;
+
+    .title {
+      margin: 0;
+      font-size: 16px;
+      color: #333;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .text-muted {
+      color: #999;
+      text-decoration: line-through;
+    }
+    .order-time {
+      font-size: 12px;
+      color: #999;
+      flex-shrink: 0;
+    }
+  }
+
+  // 第二部分：图左文右
+  .item-body {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+
+    .image-box {
+      position: relative;
+      margin-right: 15px;
+      flex-shrink: 0;
+
+      .side-img {
+        width: 100px;
+        height: 75px;
+        border-radius: 6px;
+        border: 1px solid #f0f0f0;
+      }
+      .img-badge {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        font-size: 10px;
+        padding: 1px 4px;
+        border-radius: 3px;
+      }
+    }
+
+    .text-content {
+      flex: 1;
+      .summary {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.5;
+        margin: 0;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3; // 最多显示3行
+        overflow: hidden;
+      }
+    }
+  }
+
+  // 第三部分：求助者信息
+.item-footer-info {
+  margin-bottom: 10px;
+  
+  .publisher {
+    display: flex;
+    align-items: center;
+
+    .user-info {
+      font-size: 13px;
+      color: #606266;
+      display: flex;
+      align-items: center;
+
+      i {
+        margin-right: 4px;
+        font-size: 14px; // 图标稍微大一点点更清晰
+        color: #409eff; // 保留你之前的蓝色调
+      }
+    }
+  }
+}
+
+  // 操作提示栏
+  .action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #fffcf5;
+    border-radius: 6px;
+    border: 1px solid #fdf6ec;
+
+    .tip {
+      font-size: 12px;
+      color: #e6a23c;
+    }
+  }
+
+  .el-divider--horizontal {
+    margin: 15px 0 5px 0;
   }
 }
 </style>

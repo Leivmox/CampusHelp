@@ -15,7 +15,7 @@
           icon="el-icon-search"
           @click="goTo('/home/help/accept')"
         >
-          接受求助
+          求助广场
         </el-button>
 
         <el-button 

@@ -1,4 +1,6 @@
 <template>
+
+  <!-- <div class="profile-container"> -->
   <el-row :gutter="20" class="main-layout-row">
     <el-col :xs="24" :sm="24" :md="16" :lg="17">
       <el-card shadow="never" class="detail-card">
@@ -261,6 +263,7 @@
       </span>
     </el-dialog>
   </el-row>
+  <!-- </div> -->
 </template>
 
 <script>
@@ -443,8 +446,8 @@ export default {
 <style scoped lang="less">
 /* 核心布局优化：不再有背景色 */
 .main-layout-row {
-  padding: 20px;
-  max-width: 1300px;
+  padding: 20px 0;
+//   max-width: 1300px;
   margin: 0 auto;
 }
 
@@ -629,5 +632,11 @@ export default {
   display: flex; /* 启用 flex 布局 */
   justify-content: flex-end; /* 水平方向靠右对齐 */
   align-items: center; /* 垂直方向居中对齐（可选） */
+}
+
+.profile-container {
+  padding: 10px 0;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 </style>

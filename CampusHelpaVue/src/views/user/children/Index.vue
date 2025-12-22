@@ -451,7 +451,7 @@ export default {
 
 /* 🟢 核心修改：背景图样式调整 */
 .profile-bg {
-  height: 80px;
+  height: 130px;
   /* background: linear-gradient(135deg, #409eff 0%, #a0cfff 100%); 删除旧的渐变 */
   background-size: cover; /* 让图片填满 */
   background-position: center; /* 图片居中显示 */
@@ -460,7 +460,7 @@ export default {
 .profile-content {
   text-align: center;
   position: relative;
-  margin-top: -35px;
+  margin-top: -45px;
   padding-bottom: 15px;
   border-bottom: 1px solid #f0f0f0;
 }
