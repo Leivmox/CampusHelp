@@ -585,8 +585,33 @@ export default {
     };
   },
   watch: {
-    $route(to, form) {
+    $route(to, from) {
+      // 1. 原有的面包屑逻辑保留
       this.getBreadcrumb();
+
+      // =======================================================
+      // 🟢 新增：切换路由时，强制滚动到顶部
+      // =======================================================
+
+      // 情况A：如果你是整个浏览器窗口滚动
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+
+      // 情况B：如果你的滚动条是在 .right 这个区域内部生成的（局部滚动）
+      // 很多后台管理系统是固定侧边栏，只有右侧区域滚动
+      this.$nextTick(() => {
+        const rightPanel = document.querySelector(".right");
+        if (rightPanel) {
+          rightPanel.scrollTop = 0;
+        }
+
+        // 或者是 .bottom 区域
+        const bottomPanel = document.querySelector(".bottom");
+        if (bottomPanel) {
+          bottomPanel.scrollTop = 0;
+        }
+      });
     },
     // 监听 user 变化，重新计算文字头像 (防止只显示图不显示字)
     user: {
@@ -829,10 +854,10 @@ export default {
 }
 .points-wrapper {
   /* 🟢 这里控制距离名字的距离：8px 到 15px 之间比较合适 */
-  margin-right: 12px; 
+  margin-right: 12px;
   cursor: pointer;
   transition: all 0.3s;
-  
+
   &:hover {
     transform: scale(1.05);
     .points-content {

@@ -6,15 +6,35 @@
 
     <resultMap id="postResultMap" type="com.yqn.pojo.Post">
         <id column="id" property="id"/>
-        <!-- 普通字段 MyBatis 会自动匹配，但为了保险可以写上，这里主要写关联 -->
-
-        <!-- 关联 User：根据 user_id 查出 publisher 对象 -->
-        <association property="publisher" column="user_id" select="findUserById"/>
+        <result column="user_id" property="userId"/>
+        <result column="school_id" property="schoolId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="create_time" property="createTime"/>
+        <result column="img_url" property="imgUrl"/>
+        <result column="isLiked" property="isLiked"/> <association property="publisher" column="user_id" select="findUserById"/>
     </resultMap>
 
-    <!-- 定义怎么查 User，复用 UserMapper 的 ResultMap (和你提供的例子一致) -->
-    <select id="findUserById" resultMap="com.yqn.mapper.UserMapper.userResultMap">
+    <select id="findUserById" resultType="com.yqn.pojo.User">
         select * from user where id=#{id}
+    </select>
+
+    <select id="selectPostListWithLike" resultMap="postResultMap">
+        SELECT
+            p.*,
+            -- 如果关联到了点赞记录，则为 true(1)，否则为 false(0)
+            (CASE WHEN lr.id IS NOT NULL THEN 1 ELSE 0 END) AS isLiked
+        FROM post p
+
+                 -- 左连接点赞表：只匹配当前 userId 的点赞记录
+                 LEFT JOIN user_like lr
+                           ON p.id = lr.target_id
+                               AND lr.target_type = 1
+                               AND lr.user_id = #{userId}
+
+        WHERE p.school_id = #{schoolId}
+        ORDER BY p.create_time DESC
     </select>
 
 </mapper>

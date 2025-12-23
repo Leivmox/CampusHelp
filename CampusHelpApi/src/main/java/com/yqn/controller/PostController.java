@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.yqn.common.core.domain.AjaxResult;
 import com.yqn.common.tools.MessageTools;
+import com.yqn.mapper.PostMapper;
 import com.yqn.pojo.Comment;
 import com.yqn.pojo.Post;
 import com.yqn.pojo.User;
@@ -34,40 +35,36 @@ public class PostController {
     private UserService userService;
     @Autowired
     private MessageTools message;
+    // 🟢 注入 Mapper，为了直接调用自定义 SQL (规范做法是写在 Service 里，但这里直接调更方便你改)
+    @Autowired
+    private PostMapper postMapper;
 
     // 获取论坛列表 (带评论、用户信息、多图拆分)
 // 获取论坛列表 (支持 查全校 OR 查个人)
+// 获取论坛列表
     @GetMapping
-    public Map<String, Object> posts(Long schoolId, Long userId) { // 🟢 1. 增加 userId 参数
-        QueryWrapper<Post> wrapper = new QueryWrapper<>();
+    public Map<String, Object> posts(Long schoolId, Long userId) {
 
-        // 必须查该学校
-        wrapper.eq("school_id", schoolId);
+        // 🟥 删掉原来那一大段 QueryWrapper 代码，改成下面这一行：
+        // 直接调用 Mapper 里的自定义 SQL，它会处理 LEFT JOIN
+        List<Post> posts = postMapper.selectPostListWithLike(schoolId, userId);
 
-        // 🟢 2. 核心修改：如果有 userId，就只查这个人的；没有就查所有人的
-        if (userId != null) {
-            wrapper.eq("user_id", userId);
-        }
-
-        wrapper.orderByDesc("create_time");
-
-        List<Post> posts = postService.list(wrapper);
-
-        // 遍历每个帖子 (保持原有逻辑不变)
+        // --- 下面的处理逻辑（拆分图片、查评论）保持不变 ---
         for (Post post : posts) {
-            // 将数据库的长字符串拆分成图片列表给前端
+            // 图片拆分
             post.convertStringToList();
 
-            // 1. 填充发布者 User
-            User publisher = userService.getById(post.getUserId());
-            post.setPublisher(publisher);
+            // 填充发布者 (Mapper里其实已经配置了association，但为了保险这里的逻辑可以保留，也可以删掉)
+            if(post.getPublisher() == null) {
+                User publisher = userService.getById(post.getUserId());
+                post.setPublisher(publisher);
+            }
 
-            // 2. 填充该帖子的评论
+            // 填充评论 (保持不变)
             QueryWrapper<Comment> commentWrapper = new QueryWrapper<>();
             commentWrapper.eq("post_id", post.getId()).orderByAsc("create_time");
             List<Comment> comments = commentService.list(commentWrapper);
 
-            // 3. 遍历评论，填充评论者 User
             for (Comment c : comments) {
                 User commenter = userService.getById(c.getUserId());
                 c.setCommenter(commenter);

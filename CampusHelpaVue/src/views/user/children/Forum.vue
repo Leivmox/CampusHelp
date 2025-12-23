@@ -56,9 +56,16 @@
           </div>
 
           <div class="post-actions">
-            <el-button size="mini" icon="el-icon-thumb" @click.stop="handleLike(item)">
-              点赞 ({{ item.likeCount || 0 }})
+            <el-button 
+                size="mini" 
+                :type="item.isLiked ? 'danger' : ''"
+                :icon="item.isLiked ? 'el-icon-star-on' : 'el-icon-thumb'"
+                :plain="!item.isLiked"
+                @click.stop="handleLike(item)"
+            >
+              {{ item.isLiked ? '已赞' : '点赞' }} ({{ item.likeCount || 0 }})
             </el-button>
+
             <el-button size="mini" icon="el-icon-chat-dot-round" @click.stop="goToDetail(item.id)">
               评论 ({{ item.comments ? item.comments.length : 0 }})
             </el-button>
@@ -137,13 +144,19 @@ export default {
       if (!publisher || !publisher.username) return "U";
       return publisher.username.charAt(0).toUpperCase();
     },
+
+    // 🔴 修改点 2：获取列表时，告诉后端是谁在看（传 userId）
     getPosts() {
-      this.$get("/post", { schoolId: this.user.school.id }).then((res) => {
+      this.$get("/post", { 
+          schoolId: this.user.school.id,
+          userId: this.user.id  // 新增
+      }).then((res) => {
         if (res.data.status) {
           this.postList = res.data.posts;
         }
       });
     },
+
     openDialog() {
       this.dialogVisible = true;
     },
@@ -189,16 +202,32 @@ export default {
         }
       });
     },
-    // 点赞
+
+    // 🔴 修改点 3：点赞逻辑对接新接口
     handleLike(item) {
-      this.$put("/post/like/" + item.id).then((res) => {
+      // 拼接参数：userId, targetId, targetType=1(帖子)
+      const url = `/like?userId=${this.user.id}&targetId=${item.id}&targetType=1`;
+      
+      this.$put(url).then((res) => {
         if (res.data.status) {
-          item.likeCount++;
-          this.$msg("点赞成功", "success");
+            // 后端返回当前最新的状态
+            const isLikedNow = res.data.isLiked;
+            item.isLiked = isLikedNow;
+
+            // 更新数字显示
+            if (isLikedNow) {
+                item.likeCount = (item.likeCount || 0) + 1;
+                this.$msg("点赞成功", "success");
+            } else {
+                if (item.likeCount > 0) item.likeCount--;
+                this.$msg("取消点赞", "info");
+            }
+        } else {
+             this.$msg(res.data.msg, "error");
         }
       });
     },
-    // 🟢 跳转详情页
+
     goToDetail(postId) {
       this.$router.push({ name: 'PostDetail', params: { id: postId } });
     }

@@ -1,5 +1,4 @@
 <template>
-
   <!-- <div class="profile-container"> -->
   <el-row :gutter="20" class="main-layout-row">
     <el-col :xs="24" :sm="24" :md="16" :lg="17">
@@ -78,13 +77,13 @@
 
           <div class="action-bar">
             <el-button
-              type="primary"
-              plain
+              :type="post.isLiked ? 'danger' : 'primary'"
+              :icon="post.isLiked ? 'el-icon-star-on' : 'el-icon-thumb'"
+              :plain="!post.isLiked"
               round
-              icon="el-icon-thumb"
               @click="handleLike"
             >
-              点赞 {{ post.likeCount || 0 }}
+              {{ post.isLiked ? "已赞" : "点赞" }} {{ post.likeCount || 0 }}
             </el-button>
             <span class="divider"></span>
             <span class="read-info">
@@ -283,6 +282,10 @@ export default {
       userBgImg: require("@/assets/img/user_bg.jpg"),
       pubStats: { publishCount: 0, solveCount: 0 },
       fileList: [], // 用于存储 el-upload 显示的图片列表
+
+      // 👇👇👇 必须加上这一行！如果不加，弹窗永远弹不出来，或者控制台报错 👇👇👇
+      editDialogVisible: false,
+
       editForm: { id: null, title: "", content: "", imgList: [] },
     };
   },
@@ -298,28 +301,57 @@ export default {
     this.fetchPostDetail();
   },
   methods: {
-    fetchPostDetail() {
-      this.loading = true;
-      this.$get("/post", { schoolId: this.user.school.id })
-        .then((res) => {
-          this.loading = false;
-          if (res.data.status) {
-            let list = res.data.posts || [];
-            const found = list.find((p) => p.id == this.postId);
-            if (found) {
-              this.post = found;
-              if (this.post.publisher) {
-                this.getPublisherStats(this.post.publisher.id);
-              }
-            } else {
-              this.$msg("未找到该帖子", "error");
-            }
-          }
-        })
-        .catch(() => {
-          this.loading = false;
-        });
-    },
+fetchPostDetail() {
+  this.loading = true;
+
+  // 🔴 关键修复：确保 userId 真的拿到了
+  // 如果 this.user 为空，尝试从 localStorage 再拿一次（作为兜底）
+  // 或者直接使用 JSON.stringify 验证当前打印的瞬间是否有值
+  let realUserId = null;
+  if (this.user && this.user.id) {
+    realUserId = this.user.id;
+  } else {
+    // 尝试从本地缓存补救 (假设你存的是 "USER")
+    const localUser = localStorage.getItem("USER") ? JSON.parse(localStorage.getItem("USER")) : null;
+    if (localUser) realUserId = localUser.id;
+  }
+
+  // 调试：请在控制台看这条 Log，确认发出去的 id 是不是 null
+  console.log("【最终发送的 UserId】:", realUserId);
+
+  this.$get("/post", {
+    // 🔴 这里的 schoolId 同理，如果 user 为空 user.school 可能会报错，建议加保护
+    schoolId: this.user && this.user.school ? this.user.school.id : 1, 
+    userId: realUserId // 传给后端
+  })
+  .then((res) => {
+    this.loading = false;
+    if (res.data.status) {
+      let list = res.data.posts || [];
+      // 注意：这里用 == 而不是 ===，防止 id 一个是字符串一个是数字
+      const found = list.find((p) => p.id == this.postId);
+
+      if (found) {
+        // 🔴 修复视图刷新问题：直接构造新对象赋值
+        // 有时候直接 this.post = found 后再 $set 不一定立刻触发按钮样式的重绘
+        // 我们手动把 isLiked 转换好，再赋值
+        found.isLiked = !!found.isLiked; // 强制转 boolean
+        this.post = found; 
+
+        console.log("【帖子详情】当前点赞状态:", this.post.isLiked);
+
+        // 如果有点赞，手动强制刷新一下视图（保险起见）
+        this.$forceUpdate();
+
+        if (this.post.publisher) {
+          this.getPublisherStats(this.post.publisher.id);
+        }
+      } else {
+        this.$msg("未找到该帖子", "error");
+      }
+    }
+  });
+},
     getPublisherStats(pubId) {
       listPublished(pubId).then((res) => {
         const list = res.task || (res.data && res.data.task) || [];
@@ -343,12 +375,43 @@ export default {
       return u.username.charAt(0).toUpperCase();
     },
     handleLike() {
-      this.$put("/post/like/" + this.post.id).then((res) => {
-        if (res.data.status) {
-          this.post.likeCount++;
-          this.$msg("点赞成功", "success");
-        }
-      });
+      // 确保获取到当前用户ID和帖子ID
+      if (!this.user || !this.user.id) {
+        this.$msg("请先登录", "warning");
+        return;
+      }
+
+      // 统一接口逻辑：userId, targetId, targetType=1(帖子)
+      const url = `/like?userId=${this.user.id}&targetId=${this.post.id}&targetType=1`;
+
+      this.$put(url)
+        .then((res) => {
+          if (res.data.status) {
+            // 获取后端返回的最新状态
+            const isLikedNow = res.data.isLiked;
+
+            // 使用 $set 确保视图响应更新（防止 post 对象初始化时没有 isLiked 字段）
+            this.$set(this.post, "isLiked", isLikedNow);
+
+            // 更新数字显示
+            if (isLikedNow) {
+              // 点赞动作
+              this.post.likeCount = (this.post.likeCount || 0) + 1;
+              this.$msg("点赞成功", "success");
+            } else {
+              // 取消点赞动作
+              if (this.post.likeCount > 0) {
+                this.post.likeCount--;
+              }
+              this.$msg("取消点赞", "info");
+            }
+          } else {
+            this.$msg(res.data.msg || "操作失败", "error");
+          }
+        })
+        .catch((err) => {
+          this.$msg("网络错误", "error");
+        });
     },
     // 🟢 提交修改
     submitEdit() {
@@ -447,7 +510,7 @@ export default {
 /* 核心布局优化：不再有背景色 */
 .main-layout-row {
   padding: 20px 0;
-//   max-width: 1300px;
+  //   max-width: 1300px;
   margin: 0 auto;
 }
 

@@ -55,6 +55,11 @@ public class Post {
     @TableField(exist = false)
     private List<String> imgList;
 
+
+    // 🟢 新增：标记当前用户是否点赞 (数据库没这个字段，是查出来的)
+    // Integer或者Boolean都可以，SQL里返回1或0
+    @TableField(exist = false)
+    private Boolean isLiked;
     // --- 核心工具方法 ---
 
     /**
