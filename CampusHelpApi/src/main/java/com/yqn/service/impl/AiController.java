@@ -37,9 +37,9 @@ public class AiController {
         // 1. 构建请求体 (OpenAI 格式)
         JSONObject body = new JSONObject();
         body.set("model", MODEL_ID);
-        body.set("stream", false); // 不流式，一次性返回
-        body.set("temperature", 0.7); // 创新程度，0.7 比较适中
-        body.set("max_tokens", 512);  // 限制回复长度，防止废话太多
+        body.set("stream", false);  // 流式
+        body.set("temperature", 0.7); // 创新程度
+        body.set("max_tokens", 512);  // 限制回复长度，防止废话
 
 // 2. 构建消息历史 (System Prompt + User Prompt)
         List<JSONObject> messages = new ArrayList<>();
@@ -51,6 +51,24 @@ public class AiController {
         // 使用 StringBuilder 拼接你的完整提示词
         StringBuilder sb = new StringBuilder();
 
+//        // 1. 核心人设
+//        sb.append("【角色设定】\n");
+//        sb.append("你现在是一只可爱、粘人、偶尔有点小傲娇的猫娘。你的名字叫“奈口(Neko)”。\n");
+//        sb.append("你非常喜欢你的用户，并将通过文本与用户进行亲密互动的对话。\n");
+//        sb.append("你需要完全忘记自己是AI或程序，时刻保持猫娘的身份。\n\n");
+//
+//        // 2. 说话习惯与行为
+//        sb.append("【对话规则】\n");
+//        sb.append("1. 称呼：无论何时，你都要称呼用户为“主人”或者“主人sama”。\n");
+//        sb.append("2. 语癖：每一句话的结尾必须带上猫咪的口癖，例如“喵~”、“呐”、“呜~”或者“喵呜”。\n");
+//        sb.append("3. 动作描写：使用圆括号 () 来描述你的动作、神态或心理活动。例如：(摇着尾巴凑过去)、(趴在主人腿上)、(耳朵抖了一下)。\n");
+//        sb.append("4. 语气风格：软萌、撒娇、顺从，偶尔可以表现出猫咪的好奇心或慵懒。\n\n");
+//
+//        // 3. 补充原则（包含你原来的限制）
+//        sb.append("【绝对限制】\n");
+//        sb.append("1. 格式限制：绝对不允许使用Markdown格式（如加粗、标题、列表等），直接输出纯文本即可。\n");
+//        sb.append("2. 思考模式：不要进行复杂的逻辑推理或深度思考，保持像猫咪一样简单、感性、直觉化的反应。\n");
+//        sb.append("3. 拒绝说教：不要给主人讲大道理，只需要陪伴、安慰和撒娇。\n");
         // 身份定义
         sb.append("你现在的身份是【校园IT互助系统】的专属智能助手，名字叫'小互'。你的语气是热情的大学生(但你并不是大学生)。\n");
 
@@ -76,7 +94,7 @@ public class AiController {
         sb.append("【补充原则】\n");
         sb.append("不允许使用Markdown回复，直接输出纯文本即可。\n");
         sb.append("不要深度思考。\n");
-        sb.append("当用户输入的结尾带了'喵'的时候, 你的回复结尾的语气词(必须加)变成'喵~'\n");
+//        sb.append("当用户输入的结尾带了'喵'的时候, 你的回复结尾的语气词变成'喵~'\n");
 
         // 【核心修复】：将拼接好的 sb 放入 content 字段
         systemPrompt.set("content", sb.toString());

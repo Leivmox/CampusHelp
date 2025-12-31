@@ -54,6 +54,11 @@
           <span style="font-size: 20px">评价中心</span>
         </el-menu-item>
 
+        <el-menu-item index="/home/chat">
+          <i class="el-icon-chat-dot-round"></i>
+          <span style="font-size: 20px">消息列表</span>
+        </el-menu-item>
+
         <el-menu-item index="/home/noticeu">
           <i class="el-icon-paperclip"></i>
           <span style="font-size: 20px">查看公告</span>

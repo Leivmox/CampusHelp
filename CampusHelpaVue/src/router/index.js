@@ -52,7 +52,7 @@ const routes = [
         ],
       },
 
-// 🟢 新增：帖子详情页路由 (放在 home 下面，与 forum 平级)
+      // 🟢 新增：帖子详情页路由 (放在 home 下面，与 forum 平级)
       // 这样跳转后 url 是 /home/post/detail/123
       {
         path: "post/postdetail/:id",
@@ -134,6 +134,23 @@ const routes = [
             component: () => import("@v/remark/userremark.vue"),
           },
         ],
+      },
+
+      // --- 消息中心 ---
+      {
+        // 1. 消息列表页 (点击侧边栏进这里)
+        path: "chat",
+        name: "ChatList",
+        meta: { title: "消息列表" },
+        component: () => import("@v/user/children/ChatList.vue"),
+      },
+      {
+        // 2. 聊天详情页 (点击列表某个人进这里)
+        // 路径设计为 /home/chat/detail，这样它属于 /home/chat 的子路径范畴
+        path: "chat/detail",
+        name: "ChatDetail",
+        meta: { title: "聊天详情" },
+        component: () => import("@v/user/children/ChatDetail.vue"),
       },
 
       // 其他路由

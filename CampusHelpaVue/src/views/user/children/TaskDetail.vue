@@ -90,14 +90,27 @@
               >
             </div>
 
-            <div v-else-if="isOwner && task.state === 0" class="op-box">
+            <div v-else-if="isTaker && task.state === 1" class="op-box">
               <el-alert
-                title="您的求助正在等待校友接单..."
-                type="info"
-                :closable="false"
-                center
+                title="互助进行中：请联系发布者提供帮助"
+                type="warning"
                 show-icon
+                :closable="false"
               ></el-alert>
+
+              <div class="btn-group">
+                <el-button
+                  type="primary"
+                  icon="el-icon-chat-dot-round"
+                  style="margin-right: 10px"
+                  @click="toChat(task.publish.id)"
+                  >联系发布者</el-button
+                >
+
+                <el-button type="danger" plain @click="handleTakerCancel">
+                  取消接单
+                </el-button>
+              </div>
             </div>
 
             <div v-else-if="isTaker && task.state === 1" class="op-box">
@@ -121,7 +134,16 @@
                 show-icon
                 :closable="false"
               ></el-alert>
+
               <div class="btn-group">
+                <el-button
+                  type="primary"
+                  icon="el-icon-chat-dot-round"
+                  style="margin-right: 10px"
+                  @click="toChat(task.accept ? task.accept.id : task.acceptId)"
+                  >联系接单人</el-button
+                >
+
                 <el-button
                   type="success"
                   icon="el-icon-circle-check"
@@ -270,12 +292,33 @@ export default {
     },
 
     // 是否是接单人本人
+    // isTaker() {
+    //   if (!this.task || !this.user) return false;
+    //   return (
+    //     this.task.acceptUserId &&
+    //     String(this.task.acceptUserId) === String(this.user.id)
+    //   );
+    // },
+    // 修改 script -> computed -> isTaker
     isTaker() {
       if (!this.task || !this.user) return false;
-      return (
-        this.task.acceptUserId &&
-        String(this.task.acceptUserId) === String(this.user.id)
-      );
+
+      // 核心修改：兼容获取 ID 的方式
+      // 1. 尝试从 task.accept 对象里拿 id (后端关联查询通常会有这个)
+      // 2. 尝试拿 task.acceptId (数据库字段通常叫这个)
+      // 3. 保留你原来的 acceptUserId 以防万一
+      const takerId =
+        (this.task.accept ? this.task.accept.id : null) ||
+        this.task.acceptId ||
+        this.task.acceptUserId;
+
+      if (!takerId) {
+        // 调试用：如果控制台打印了这个，说明后端真的没返回接单人ID
+        // console.log("前端未找到接单人ID字段", this.task);
+        return false;
+      }
+
+      return String(takerId) === String(this.user.id);
     },
 
     // 是否是普通访客
@@ -313,6 +356,25 @@ export default {
     }
   },
   methods: {
+    // 【新增】跳转至私聊页面
+    toChat(targetUserId) {
+      if (!targetUserId) {
+        this.$msg("无法获取对方信息", "error");
+        return;
+      }
+
+      // 避免自己和自己聊天
+      if (targetUserId === this.user.id) {
+        this.$msg("不能和自己聊天哦", "warning");
+        return;
+      }
+
+      // 跳转到 /home/chat/detail，参数名为 toUser
+      this.$router.push({
+        path: "/home/chat/detail",
+        query: { toUser: targetUserId },
+      });
+    },
     // 异步逻辑：核心修复点
     fetchTaskDetail() {
       this.loading = true;
@@ -617,27 +679,27 @@ export default {
 .title-row {
   display: flex;
   justify-content: space-between; /* 关键：让子元素分居左右两端 */
-  align-items: center;           /* 垂直居中对居 */
-  width: 100%;                   /* 确保占满整行 */
-  margin-bottom: 20px;           /* 根据你的页面调整间距 */
+  align-items: center; /* 垂直居中对居 */
+  width: 100%; /* 确保占满整行 */
+  margin-bottom: 20px; /* 根据你的页面调整间距 */
 
   .main-title {
-    margin: 0;                   /* 去除标题默认的外边距，防止对齐歪掉 */
-    flex: 1;                     /* 让标题占据剩余空间 */
+    margin: 0; /* 去除标题默认的外边距，防止对齐歪掉 */
+    flex: 1; /* 让标题占据剩余空间 */
     font-size: 24px;
     font-weight: bold;
     color: #303133;
   }
 
   .owner-actions {
-    flex-shrink: 0;              /* 防止按钮被挤压换行 */
-    margin-left: 20px;           /* 如果标题太长，留出一点空隙 */
+    flex-shrink: 0; /* 防止按钮被挤压换行 */
+    margin-left: 20px; /* 如果标题太长，留出一点空隙 */
   }
 }
 
 .delete-btn {
   color: #f56c6c;
-  font-size: 14px;               /* 按钮文字稍微小一点更精致 */
+  font-size: 14px; /* 按钮文字稍微小一点更精致 */
   &:hover {
     color: #ff7875;
   }
