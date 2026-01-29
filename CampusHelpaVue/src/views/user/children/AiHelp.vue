@@ -27,7 +27,10 @@
         >
           <template v-if="msg.role === 'ai'">
             <el-avatar shape="circle" :src="aiAvatar" class="avatar" />
-            <div class="bubble ai">{{ msg.content }}</div>
+            <div class="bubble ai" v-html="renderMarkdown(msg.content)"></div>
+            <el-tooltip content="复制" placement="top">
+              <i class="el-icon-document-copy copy-btn" @click="copyText(msg.content)"></i>
+            </el-tooltip>
           </template>
 
           <template v-else>
@@ -53,6 +56,20 @@
     </div>
 
     <div class="input-area">
+      <!-- 🟢 快捷问题按钮 -->
+      <div class="quick-questions">
+        <span class="quick-label">快捷提问：</span>
+        <el-tag 
+          v-for="(q, idx) in quickQuestions" 
+          :key="idx" 
+          size="small" 
+          effect="plain"
+          class="quick-tag"
+          @click="askQuickQuestion(q)"
+        >
+          {{ q }}
+        </el-tag>
+      </div>
       <div class="input-wrapper">
         <el-input
           v-model="inputMsg"
@@ -93,6 +110,14 @@ export default {
         }
       })(),
       msgList: [],
+      // 🟢 快捷问题列表
+      quickQuestions: [
+        "怎么获取积分",
+        "食堂营业时间",
+        "如何发布求助",
+        "快递站在哪",
+        "考试安排查询"
+      ],
     };
   },
   computed: {
@@ -209,6 +234,47 @@ export default {
         const el = this.$refs.chatBody;
         if (el) el.scrollTop = el.scrollHeight;
       });
+    },
+
+    // 🟢 Markdown 渲染
+    renderMarkdown(text) {
+      if (!text) return '';
+      // 简化版Markdown解析：代码块、加粗、列表、换行
+      let html = text
+        // 代码块 ```code```
+        .replace(/```([\s\S]*?)```/g, '<pre class="code-block">$1</pre>')
+        // 行内代码 `code`
+        .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+        // 加粗 **text**
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        // 斠体 *text*
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        // 无序列表 - item
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        // 有序列表 1. item
+        .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+        // 换行
+        .replace(/\n/g, '<br>');
+      // 包裹li标签
+      if (html.includes('<li>')) {
+        html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+      }
+      return html;
+    },
+
+    // 🟢 复制文本
+    copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.$msg('已复制到剪贴板', 'success');
+      }).catch(() => {
+        this.$msg('复制失败', 'error');
+      });
+    },
+
+    // 🟢 快捷问题
+    askQuickQuestion(question) {
+      this.inputMsg = question;
+      this.sendMsg();
     },
   },
 };
@@ -375,6 +441,72 @@ export default {
   border-top: 1px solid #e9ecef;
   padding: 16px 20px;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* 🟢 快捷问题样式 */
+.quick-questions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.quick-label {
+  font-size: 12px;
+  color: #909399;
+}
+.quick-tag {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quick-tag:hover {
+  background: #409eff;
+  color: white;
+  border-color: #409eff;
+}
+
+/* 🟢 复制按钮 */
+.copy-btn {
+  color: #c0c4cc;
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.2s;
+}
+.chat-row:hover .copy-btn {
+  opacity: 1;
+}
+.copy-btn:hover {
+  color: #409eff;
+}
+
+/* 🟢 代码块样式 */
+.bubble >>> .code-block {
+  background: #2d2d2d;
+  color: #f8f8f2;
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  margin: 8px 0;
+  white-space: pre-wrap;
+}
+.bubble >>> .inline-code {
+  background: #f0f0f0;
+  color: #e83e8c;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+}
+.bubble >>> ul {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+.bubble >>> li {
+  margin: 4px 0;
 }
 .input-wrapper {
   display: flex;

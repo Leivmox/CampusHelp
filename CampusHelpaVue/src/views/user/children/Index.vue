@@ -39,12 +39,13 @@
             </div>
             <div
               v-for="(item, index) in topArticles"
-              :key="index"
+              :key="item.id"
               class="article-item"
+              @click="goToPost(item.id)"
             >
               <span class="tag-top">置顶</span>
-              <span class="article-title">{{ item }}</span>
-              <span class="article-date">2023-12-{{ 20 - index }}</span>
+              <span class="article-title">{{ item.title }}</span>
+              <span class="article-date">{{ item.date }}</span>
             </div>
           </div>
         </div>
@@ -159,11 +160,11 @@ export default {
       mySolveCount: 0,
 
       topArticles: [
-        "最全的微软msdn原版Windows系统镜像和Office Visio Project下载地址集锦",
-        "图文详解彻底关闭win10、win11系统自带的windows defender杀毒功能",
-        "全面剖析固态硬盘M.2接口与PCI-E SSD固态硬盘的关系",
-        "系统安装教程大汇总：win系统版本下载 + 系统安装/重装/升级/封装教程",
-        "实战绝招分享：半个月变身计算机大神就是这样练成的",
+        { id: 31, title: '最全的微软msdn原版Windows系统镜像和Office Visio Project下载地址集锦', date: '2023-12-20' },
+        { id: 32, title: '图文详解彻底关闭win10、win11系统自带的windows defender杀毒功能', date: '2023-12-19' },
+        { id: 33, title: '全面剖析固态硬盘M.2接口与PCI-E SSD固态硬盘的关系', date: '2023-12-18' },
+        { id: 34, title: '系统安装教程大汇总：win系统版本下载 + 系统安装/重装/升级/封装教程', date: '2023-12-17' },
+        { id: 35, title: '实战绝招分享：半个月变身计算机大神就是这样练成的', date: '2023-12-16' },
       ],
     };
   },
@@ -189,6 +190,10 @@ export default {
   methods: {
     goToProfile() {
       this.$router.push("/home/MyProfile");
+    },
+    // 🟢 跳转到帖子详情页
+    goToPost(postId) {
+      this.$router.push(`/home/post/postdetail/${postId}`);
     },
     getMyStats() {
       if (!this.user.id) return;

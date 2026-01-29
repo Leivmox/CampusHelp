@@ -26,7 +26,7 @@
       <div v-else>
         <div 
           v-for="(msg, index) in msgList" 
-          :key="index"
+          :key="msg.id || index"
           class="msg-item"
           :class="msg.senderId === user.id ? 'me' : 'other'"
         >
@@ -140,18 +140,38 @@ export default {
         if (res.data.status) {
           const newMessages = res.data.list || [];
           
-          // 如果消息数量变多了，说明有新消息，需要滚动到底部
-          if (newMessages.length > this.msgList.length) {
+          // 🟢 优化：只有当消息真正有变化时才更新列表，避免无意义的重新渲染
+          const hasChanged = this.checkMessagesChanged(newMessages);
+          
+          if (hasChanged) {
+            const shouldScroll = newMessages.length > this.msgList.length;
             this.msgList = newMessages;
-            this.scrollToBottom();
-          } else {
-            // 数量一样也更新一下，防止状态变化
-            this.msgList = newMessages;
+            if (shouldScroll) {
+              this.scrollToBottom();
+            }
           }
         }
       }).catch(err => {
          if(!silent) console.error(err);
       });
+    },
+
+    // 🟢 新增：检查消息列表是否真正有变化
+    checkMessagesChanged(newMessages) {
+      // 数量不同，肯定变了
+      if (newMessages.length !== this.msgList.length) {
+        return true;
+      }
+      // 数量相同，比较最后一条消息的ID（如果有）
+      if (newMessages.length > 0 && this.msgList.length > 0) {
+        const newLast = newMessages[newMessages.length - 1];
+        const oldLast = this.msgList[this.msgList.length - 1];
+        // 比较ID或内容
+        if (newLast.id !== oldLast.id) {
+          return true;
+        }
+      }
+      return false;
     },
 
     // 发送消息
