@@ -6,6 +6,8 @@ import cn.hutool.json.JSONUtil;
 import com.yqn.common.tools.MessageTools;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,26 +19,27 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/ai")
+@PropertySource(value = "classpath:secret.properties", ignoreResourceNotFound = true)
 public class AiController {
 
     @Autowired
     private MessageTools message;
 
-    // 【配置1】你的硅基流动 API Key
-    private static final String API_KEY = "sk-inqblcxsmoyruthzbxjhyxknyroigypqksmrqruoajqqpnhp";
+    // 从 secret.properties 注入
+    @Value("${ai.api-key:}")
+    private String apiKey;
 
-    // 【配置2】硅基流动的完整请求地址
-    private static final String API_URL = "https://api.siliconflow.cn/v1/chat/completions";
+    @Value("${ai.api-url:https://api.siliconflow.cn/v1/chat/completions}")
+    private String apiUrl;
 
-    // 【配置3】模型 ID (请确保这个ID在硅基流动控制台里是存在的)
-    // 如果你一定要用 V3.2，请把这里改成 "deepseek-ai/DeepSeek-V3.2"
-    private static final String MODEL_ID = "deepseek-ai/DeepSeek-V3";
+    @Value("${ai.model-id:deepseek-ai/DeepSeek-V3}")
+    private String modelId;
 
     @PostMapping("/chat")
     public Map<String, Object> chat(@RequestBody ChatRequest request) {
         // 1. 构建请求体 (OpenAI 格式)
         JSONObject body = new JSONObject();
-        body.set("model", MODEL_ID);
+        body.set("model", modelId);
         body.set("stream", false);  // 流式
         body.set("temperature", 0.7); // 创新程度
         body.set("max_tokens", 512);  // 限制回复长度，防止废话
@@ -126,8 +129,8 @@ public class AiController {
             // 3. 发送请求
             System.out.println("正在请求硅基流动 API...");
 
-            String result = HttpRequest.post(API_URL)
-                    .header("Authorization", "Bearer " + API_KEY) // 必须带 Bearer
+            String result = HttpRequest.post(apiUrl)
+                    .header("Authorization", "Bearer " + apiKey) // 必须带 Bearer
                     .header("Content-Type", "application/json")
                     .body(body.toString())
                     .timeout(20000) // 20秒超时
