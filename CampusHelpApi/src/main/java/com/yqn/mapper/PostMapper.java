@@ -17,4 +17,11 @@ public interface PostMapper extends BaseMapper<Post> {
      */
     List<Post> selectPostListWithLike(@Param("schoolId") Long schoolId, @Param("userId") Long userId);
 
+    /**
+     * 获取用户自己的帖子列表
+     * @param userId 用户ID
+     * @return 帖子列表
+     */
+    List<Post> selectMyPosts(@Param("userId") Long userId);
+
 }

@@ -91,7 +91,7 @@
             </span>
           </div>
         </div>
-        <el-button slot="reference" icon="el-icon-star-on" circle></el-button>
+        <el-button slot="reference" circle class="emoji-btn">😊</el-button>
       </el-popover>
       <el-upload
         action="http://localhost:8080/common/upload"
@@ -569,6 +569,14 @@ export default {
 
     .input-area {
       flex: 1;
+    }
+    
+    .emoji-btn {
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px;
+      padding: 0 !important;
+      font-size: 20px;
     }
   }
 }

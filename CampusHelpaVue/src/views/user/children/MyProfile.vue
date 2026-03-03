@@ -237,10 +237,7 @@ export default {
     },
     getMyPosts() {
       if (!this.user || !this.user.id) return;
-      this.$get("/post", {
-        schoolId: this.user.school ? this.user.school.id : null,
-        userId: this.user.id,
-      })
+      this.$get(`/post/my/${this.user.id}`)
         .then((res) => {
           if (res.data.status) {
             this.historyList = res.data.posts;

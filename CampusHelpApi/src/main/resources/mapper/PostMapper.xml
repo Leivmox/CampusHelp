@@ -34,4 +34,17 @@
         ORDER BY p.create_time DESC
     </select>
 
+    <select id="selectMyPosts" resultMap="postResultMap">
+        SELECT
+            p.*,
+            (CASE WHEN lr.id IS NOT NULL THEN 1 ELSE 0 END) AS isLiked
+        FROM post p
+                 LEFT JOIN user_like lr
+                           ON p.id = lr.target_id
+                               AND lr.target_type = 1
+                               AND lr.user_id = #{userId}
+        WHERE p.user_id = #{userId}
+        ORDER BY p.create_time DESC
+    </select>
+
 </mapper>

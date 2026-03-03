@@ -205,6 +205,31 @@ public class PostController {
         return message.message(true, "请求成功", "post", post);
     }
 
+    @GetMapping("/my/{userId}")
+    public Map<String, Object> getMyPosts(@PathVariable Long userId) {
+        List<Post> posts = postMapper.selectMyPosts(userId);
+        
+        for (Post post : posts) {
+            post.convertStringToList();
+            
+            if (post.getPublisher() == null) {
+                User publisher = userService.getById(post.getUserId());
+                post.setPublisher(publisher);
+            }
+            
+            QueryWrapper<Comment> commentWrapper = new QueryWrapper<>();
+            commentWrapper.eq("post_id", post.getId()).orderByAsc("create_time");
+            List<Comment> comments = commentService.list(commentWrapper);
+            for (Comment c : comments) {
+                User commenter = userService.getById(c.getUserId());
+                c.setCommenter(commenter);
+            }
+            post.setComments(comments);
+        }
+        
+        return message.message(true, "请求成功", "posts", posts);
+    }
+
     // ==========================================
     // 🟢 核心修改：单独更新帖子图片 (支持多图)
     // ==========================================
