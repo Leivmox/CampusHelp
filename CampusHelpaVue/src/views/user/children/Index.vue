@@ -37,16 +37,19 @@
               <i class="el-icon-collection-tag" style="color: #f56c6c"></i>
               <span style="font-weight: bold; margin-left: 5px">精选</span>
             </div>
-            <div
-              v-for="(item, index) in topArticles"
-              :key="item.id"
-              class="article-item"
-              @click="goToPost(item.id)"
-            >
-              <span class="tag-top">置顶</span>
-              <span class="article-title">{{ item.title }}</span>
-              <span class="article-date">{{ item.date }}</span>
+            <div v-if="topArticles.length > 0">
+              <div
+                v-for="(item, index) in topArticles"
+                :key="item.id"
+                class="article-item"
+                @click="goToPost(item.id)"
+              >
+                <span class="tag-top">置顶</span>
+                <span class="article-title">{{ item.title }}</span>
+                <span class="article-date">{{ item.date }}</span>
+              </div>
             </div>
+            <el-empty v-else description="暂无置顶帖子" :image-size="60"></el-empty>
           </div>
         </div>
       </el-col>
@@ -159,13 +162,7 @@ export default {
       myPublishCount: 0,
       mySolveCount: 0,
 
-      topArticles: [
-        { id: 31, title: '最全的微软msdn原版Windows系统镜像和Office Visio Project下载地址集锦', date: '2023-12-20' },
-        { id: 32, title: '图文详解彻底关闭win10、win11系统自带的windows defender杀毒功能', date: '2023-12-19' },
-        { id: 33, title: '全面剖析固态硬盘M.2接口与PCI-E SSD固态硬盘的关系', date: '2023-12-18' },
-        { id: 34, title: '系统安装教程大汇总：win系统版本下载 + 系统安装/重装/升级/封装教程', date: '2023-12-17' },
-        { id: 35, title: '实战绝招分享：半个月变身计算机大神就是这样练成的', date: '2023-12-16' },
-      ],
+      topArticles: [],
     };
   },
   computed: {
@@ -179,6 +176,7 @@ export default {
   mounted() {
     this.getAllData();
     this.getMyStats();
+    this.getTopArticles();
     window.addEventListener("resize", this.resizeChart);
   },
   beforeDestroy() {
@@ -208,6 +206,19 @@ export default {
         .then((res) => {
           const list = res.task || (res.data && res.data.task) || [];
           this.mySolveCount = list.length || 0;
+        })
+        .catch((e) => console.error(e));
+    },
+    getTopArticles() {
+      this.$get("/post/top")
+        .then((res) => {
+          if (res.data.status) {
+            this.topArticles = (res.data.posts || []).map(post => ({
+              id: post.id,
+              title: post.title,
+              date: this.formatDateToDay(post.createTime)
+            }));
+          }
         })
         .catch((e) => console.error(e));
     },

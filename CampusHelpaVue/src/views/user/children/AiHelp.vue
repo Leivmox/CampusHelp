@@ -56,7 +56,6 @@
     </div>
 
     <div class="input-area">
-      <!-- 🟢 快捷问题按钮 -->
       <div class="quick-questions">
         <span class="quick-label">快捷提问：</span>
         <el-tag 
@@ -110,7 +109,6 @@ export default {
         }
       })(),
       msgList: [],
-      // 🟢 快捷问题列表
       quickQuestions: [
         "怎么获取积分",
         "食堂营业时间",
@@ -123,7 +121,6 @@ export default {
   computed: {
     ...mapState("user", ["user"]),
 
-    // 缓存 Key (绑定用户ID)
     cacheKey() {
       if (this.user && this.user.id) {
         return `ai_chat_history_${this.user.id}`;
@@ -145,8 +142,6 @@ export default {
     msgList: {
       deep: true,
       handler(val) {
-        // 如果列表为空且刚刚执行了清空操作，不要立刻存空数组覆盖（防止逻辑冲突），
-        // 但一般直接存是可以的。
         if (val.length > 0) {
           localStorage.setItem(this.cacheKey, JSON.stringify(val));
         }
@@ -181,7 +176,6 @@ export default {
       ];
     },
 
-    // 🟢 新增：清空记录的方法
     handleClearHistory() {
       this.$confirm("确定要删除当前的所有对话记录吗？", "提示", {
         confirmButtonText: "确定删除",
@@ -189,13 +183,9 @@ export default {
         type: "warning",
       })
         .then(() => {
-          // 1. 清空内存数据
           this.msgList = [];
-          // 2. 清空本地缓存
           localStorage.removeItem(this.cacheKey);
-          // 3. 恢复默认欢迎语
           this.addWelcomeMsg();
-
           this.$msg("记录已清空", "success");
         })
         .catch(() => {});
@@ -214,6 +204,7 @@ export default {
         url: "/ai/chat",
         method: "post",
         data: { content: text },
+        silent: true,
       })
         .then((res) => {
           const reply =
@@ -236,33 +227,22 @@ export default {
       });
     },
 
-    // 🟢 Markdown 渲染
     renderMarkdown(text) {
       if (!text) return '';
-      // 简化版Markdown解析：代码块、加粗、列表、换行
       let html = text
-        // 代码块 ```code```
         .replace(/```([\s\S]*?)```/g, '<pre class="code-block">$1</pre>')
-        // 行内代码 `code`
         .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
-        // 加粗 **text**
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-        // 斠体 *text*
         .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-        // 无序列表 - item
         .replace(/^- (.+)$/gm, '<li>$1</li>')
-        // 有序列表 1. item
         .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-        // 换行
         .replace(/\n/g, '<br>');
-      // 包裹li标签
       if (html.includes('<li>')) {
         html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
       }
       return html;
     },
 
-    // 🟢 复制文本
     copyText(text) {
       navigator.clipboard.writeText(text).then(() => {
         this.$msg('已复制到剪贴板', 'success');
@@ -271,7 +251,6 @@ export default {
       });
     },
 
-    // 🟢 快捷问题
     askQuickQuestion(question) {
       this.inputMsg = question;
       this.sendMsg();
@@ -281,21 +260,26 @@ export default {
 </script>
 
 <style scoped>
-/* 此处只列出修改的部分，其他样式保持原样 */
+.ai-chat-container {
+  height: calc(100vh - 105px);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
 
 .chat-header {
   height: 60px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  /* 🟢 修改：两端对齐，把标题顶左边，按钮顶右边 */
   justify-content: space-between;
   padding: 0 20px;
   background: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
 }
 
-/* 🟢 新增：左侧标题包装器 */
 .header-left {
   display: flex;
   align-items: center;
@@ -305,44 +289,29 @@ export default {
   color: #333;
 }
 
-/* 🟢 新增：清空按钮样式 */
 .clear-btn {
   color: #909399;
   font-size: 14px;
   padding: 0;
 }
 .clear-btn:hover {
-  color: #f56c6c; /* 悬浮变红，提示这是删除操作 */
+  color: #f56c6c;
 }
 
-/* ... 以下保持原样 ... */
-.ai-chat-container {
-
-  height: calc(100vh - 60px);
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-}
 .chat-body-wrapper {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  background: #f8f9fa;
   overflow: hidden;
-  padding-bottom: 16px;
+  background: #f8f9fa;
 }
+
 .chat-body {
-  flex: 1;
-  padding: 20px 20px 0 20px;
+  height: 100%;
+  padding: 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  margin-bottom: 20px;
 }
 .chat-row {
   display: flex;
@@ -443,7 +412,6 @@ export default {
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* 🟢 快捷问题样式 */
 .quick-questions {
   display: flex;
   align-items: center;
@@ -465,7 +433,6 @@ export default {
   border-color: #409eff;
 }
 
-/* 🟢 复制按钮 */
 .copy-btn {
   color: #c0c4cc;
   cursor: pointer;
@@ -481,7 +448,6 @@ export default {
   color: #409eff;
 }
 
-/* 🟢 代码块样式 */
 .bubble >>> .code-block {
   background: #2d2d2d;
   color: #f8f8f2;

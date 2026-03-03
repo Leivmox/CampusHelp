@@ -140,6 +140,71 @@ public class PostController {
         return message.message(false, "删除失败", "", null);
     }
 
+    @PutMapping("/top/{id}")
+    public Map<String, Object> setTop(@PathVariable Long id) {
+        Post post = postService.getById(id);
+        if (post == null) {
+            return message.message(false, "帖子不存在", "", null);
+        }
+        post.setIsTop(1);
+        postService.updateById(post);
+        return message.message(true, "置顶成功", "", null);
+    }
+
+    @PutMapping("/untop/{id}")
+    public Map<String, Object> cancelTop(@PathVariable Long id) {
+        Post post = postService.getById(id);
+        if (post == null) {
+            return message.message(false, "帖子不存在", "", null);
+        }
+        post.setIsTop(0);
+        postService.updateById(post);
+        return message.message(true, "取消置顶成功", "", null);
+    }
+
+    @GetMapping("/top")
+    public Map<String, Object> getTopPosts() {
+        QueryWrapper<Post> wrapper = new QueryWrapper<>();
+        wrapper.eq("is_top", 1).orderByDesc("create_time");
+        List<Post> posts = postService.list(wrapper);
+        
+        for (Post post : posts) {
+            post.convertStringToList();
+            if (post.getPublisher() == null) {
+                User publisher = userService.getById(post.getUserId());
+                post.setPublisher(publisher);
+            }
+        }
+        
+        return message.message(true, "请求成功", "posts", posts);
+    }
+
+    @GetMapping("/{id}")
+    public Map<String, Object> getPostById(@PathVariable Long id) {
+        Post post = postService.getById(id);
+        if (post == null) {
+            return message.message(false, "帖子不存在", "", null);
+        }
+        
+        post.convertStringToList();
+        
+        if (post.getPublisher() == null) {
+            User publisher = userService.getById(post.getUserId());
+            post.setPublisher(publisher);
+        }
+        
+        QueryWrapper<Comment> commentWrapper = new QueryWrapper<>();
+        commentWrapper.eq("post_id", id).orderByAsc("create_time");
+        List<Comment> comments = commentService.list(commentWrapper);
+        for (Comment c : comments) {
+            User commenter = userService.getById(c.getUserId());
+            c.setCommenter(commenter);
+        }
+        post.setComments(comments);
+        
+        return message.message(true, "请求成功", "post", post);
+    }
+
     // ==========================================
     // 🟢 核心修改：单独更新帖子图片 (支持多图)
     // ==========================================

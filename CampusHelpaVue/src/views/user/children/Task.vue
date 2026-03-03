@@ -1,23 +1,31 @@
 <template>
   <div class="content">
     <el-alert
-      title="发布新求助 - 请详细描述你的问题"
+      :title="isEditMode ? '修改求助 - 修改你的求助信息' : '发布新求助 - 请详细描述你的问题'"
       :closable="false"
-      type="success"
+      :type="isEditMode ? 'warning' : 'success'"
       style="margin-bottom: 10px"
     >
     </el-alert>
 
     <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
-        <span style="font-size: 18px; font-weight: bold">发布求助</span>
+        <span style="font-size: 18px; font-weight: bold">{{ isEditMode ? '修改求助' : '发布求助' }}</span>
         <el-button
           style="float: right; padding: 3px 0; font-size: 16px"
-          icon="el-icon-s-promotion"
+          :icon="isEditMode ? 'el-icon-edit' : 'el-icon-s-promotion'"
           type="text"
           @click="submitTask"
         >
-          发布
+          {{ isEditMode ? '保存修改' : '发布' }}
+        </el-button>
+        <el-button
+          v-if="isEditMode"
+          style="float: right; padding: 3px 0; font-size: 16px; margin-right: 15px;"
+          type="text"
+          @click="cancelEdit"
+        >
+          取消
         </el-button>
       </div>
 
@@ -38,6 +46,31 @@
             resize="none"
           >
           </el-input>
+        </div>
+
+        <div class="form-item">
+          <div class="label-text">悬赏积分</div>
+          <div class="reward-container">
+            <div class="reward-info">
+              <span class="current-balance">当前积分: <strong>{{ user.balance || 0 }}</strong></span>
+            </div>
+            <div class="reward-options">
+              <div
+                v-for="amount in rewardOptions"
+                :key="amount"
+                class="reward-option"
+                :class="{ active: reward === amount, disabled: user.balance < amount }"
+                @click="selectReward(amount)"
+              >
+                <span class="reward-amount">{{ amount }}</span>
+                <span class="reward-label">积分</span>
+              </div>
+            </div>
+            <div class="reward-tip">
+              <i class="el-icon-info"></i>
+              悬赏积分越高，越容易被接单哦~
+            </div>
+          </div>
         </div>
 
         <div class="form-item">
@@ -79,6 +112,9 @@
             </el-collapse-item>
             <el-collapse-item title="求助内容" name="2">
               <div class="preview-text">{{ taskContext }}</div>
+            </el-collapse-item>
+            <el-collapse-item title="悬赏积分" name="5">
+              <div class="preview-text reward-highlight">{{ reward }} 积分</div>
             </el-collapse-item>
             <el-collapse-item
               title="求助图片"
@@ -124,15 +160,18 @@ export default {
   name: "Task",
   data() {
     return {
+      isEditMode: false,
+      editTaskId: null,
       taskTitle: "",
       taskContext: "",
       createTime: "",
       drawer: false,
-      activeNames: ["1", "2", "3", "4"],
-      // 🟢 关键修改：初始化图片相关数据
+      activeNames: ["1", "2", "3", "4", "5"],
       imgList: [],
       fileList: [],
       baseUrl: "http://localhost:8080",
+      reward: 10,
+      rewardOptions: [10, 15, 20, 25, 30]
     };
   },
   computed: {
@@ -141,14 +180,18 @@ export default {
   methods: {
     ...mapMutations("user", ["setUser"]),
 
-    // 🟢 获取完整资源路径
     getResUrl(url) {
       if (!url) return "";
       if (url.startsWith("http")) return url;
       return this.baseUrl + url;
     },
 
-    // 🟢 图片上传成功回调
+    selectReward(amount) {
+      if (this.user.balance >= amount || this.isEditMode) {
+        this.reward = amount;
+      }
+    },
+
     handleUploadSuccess(res, file, fileList) {
       if (res.url) {
         this.imgList.push(res.url);
@@ -157,53 +200,105 @@ export default {
       }
     },
 
-    // 🟢 图片移除回调
     handleRemove(file, fileList) {
-      // 这里的处理逻辑需要兼容上传时返回的 response
       const urlToRemove = file.response ? file.response.url : file.url;
       this.imgList = this.imgList.filter((url) => url !== urlToRemove);
     },
 
-    // 🟢 超出限制提示
     handleExceed() {
       this.$msg("最多只能上传 9 张图片", "warning");
     },
 
+    loadTaskForEdit(taskId) {
+      this.$get("/task/" + taskId).then((res) => {
+        if (res.data.status && res.data.task) {
+          const task = res.data.task;
+          this.editTaskId = task.id;
+          this.taskTitle = task.taskTitle;
+          this.taskContext = task.taskContext;
+          this.reward = task.reward || 10;
+          this.imgList = task.imgList || [];
+          this.fileList = (task.imgList || []).map(url => ({
+            name: url,
+            url: this.getResUrl(url)
+          }));
+          this.isEditMode = true;
+        } else {
+          this.$msg("获取求助信息失败", "error");
+          this.$router.push("/home/help/published");
+        }
+      }).catch((err) => {
+        console.error(err);
+        this.$msg("服务器连接异常", "error");
+      });
+    },
+
+    cancelEdit() {
+      this.isEditMode = false;
+      this.editTaskId = null;
+      this.taskTitle = "";
+      this.taskContext = "";
+      this.imgList = [];
+      this.fileList = [];
+      this.reward = 10;
+      this.$router.push("/home/help/published");
+    },
+
     submitTask() {
       if (this.taskTitle && this.taskContext) {
-        if (this.user.balance < 10) {
-          this.$msg("积分不足，发布求助需要 10 积分", "error");
-          return;
-        }
-
-        // 发送请求，🟢 加入了 imgList
-        this.$post("/task", {
-          publishId: this.user.id,
-          schoolId: this.user.school.id,
-          taskTitle: this.taskTitle,
-          taskContext: this.taskContext,
-          imgList: this.imgList, // 这里传的是 ['/upload/1.jpg', '/upload/2.jpg']
-        })
-          .then((res) => {
+        if (this.isEditMode) {
+          this.$put("/task/edit", {
+            id: this.editTaskId,
+            taskTitle: this.taskTitle,
+            taskContext: this.taskContext,
+            reward: this.reward,
+            imgList: this.imgList,
+          }).then((res) => {
             if (res.data.status) {
-              this.createTime = new Date().getTime();
-              this.drawer = true;
-              this.renew();
-              this.$msg(res.data.msg, "success");
-
-              // 🟢 重置表单
-              this.taskTitle = "";
-              this.taskContext = "";
-              this.imgList = [];
-              this.fileList = [];
+              this.$msg("修改成功", "success");
+              this.$router.push("/home/help/published");
             } else {
-              this.$msg(res.data.msg, "error");
+              this.$msg(res.data.msg || "修改失败", "error");
             }
-          })
-          .catch((err) => {
+          }).catch((err) => {
             console.error(err);
             this.$msg("服务器连接异常", "error");
           });
+        } else {
+          if (this.user.balance < this.reward) {
+            this.$msg("积分不足，当前积分: " + this.user.balance + "，需要: " + this.reward, "error");
+            return;
+          }
+
+          this.$post("/task", {
+            publishId: this.user.id,
+            schoolId: this.user.school.id,
+            taskTitle: this.taskTitle,
+            taskContext: this.taskContext,
+            reward: this.reward,
+            imgList: this.imgList,
+          })
+            .then((res) => {
+              if (res.data.status) {
+                this.createTime = new Date().getTime();
+                this.drawer = true;
+                this.renew();
+                this.$msg(res.data.msg, "success");
+
+                this.taskTitle = "";
+                this.taskContext = "";
+                this.imgList = [];
+                this.fileList = [];
+                this.reward = 10;
+              } else {
+                this.$msg(res.data.msg, "error");
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+              this.$msg("服务器连接异常", "error");
+            });
+        }
       } else {
         this.$msg("请完整填写标题和详细描述", "warning");
       }
@@ -225,6 +320,10 @@ export default {
   },
   created() {
     this.renew();
+    
+    if (this.$route.query.edit) {
+      this.loadTaskForEdit(this.$route.query.edit);
+    }
   },
   filters: {
     formatDate(time) {
@@ -267,7 +366,89 @@ export default {
       display: inline-block;
     }
 
-    /* 🟢 关键修改：图片上传区域样式 */
+    .reward-container {
+      border: 1px solid #dcdfe6;
+      padding: 20px;
+      border-radius: 0 4px 4px 4px;
+      background: #fafafa;
+
+      .reward-info {
+        margin-bottom: 15px;
+        
+        .current-balance {
+          font-size: 14px;
+          color: #606266;
+          
+          strong {
+            color: #ff7d00;
+            font-size: 18px;
+          }
+        }
+      }
+
+      .reward-options {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+
+        .reward-option {
+          width: 80px;
+          height: 70px;
+          border: 2px solid #dcdfe6;
+          border-radius: 8px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s;
+          background: white;
+
+          .reward-amount {
+            font-size: 22px;
+            font-weight: bold;
+            color: #303133;
+          }
+
+          .reward-label {
+            font-size: 12px;
+            color: #909399;
+            margin-top: 2px;
+          }
+
+          &:hover:not(.disabled) {
+            border-color: #409eff;
+            background: #ecf5ff;
+          }
+
+          &.active {
+            border-color: #409eff;
+            background: #409eff;
+            
+            .reward-amount, .reward-label {
+              color: white;
+            }
+          }
+
+          &.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            background: #f5f5f5;
+          }
+        }
+      }
+
+      .reward-tip {
+        margin-top: 15px;
+        font-size: 12px;
+        color: #909399;
+        
+        i {
+          margin-right: 4px;
+        }
+      }
+    }
+
     .upload-container {
       border: 1px solid #dcdfe6;
       padding: 15px;
@@ -291,6 +472,12 @@ export default {
     .preview-text {
       white-space: pre-wrap;
       color: #333;
+      
+      &.reward-highlight {
+        font-size: 18px;
+        font-weight: bold;
+        color: #ff7d00;
+      }
     }
 
     .preview-images {

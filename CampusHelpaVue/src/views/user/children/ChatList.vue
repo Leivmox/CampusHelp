@@ -15,7 +15,7 @@
           style="float: right; padding: 3px 0; font-size: 16px"
           icon="el-icon-refresh"
           type="text"
-          @click="getChatList"
+          @click="refreshList"
         >
           刷新
         </el-button>
@@ -26,7 +26,7 @@
           v-for="(item, index) in chatList"
           :key="index"
           class="chat-item"
-          @click="toChat(item.targetUser.id)"
+          @click="toChat(item.targetUser.id, item.unreadCount)"
         >
           <div class="chat-left">
             <el-avatar
@@ -50,9 +50,12 @@
 
           <div class="chat-right">
             <span class="time">{{ item.lastTime | formatDate }}</span>
-            <el-button size="small" type="primary" plain round>
-              发消息
-            </el-button>
+            <div class="action-row">
+              <span v-if="item.unreadCount > 0" class="unread-dot"></span>
+              <el-button size="small" type="primary" plain round>
+                发消息
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
@@ -64,25 +67,15 @@
 
 <script>
 import { mapState } from "vuex";
-import { formatDate } from "@/util/date"; // 假设你有这个工具类
+import { formatDate } from "@/util/date";
 
 export default {
   name: "ChatList",
   data() {
     return {
-      baseUrl: "http://localhost:8080", // 根据实际情况修改
-      // 模拟数据结构，你需要把这里替换成从后端获取的数据
-      chatList: [
-        // 示例数据
-        /*
-        {
-          targetUser: { id: 101, username: "Admin", avatar: "" },
-          lastMessage: "你好，请问有什么可以帮你的？",
-          lastTime: new Date(),
-          unreadCount: 2
-        }
-        */
-      ],
+      baseUrl: "http://localhost:8080",
+      chatList: [],
+      timer: null,
     };
   },
   computed: {
@@ -90,38 +83,89 @@ export default {
   },
   created() {
     this.getChatList();
+    this.startPolling();
+  },
+  beforeDestroy() {
+    this.stopPolling();
+  },
+  activated() {
+    this.getChatList();
+    this.startPolling();
+  },
+  deactivated() {
+    this.stopPolling();
   },
   methods: {
-    // 处理头像链接
     getResUrl(url) {
       if (!url) return "";
       if (url.startsWith("http")) return url;
       return this.baseUrl + url;
     },
-    // 处理文字头像
+    
     getAvatarText(username) {
       if (!username) return "U";
       return username.charAt(0).toUpperCase();
     },
     
-    // 获取最近联系人列表
-    getChatList() {
-      // 🟢 这里需要调用后端接口获取最近聊过天的人
-      // 假设接口是 /chat/recent-list?userId=xxx
-      // 这里先写个空的请求逻辑，你可以根据后端接口修改
-      
-      this.$get("/chat/recent", { userId: this.user.id }).then(res => {
-         if(res.data.status && res.data.list) {
-            this.chatList = res.data.list;
-         }
+    startPolling() {
+      if (this.timer) return;
+      this.timer = setInterval(() => {
+        this.getChatList(true);
+      }, 3000);
+    },
+    
+    stopPolling() {
+      if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+    },
+    
+    refreshList() {
+      this.getChatList();
+    },
+    
+    getChatList(silent = false) {
+      this.$get("/chat/recent", { userId: this.user.id }, silent).then(res => {
+        if(res.data.status && res.data.list) {
+          const newList = res.data.list;
+          const hasChanged = this.checkListChanged(newList);
+          
+          if (hasChanged) {
+            this.chatList = newList;
+          }
+        }
       }).catch(() => {
-         // 如果还没后端，先不报错
-         console.log("获取消息列表失败或接口未定义");
+        if(!silent) {
+          console.log("获取消息列表失败");
+        }
       });
     },
+    
+    checkListChanged(newList) {
+      if (newList.length !== this.chatList.length) {
+        return true;
+      }
+      
+      for (let i = 0; i < newList.length; i++) {
+        const newItem = newList[i];
+        const oldItem = this.chatList[i];
+        
+        if (newItem.unreadCount !== oldItem.unreadCount) {
+          return true;
+        }
+        if (newItem.lastMessage !== oldItem.lastMessage) {
+          return true;
+        }
+        if (newItem.lastTime !== oldItem.lastTime) {
+          return true;
+        }
+      }
+      
+      return false;
+    },
 
-    // 跳转到详情页
-    toChat(targetUserId) {
+    toChat(targetUserId, unreadCount) {
       this.$router.push({
         path: "/home/chat/detail",
         query: { toUser: targetUserId },
@@ -132,7 +176,6 @@ export default {
     formatDate(time) {
       if (!time) return "";
       let date = new Date(time);
-      // 简单格式化，你可以用你项目里的 util
       return formatDate(date, "MM-dd hh:mm");
     },
   },
@@ -151,7 +194,6 @@ export default {
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
   }
 
-  /* 列表项样式 */
   .chat-item {
     display: flex;
     justify-content: space-between;
@@ -197,7 +239,6 @@ export default {
             color: #909399;
             font-size: 14px;
             margin: 0;
-            // 单行省略
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -216,7 +257,36 @@ export default {
         font-size: 12px;
         margin-bottom: 8px;
       }
+      
+      .action-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .unread-dot {
+        width: 10px;
+        height: 10px;
+        background-color: #f56c6c;
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+      }
     }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 </style>

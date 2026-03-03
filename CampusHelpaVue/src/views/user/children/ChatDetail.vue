@@ -74,19 +74,18 @@ export default {
   data() {
     return {
       baseUrl: "http://localhost:8080",
-      targetUserId: null, // 对方ID
-      targetUser: {},     // 对方详细信息
-      msgList: [],        // 消息列表
-      inputContent: "",   // 输入框内容
+      targetUserId: null,
+      targetUser: {},
+      msgList: [],
+      inputContent: "",
       loading: false,
-      timer: null,        // 定时器用于轮询消息
+      timer: null,
     };
   },
   computed: {
     ...mapState("user", ["user"]),
   },
   created() {
-    // 1. 获取路由参数中的对方ID
     this.targetUserId = this.$route.query.toUser;
     
     if (!this.targetUserId) {
@@ -95,23 +94,18 @@ export default {
       return;
     }
 
-    // 2. 初始化
     this.initData();
 
-    // 3. 开启轮询 (每3秒拉取一次最新消息，模拟实时)
-    // 如果你有 WebSocket，这里换成 WebSocket监听
     this.timer = setInterval(() => {
-      this.getMessages(true); // true 表示静默刷新，不显示 loading
+      this.getMessages(true);
     }, 3000);
   },
   beforeDestroy() {
-    // 页面销毁前清除定时器
     if (this.timer) {
       clearInterval(this.timer);
     }
   },
   methods: {
-    // 初始化：获取对方信息 + 获取历史记录
     async initData() {
       this.loading = true;
       await this.getTargetUserInfo();
@@ -120,35 +114,33 @@ export default {
       this.scrollToBottom();
     },
 
-    // 获取对方信息
     getTargetUserInfo() {
       return this.$get(`/user/${this.targetUserId}`).then((res) => {
         if (res.data.status || res.data.user) {
-          // 兼容你的后端返回结构，可能是 res.data.user 或 res.data.data
           this.targetUser = res.data.user || res.data.data;
         }
       });
     },
 
-    // 获取消息记录
     getMessages(silent = false) {
-      // 假设接口： GET /chat/history?userId=我的ID&targetId=对方ID
       return this.$get("/chat/history", {
         userId: this.user.id,
         targetId: this.targetUserId
-      }).then((res) => {
+      }, silent).then((res) => {
         if (res.data.status) {
           const newMessages = res.data.list || [];
           
-          // 🟢 优化：只有当消息真正有变化时才更新列表，避免无意义的重新渲染
-          const hasChanged = this.checkMessagesChanged(newMessages);
-          
-          if (hasChanged) {
-            const shouldScroll = newMessages.length > this.msgList.length;
-            this.msgList = newMessages;
-            if (shouldScroll) {
-              this.scrollToBottom();
+          if (silent) {
+            const hasNewMessages = this.hasNewMessages(newMessages);
+            if (hasNewMessages) {
+              const wasAtBottom = this.isScrolledToBottom();
+              this.msgList = newMessages;
+              if (wasAtBottom) {
+                this.$nextTick(() => this.scrollToBottom());
+              }
             }
+          } else {
+            this.msgList = newMessages;
           }
         }
       }).catch(err => {
@@ -156,57 +148,64 @@ export default {
       });
     },
 
-    // 🟢 新增：检查消息列表是否真正有变化
-    checkMessagesChanged(newMessages) {
-      // 数量不同，肯定变了
-      if (newMessages.length !== this.msgList.length) {
-        return true;
-      }
-      // 数量相同，比较最后一条消息的ID（如果有）
-      if (newMessages.length > 0 && this.msgList.length > 0) {
-        const newLast = newMessages[newMessages.length - 1];
-        const oldLast = this.msgList[this.msgList.length - 1];
-        // 比较ID或内容
-        if (newLast.id !== oldLast.id) {
-          return true;
-        }
-      }
-      return false;
+    isScrolledToBottom() {
+      const div = this.$refs.chatBox;
+      if (!div) return true;
+      const threshold = 100;
+      return div.scrollHeight - div.scrollTop - div.clientHeight < threshold;
     },
 
-    // 发送消息
+    hasNewMessages(newMessages) {
+      if (newMessages.length !== this.msgList.length) {
+        return newMessages.length > this.msgList.length;
+      }
+      
+      if (newMessages.length === 0) return false;
+      
+      const newLast = newMessages[newMessages.length - 1];
+      const oldLast = this.msgList[this.msgList.length - 1];
+      
+      if (newLast.id && oldLast.id) {
+        return newLast.id !== oldLast.id;
+      }
+      
+      if (newLast.createTime && oldLast.createTime) {
+        const newTime = new Date(newLast.createTime).getTime();
+        const oldTime = new Date(oldLast.createTime).getTime();
+        return newTime !== oldTime;
+      }
+      
+      return newLast.content !== oldLast.content;
+    },
+
     sendMessage() {
       if (!this.inputContent.trim()) return;
 
-      const content = this.inputContent; // 暂存
-      this.inputContent = ""; // 先清空输入框，体验更好
+      const content = this.inputContent;
+      this.inputContent = "";
 
-      // 假设接口：POST /chat/send
       this.$post("/chat/send", {
         senderId: this.user.id,
         receiverId: this.targetUserId,
         content: content,
-        type: 0 // 0代表文本
+        type: 0
       }).then((res) => {
         if (res.data.status) {
-          // 发送成功后，手动把这条消息加到列表里 (或者立即调一次 getMessages)
-          // 这里为了流畅，手动 push 一条假的，等轮询或者刷新来同步
           this.msgList.push({
              senderId: this.user.id,
              receiverId: this.targetUserId,
              content: content,
              createTime: new Date(),
-             avatar: this.user.avatar // 临时显示
+             avatar: this.user.avatar
           });
           this.scrollToBottom();
         } else {
           this.$msg("发送失败", "error");
-          this.inputContent = content; // 失败还原文本
+          this.inputContent = content;
         }
       });
     },
 
-    // 滚动到底部
     scrollToBottom() {
       this.$nextTick(() => {
         const div = this.$refs.chatBox;
@@ -216,18 +215,17 @@ export default {
       });
     },
 
-    // 工具函数：获取头像链接
     getAvatarUrl(u) {
       if (!u || !u.avatar) return "";
       if (u.avatar.startsWith("http")) return u.avatar;
       return this.baseUrl + u.avatar;
     },
-    // 工具函数：文字头像
+    
     getAvatarText(name) {
       if (!name) return "U";
       return name.charAt(0).toUpperCase();
     },
-    // 判断是否显示时间 (两条消息间隔超过5分钟才显示)
+    
     shouldShowTime(index) {
       if (index === 0) return true;
       const current = new Date(this.msgList[index].createTime).getTime();

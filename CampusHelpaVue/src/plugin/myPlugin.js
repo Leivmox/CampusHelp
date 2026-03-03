@@ -1,26 +1,20 @@
-//加载自己开发的插件
 import {del, get, post, put} from "../util/request";
-import th from "element-ui/src/locale/lang/th";
 
 export default {
-    // 插件中，必须包含一个install方法
     install: function (Vue) {
-        //注入组件选项
         Vue.mixin({
             methods: {
-                //get方法
-                $get(url, params) {
-                    return get(url, params);
+                $get(url, params, silent = false) {
+                    return get(url, params, silent);
                 },
-                //post方法
-                $post(url, params) {
-                    return post(url, params);
+                $post(url, params, silent = false) {
+                    return post(url, params, silent);
                 },
-                $put(url, params) {
-                    return put(url, params);
+                $put(url, params, silent = false) {
+                    return put(url, params, silent);
                 },
-                $del(url, params) {
-                    return del(url, params)
+                $del(url, params, silent = false) {
+                    return del(url, params, silent);
                 },
                 $msg(message, type, duration = 2000) {
                     this.$message({

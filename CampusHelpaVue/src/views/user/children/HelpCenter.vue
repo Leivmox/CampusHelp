@@ -3,19 +3,19 @@
     <div class="sub-nav">
       <el-button-group>
         <el-button 
-          :type="isActive('/home/help/task') ? 'primary' : 'default'" 
-          icon="el-icon-edit"
-          @click="goTo('/home/help/task')"
-        >
-          发布求助
-        </el-button>
-
-        <el-button 
           :type="isActive('/home/help/accept') ? 'primary' : 'default'" 
           icon="el-icon-search"
           @click="goTo('/home/help/accept')"
         >
           求助广场
+        </el-button>
+
+        <el-button 
+          :type="isActive('/home/help/task') ? 'primary' : 'default'" 
+          icon="el-icon-edit"
+          @click="goTo('/home/help/task')"
+        >
+          发布求助
         </el-button>
 
         <el-button 

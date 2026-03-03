@@ -11,18 +11,30 @@
     <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
         <span style="font-size: 18px; font-weight: bold">求助广场</span>
-        <el-button
-          style="float: right; padding: 3px 0; font-size: 14px"
-          type="text"
-          icon="el-icon-refresh"
-          @click="loadTasks"
-          >刷新</el-button
-        >
+        <div style="float: right; display: flex; align-items: center; gap: 10px;">
+          <el-select v-model="sortType" size="small" style="width: 110px" @change="sortTasks">
+            <el-option label="时间排序" value="time"></el-option>
+            <el-option label="积分排序" value="reward"></el-option>
+          </el-select>
+          <el-button
+            :type="sortOrder === 'desc' ? 'primary' : 'default'"
+            size="small"
+            :icon="sortOrder === 'desc' ? 'el-icon-sort-down' : 'el-icon-sort-up'"
+            @click="toggleSortOrder"
+          >
+            {{ sortOrder === 'desc' ? '降序' : '升序' }}
+          </el-button>
+          <el-button
+            type="text"
+            icon="el-icon-refresh"
+            @click="loadTasks"
+          >刷新</el-button>
+        </div>
       </div>
 
-      <div v-if="tasks.length > 0">
+      <div v-if="sortedTasks.length > 0">
         <div
-          v-for="item in tasks"
+          v-for="item in sortedTasks"
           :key="item.id"
           class="task-item"
           @click="goToDetail(item)"
@@ -54,6 +66,10 @@
             >
             <span class="task-title" :class="{ solved: item.state == 2 }">
               {{ item.taskTitle }}
+            </span>
+            <span class="task-reward">
+              <i class="el-icon-coin"></i>
+              {{ item.reward || 10 }}积分
             </span>
           </div>
 
@@ -105,9 +121,16 @@ export default {
     return {
       tasks: [],
       baseUrl: "http://localhost:8080",
+      sortType: "time",
+      sortOrder: "desc"
     };
   },
-  computed: { ...mapState("user", ["user"]) },
+  computed: {
+    ...mapState("user", ["user"]),
+    sortedTasks() {
+      return this.sortTasks();
+    }
+  },
   methods: {
     getResUrl(url) {
       if (!url) return "";
@@ -133,14 +156,39 @@ export default {
         let list = res.data.task || [];
         list.forEach((item) => {
           if (item.imgUrl) item.imgList = item.imgUrl.split(",");
+          if (!item.reward) item.reward = 10;
         });
-        this.tasks = list.sort((a, b) => {
-          if (a.state === b.state)
-            return new Date(b.createTime) - new Date(a.createTime);
-          return a.state - b.state;
-        });
+        this.tasks = list;
       });
     },
+    toggleSortOrder() {
+      this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc';
+    },
+    sortTasks() {
+      let list = [...this.tasks];
+      
+      if (this.sortType === 'time') {
+        list.sort((a, b) => {
+          if (a.state === b.state) {
+            const timeA = new Date(a.createTime).getTime();
+            const timeB = new Date(b.createTime).getTime();
+            return this.sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+          }
+          return a.state - b.state;
+        });
+      } else if (this.sortType === 'reward') {
+        list.sort((a, b) => {
+          if (a.state === b.state) {
+            const rewardA = a.reward || 10;
+            const rewardB = b.reward || 10;
+            return this.sortOrder === 'desc' ? rewardB - rewardA : rewardA - rewardB;
+          }
+          return a.state - b.state;
+        });
+      }
+      
+      return list;
+    }
   },
   created() {
     this.loadTasks();
@@ -163,7 +211,6 @@ export default {
     background-color: #f9f9f9;
   }
 
-  // 标题样式
   .task-header {
     margin-bottom: 12px;
     display: flex;
@@ -173,19 +220,30 @@ export default {
       font-size: 17px;
       font-weight: bold;
       color: #303133;
-      // 标题太长时显示省略号
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      flex: 1;
 
       &.solved {
         color: #909399;
         text-decoration: line-through;
       }
     }
+
+    .task-reward {
+      font-size: 14px;
+      color: #ff7d00;
+      font-weight: 600;
+      margin-left: 12px;
+      flex-shrink: 0;
+      
+      i {
+        margin-right: 4px;
+      }
+    }
   }
 
-  // 中间主体：图片左，文字右
   .task-body {
     display: flex;
     align-items: flex-start;
@@ -194,7 +252,7 @@ export default {
     .task-cover {
       position: relative;
       flex-shrink: 0;
-      margin-right: 15px; // 图片与文字的间距
+      margin-right: 15px;
 
       .img-count {
         position: absolute;
@@ -213,7 +271,6 @@ export default {
       font-size: 14px;
       color: #606266;
       line-height: 1.6;
-      // 限制内容高度，最多显示3行
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 3;
@@ -221,7 +278,6 @@ export default {
     }
   }
 
-  // 底部样式
   .task-footer {
     display: flex;
     justify-content: flex-start;

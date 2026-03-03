@@ -836,15 +836,16 @@ export default {
 
     .bottom {
       width: 100%;
-      height: 100%;
+      height: calc(100vh - 65px);
       margin-top: 65px;
-      padding: 0 20px;
+      padding: 20px;
       box-sizing: border-box;
+      overflow-y: auto;
 
       .content-box {
         background: transparent;
         padding: 0;
-        min-height: 80vh;
+        min-height: calc(100% - 40px);
       }
     }
   }

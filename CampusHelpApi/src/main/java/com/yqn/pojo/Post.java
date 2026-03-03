@@ -39,9 +39,11 @@ public class Post {
     @TableField(value = "create_time")
     private Date createTime;
 
-    // 🟢 1. 数据库对应的字段：存字符串 "url1,url2,url3"
     @TableField(value = "img_url")
     private String imgUrl;
+
+    @TableField(value = "is_top")
+    private Integer isTop;
 
     // ================= 以下为关联/虚拟字段 =================
 

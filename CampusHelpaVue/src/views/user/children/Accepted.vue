@@ -39,6 +39,9 @@
               <h4 class="title" :class="{ 'text-muted': item.state == 2 }">
                 {{ item.taskTitle }}
               </h4>
+              <span class="reward-badge">
+                <i class="el-icon-coin"></i> {{ item.reward || 10 }}积分
+              </span>
               <span class="order-time"
                 >{{ item.orderTime | formatDate }} 接单</span
               >
@@ -203,6 +206,17 @@ export default {
     .text-muted {
       color: #999;
       text-decoration: line-through;
+    }
+    .reward-badge {
+      font-size: 13px;
+      color: #ff7d00;
+      font-weight: 600;
+      margin-left: 10px;
+      flex-shrink: 0;
+      
+      i {
+        margin-right: 4px;
+      }
     }
     .order-time {
       font-size: 12px;

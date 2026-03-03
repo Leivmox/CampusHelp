@@ -72,11 +72,9 @@ const routes = [
       // --- 求助中心 (HelpCenter) ---
       {
         path: "help",
-        // 这里的 component 就是上面的 HelpCenter.vue
         component: () => import("@v/user/children/HelpCenter.vue"),
         meta: { title: "求助中心" },
-        // 默认重定向到 '发布求助' 页面，防止进来是空白
-        redirect: "/home/help/task",
+        redirect: "/home/help/accept",
         children: [
           {
             // 完整路径: /home/help/task
