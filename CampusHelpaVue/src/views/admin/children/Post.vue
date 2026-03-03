@@ -28,6 +28,22 @@
           @input="filterPosts">
         </el-input>
         
+        <div class="sort-group">
+          <el-select v-model="sortType" size="small" style="width: 110px" @change="applySort">
+            <el-option label="时间排序" value="time"></el-option>
+            <el-option label="点赞排序" value="likes"></el-option>
+            <el-option label="评论排序" value="comments"></el-option>
+          </el-select>
+          <el-button
+            :type="sortOrder === 'desc' ? 'primary' : 'default'"
+            size="small"
+            :icon="sortOrder === 'desc' ? 'el-icon-sort-down' : 'el-icon-sort-up'"
+            @click="toggleSortOrder"
+          >
+            {{ sortOrder === 'desc' ? '降序' : '升序' }}
+          </el-button>
+        </div>
+        
         <el-button type="primary" icon="el-icon-refresh" @click="fetchPosts">刷新</el-button>
       </div>
     </el-card>
@@ -106,50 +122,52 @@
           </template>
         </el-table-column>
         
-        <el-table-column label="操作" width="220" align="center" fixed="right">
+        <el-table-column label="操作" width="280" align="center" fixed="right">
           <template slot-scope="scope">
-            <el-button 
-              v-if="!scope.row.isTop"
-              type="warning" 
-              size="mini" 
-              icon="el-icon-top"
-              plain
-              @click="setTop(scope.row)">
-              置顶
-            </el-button>
-            <el-button 
-              v-else
-              type="info" 
-              size="mini" 
-              icon="el-icon-bottom"
-              plain
-              @click="cancelTop(scope.row)">
-              取消置顶
-            </el-button>
-            <el-button 
-              type="primary" 
-              size="mini" 
-              icon="el-icon-view"
-              plain
-              @click="viewPost(scope.row)">
-              查看
-            </el-button>
-            <el-popconfirm
-              confirm-button-text='确定'
-              cancel-button-text='取消'
-              icon="el-icon-warning"
-              icon-color="red"
-              title="确定删除该帖子吗？删除后无法恢复！"
-              @confirm="del(scope.row.id)"
-            >
+            <div class="action-buttons">
               <el-button 
-                type="danger" 
+                v-if="!scope.row.isTop"
+                type="warning" 
                 size="mini" 
-                slot="reference"
-                icon="el-icon-delete"
-                plain>
+                icon="el-icon-top"
+                plain
+                @click="setTop(scope.row)">
+                置顶
               </el-button>
-            </el-popconfirm>
+              <el-button 
+                v-else
+                type="info" 
+                size="mini" 
+                icon="el-icon-bottom"
+                plain
+                @click="cancelTop(scope.row)">
+                取消置顶
+              </el-button>
+              <el-button 
+                type="primary" 
+                size="mini" 
+                icon="el-icon-view"
+                plain
+                @click="viewPost(scope.row)">
+                查看
+              </el-button>
+              <el-popconfirm
+                confirm-button-text='确定'
+                cancel-button-text='取消'
+                icon="el-icon-warning"
+                icon-color="red"
+                title="确定删除该帖子吗？删除后无法恢复！"
+                @confirm="del(scope.row.id)"
+              >
+                <el-button 
+                  type="danger" 
+                  size="mini" 
+                  slot="reference"
+                  icon="el-icon-delete"
+                  plain>
+                </el-button>
+              </el-popconfirm>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -253,7 +271,9 @@ export default {
       searchKeyword: '',
       baseUrl: "http://localhost:8080",
       dialogVisible: false,
-      currentPost: null
+      currentPost: null,
+      sortType: 'time',
+      sortOrder: 'desc'
     }
   },
   
@@ -316,6 +336,38 @@ export default {
           (post.content && post.content.toLowerCase().includes(keyword))
         );
       }
+      this.applySort();
+    },
+    
+    toggleSortOrder() {
+      this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc';
+      this.applySort();
+    },
+    
+    applySort() {
+      let list = [...this.filteredPosts];
+      
+      if (this.sortType === 'time') {
+        list.sort((a, b) => {
+          const timeA = new Date(a.createTime).getTime();
+          const timeB = new Date(b.createTime).getTime();
+          return this.sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+        });
+      } else if (this.sortType === 'likes') {
+        list.sort((a, b) => {
+          const likesA = a.likeCount || 0;
+          const likesB = b.likeCount || 0;
+          return this.sortOrder === 'desc' ? likesB - likesA : likesA - likesB;
+        });
+      } else if (this.sortType === 'comments') {
+        list.sort((a, b) => {
+          const commentsA = a.comments ? a.comments.length : 0;
+          const commentsB = b.comments ? b.comments.length : 0;
+          return this.sortOrder === 'desc' ? commentsB - commentsA : commentsA - commentsB;
+        });
+      }
+      
+      this.filteredPosts = list;
     },
     
     viewPost(post) {
@@ -437,6 +489,7 @@ export default {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-wrap: wrap;
     
     .filter-group {
       display: flex;
@@ -447,6 +500,12 @@ export default {
         font-weight: 500;
         color: #606266;
       }
+    }
+    
+    .sort-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
   }
 }
@@ -535,6 +594,14 @@ export default {
   i {
     vertical-align: middle;
   }
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 8px 0;
 }
 
 .post-detail {

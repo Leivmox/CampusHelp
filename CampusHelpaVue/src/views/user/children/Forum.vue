@@ -11,18 +11,32 @@
     <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix">
         <span style="font-size: 18px; font-weight: bold">最新动态</span>
-        <el-button
-          style="float: right; padding: 3px 0; font-size: 16px"
-          icon="el-icon-edit-outline"
-          type="text"
-          @click="openDialog"
-        >
-          发布论坛
-        </el-button>
+        <div style="float: right; display: flex; align-items: center; gap: 10px;">
+          <el-select v-model="sortType" size="small" style="width: 110px" @change="applySort">
+            <el-option label="时间排序" value="time"></el-option>
+            <el-option label="点赞排序" value="likes"></el-option>
+            <el-option label="评论排序" value="comments"></el-option>
+          </el-select>
+          <el-button
+            :type="sortOrder === 'desc' ? 'primary' : 'default'"
+            size="small"
+            :icon="sortOrder === 'desc' ? 'el-icon-sort-down' : 'el-icon-sort-up'"
+            @click="toggleSortOrder"
+          >
+            {{ sortOrder === 'desc' ? '降序' : '升序' }}
+          </el-button>
+          <el-button
+            type="text"
+            icon="el-icon-edit-outline"
+            @click="openDialog"
+          >
+            发布论坛
+          </el-button>
+        </div>
       </div>
 
-      <div v-if="postList.length > 0">
-        <div v-for="(item, index) in postList" :key="index" class="post-item">
+      <div v-if="sortedPostList.length > 0">
+        <div v-for="(item, index) in sortedPostList" :key="index" class="post-item">
           <div class="post-header">
             <div class="user-info-wrapper">
               <el-avatar 
@@ -125,11 +139,16 @@ export default {
         imgList: [] 
       },
       fileList: [], 
-      baseUrl: "http://localhost:8080"
+      baseUrl: "http://localhost:8080",
+      sortType: 'time',
+      sortOrder: 'desc'
     };
   },
   computed: {
     ...mapState("user", ["user"]),
+    sortedPostList() {
+      return this.applySort();
+    }
   },
   created() {
     this.getPosts();
@@ -230,6 +249,36 @@ export default {
 
     goToDetail(postId) {
       this.$router.push({ name: 'PostDetail', params: { id: postId } });
+    },
+    
+    toggleSortOrder() {
+      this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc';
+    },
+    
+    applySort() {
+      let list = [...this.postList];
+      
+      if (this.sortType === 'time') {
+        list.sort((a, b) => {
+          const timeA = new Date(a.createTime).getTime();
+          const timeB = new Date(b.createTime).getTime();
+          return this.sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+        });
+      } else if (this.sortType === 'likes') {
+        list.sort((a, b) => {
+          const likesA = a.likeCount || 0;
+          const likesB = b.likeCount || 0;
+          return this.sortOrder === 'desc' ? likesB - likesA : likesA - likesB;
+        });
+      } else if (this.sortType === 'comments') {
+        list.sort((a, b) => {
+          const commentsA = a.comments ? a.comments.length : 0;
+          const commentsB = b.comments ? b.comments.length : 0;
+          return this.sortOrder === 'desc' ? commentsB - commentsA : commentsA - commentsB;
+        });
+      }
+      
+      return list;
     }
   },
   filters: {

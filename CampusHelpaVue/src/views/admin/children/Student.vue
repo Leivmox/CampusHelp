@@ -74,7 +74,11 @@
             >
               <el-tooltip content="点击更换头像" placement="top">
                 <div class="avatar-wrapper">
-                  <el-avatar :size="40" :src="getAvatarUrl(scope.row.avatar)">
+                  <el-avatar 
+                    :key="scope.row.avatar ? scope.row.avatar + '_' + avatarVersion : 'default_' + avatarVersion"
+                    :size="40" 
+                    :src="getAvatarUrl(scope.row.avatar)"
+                  >
                     {{ getAvatarText(scope.row) }}
                   </el-avatar>
                   <div class="avatar-hover-mask">
@@ -234,6 +238,7 @@ export default {
       headers: {
         Authorization: localStorage.getItem("token"),
       },
+      avatarVersion: Date.now(),
       editDialogVisible: false,
       editForm: {
         id: null,
@@ -379,7 +384,12 @@ export default {
           avatar: uploadedUrl
         }).then(response => {
           this.$message.success('头像修改成功');
-          this.$set(user, 'avatar', uploadedUrl);
+          this.avatarVersion = Date.now();
+          const index = this.users.findIndex(u => u.id === user.id);
+          if (index !== -1) {
+            this.$set(this.users, index, { ...this.users[index], avatar: uploadedUrl });
+          }
+          user.avatar = uploadedUrl;
         }).catch(() => {
           this.$message.error('头像更新失败');
         });
@@ -390,8 +400,8 @@ export default {
     
     getAvatarUrl(avatar) {
       if (!avatar) return '';
-      if (avatar.startsWith('http')) return avatar;
-      return this.baseUrl + avatar;
+      let url = avatar.startsWith('http') ? avatar : this.baseUrl + avatar;
+      return url + (url.includes('?') ? '&' : '?') + 'v=' + this.avatarVersion;
     },
     
     getAvatarText(user) {
