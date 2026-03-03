@@ -216,4 +216,4 @@ project:
 
 ## 许可证
 
-本项目仅供学习交流使用。
+本项目采用 [MIT License](LICENSE) 开源协议。
