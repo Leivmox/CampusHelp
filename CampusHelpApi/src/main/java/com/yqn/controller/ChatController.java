@@ -114,4 +114,46 @@ public class ChatController {
         chatMessageService.markAsRead(senderId, receiverId);
         return message.message(true, "已标记为已读", "", null);
     }
+
+    /**
+     * 清空与某人的聊天记录
+     * DELETE /chat/clear?userId=xxx&targetId=xxx
+     *
+     * @param userId   当前用户ID
+     * @param targetId 对方用户ID
+     * @return 操作结果
+     */
+    @DeleteMapping("/clear")
+    public Map<String, Object> clearChatHistory(Long userId, Long targetId) {
+        if (userId == null || targetId == null) {
+            return message.message(false, "参数不完整", "", null);
+        }
+
+        boolean success = chatMessageService.clearChatHistory(userId, targetId);
+        if (success) {
+            return message.message(true, "聊天记录已清空", "", null);
+        }
+        return message.message(false, "清空失败", "", null);
+    }
+
+    /**
+     * 删除与某人的聊天（从最近联系人中移除，同时清空聊天记录）
+     * DELETE /chat/delete?userId=xxx&targetId=xxx
+     *
+     * @param userId   当前用户ID
+     * @param targetId 对方用户ID
+     * @return 操作结果
+     */
+    @DeleteMapping("/delete")
+    public Map<String, Object> deleteChat(Long userId, Long targetId) {
+        if (userId == null || targetId == null) {
+            return message.message(false, "参数不完整", "", null);
+        }
+
+        boolean success = chatMessageService.clearChatHistory(userId, targetId);
+        if (success) {
+            return message.message(true, "聊天已删除", "", null);
+        }
+        return message.message(false, "删除失败", "", null);
+    }
 }

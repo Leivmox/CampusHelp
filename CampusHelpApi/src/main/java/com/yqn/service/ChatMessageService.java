@@ -45,4 +45,13 @@ public interface ChatMessageService extends IService<ChatMessage> {
      * @param receiverId 接收者ID (我)
      */
     void markAsRead(Long senderId, Long receiverId);
+
+    /**
+     * 清空两个用户之间的聊天记录
+     *
+     * @param userId   当前用户ID
+     * @param targetId 对方用户ID
+     * @return 是否清空成功
+     */
+    boolean clearChatHistory(Long userId, Long targetId);
 }

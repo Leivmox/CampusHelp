@@ -11,7 +11,12 @@
         ></el-button>
         <span class="title">与 {{ targetUser.username || '...' }} 聊天中</span>
       </div>
-      <i class="el-icon-more" style="cursor: pointer; color: #909399"></i>
+      <el-dropdown trigger="click" @command="handleCommand">
+        <i class="el-icon-more" style="cursor: pointer; color: #909399"></i>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item command="clear" icon="el-icon-delete">清空聊天记录</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
     </div>
 
     <div class="chat-main" ref="chatBox">
@@ -43,8 +48,24 @@
               {{ getAvatarText(msg.senderId === user.id ? user.username : targetUser.username) }}
             </el-avatar>
 
-            <div class="bubble">
-              <div class="text">{{ msg.content }}</div>
+            <div class="bubble" :class="{ 'no-bg': msg.type === 1 || msg.type === 2 }">
+              <div v-if="msg.type === 1" class="image-msg">
+                <el-image 
+                  :src="baseUrl + msg.content" 
+                  fit="cover"
+                  :preview-src-list="[baseUrl + msg.content]"
+                  class="chat-image"
+                >
+                  <div slot="error" class="image-error">
+                    <i class="el-icon-picture-outline"></i>
+                    <span>图片加载失败</span>
+                  </div>
+                </el-image>
+              </div>
+              <div v-else-if="msg.type === 2" class="emoji-msg">
+                <img :src="getEmojiUrl(msg.content)" class="emoji-image" />
+              </div>
+              <div v-else class="text">{{ msg.content }}</div>
             </div>
           </div>
         </div>
@@ -52,6 +73,37 @@
     </div>
 
     <div class="chat-footer">
+      <el-popover
+        placement="top"
+        width="380"
+        trigger="click"
+        v-model="emojiPickerVisible"
+      >
+        <div class="emoji-picker">
+          <div class="emoji-grid">
+            <span 
+              v-for="(emoji, index) in emojiList" 
+              :key="index"
+              class="emoji-item"
+              @click="sendEmoji(emoji)"
+            >
+              <img :src="getEmojiUrl(emoji)" class="emoji-thumb" />
+            </span>
+          </div>
+        </div>
+        <el-button slot="reference" icon="el-icon-star-on" circle></el-button>
+      </el-popover>
+      <el-upload
+        action="http://localhost:8080/common/upload"
+        :data="{ type: 'chat' }"
+        name="file"
+        :show-file-list="false"
+        :on-success="handleImageSuccess"
+        :before-upload="beforeImageUpload"
+        accept="image/*"
+      >
+        <el-button icon="el-icon-picture" circle></el-button>
+      </el-upload>
       <el-input
         v-model="inputContent"
         placeholder="输入消息..."
@@ -67,7 +119,10 @@
 
 <script>
 import { mapState } from "vuex";
-import { formatDate } from "@/util/date"; // 假设你有这个工具
+import { formatDate } from "@/util/date";
+
+const emojiContext = require.context('@/assets/emoji', false, /\.gif$/);
+const emojiList = emojiContext.keys().map(key => key.replace('./', ''));
 
 export default {
   name: "ChatDetail",
@@ -80,6 +135,8 @@ export default {
       inputContent: "",
       loading: false,
       timer: null,
+      emojiPickerVisible: false,
+      emojiList: emojiList
     };
   },
   computed: {
@@ -195,6 +252,7 @@ export default {
              senderId: this.user.id,
              receiverId: this.targetUserId,
              content: content,
+             type: 0,
              createTime: new Date(),
              avatar: this.user.avatar
           });
@@ -204,6 +262,100 @@ export default {
           this.inputContent = content;
         }
       });
+    },
+
+    sendEmoji(emoji) {
+      this.emojiPickerVisible = false;
+      
+      this.$post("/chat/send", {
+        senderId: this.user.id,
+        receiverId: this.targetUserId,
+        content: emoji,
+        type: 2
+      }).then((res) => {
+        if (res.data.status) {
+          this.msgList.push({
+            senderId: this.user.id,
+            receiverId: this.targetUserId,
+            content: emoji,
+            type: 2,
+            createTime: new Date(),
+            avatar: this.user.avatar
+          });
+          this.scrollToBottom();
+        } else {
+          this.$msg("发送失败", "error");
+        }
+      });
+    },
+
+    beforeImageUpload(file) {
+      const isImage = file.type.startsWith('image/');
+      const isLt5M = file.size / 1024 / 1024 < 5;
+
+      if (!isImage) {
+        this.$msg("只能上传图片文件", "error");
+        return false;
+      }
+      if (!isLt5M) {
+        this.$msg("图片大小不能超过 5MB", "error");
+        return false;
+      }
+      return true;
+    },
+
+    handleImageSuccess(res) {
+      if (res.url) {
+        this.$post("/chat/send", {
+          senderId: this.user.id,
+          receiverId: this.targetUserId,
+          content: res.url,
+          type: 1
+        }).then((response) => {
+          if (response.data.status) {
+            this.msgList.push({
+              senderId: this.user.id,
+              receiverId: this.targetUserId,
+              content: res.url,
+              type: 1,
+              createTime: new Date(),
+              avatar: this.user.avatar
+            });
+            this.scrollToBottom();
+          } else {
+            this.$msg("图片发送失败", "error");
+          }
+        });
+      } else {
+        this.$msg("图片上传失败", "error");
+      }
+    },
+
+    handleCommand(command) {
+      if (command === "clear") {
+        this.clearChatHistory();
+      }
+    },
+
+    clearChatHistory() {
+      this.$confirm("确定要清空与该用户的所有聊天记录吗？此操作不可恢复。", "清空聊天记录", {
+        type: "warning"
+      }).then(() => {
+        this.$del("/chat/clear", {
+          userId: this.user.id,
+          targetId: this.targetUserId
+        }).then((res) => {
+          if (res.data.status) {
+            this.$msg("聊天记录已清空", "success");
+            this.msgList = [];
+          } else {
+            this.$msg(res.data.msg || "清空失败", "error");
+          }
+        }).catch(err => {
+          console.error(err);
+          this.$msg("清空失败", "error");
+        });
+      }).catch(() => {});
     },
 
     scrollToBottom() {
@@ -219,6 +371,10 @@ export default {
       if (!u || !u.avatar) return "";
       if (u.avatar.startsWith("http")) return u.avatar;
       return this.baseUrl + u.avatar;
+    },
+
+    getEmojiUrl(filename) {
+      return require(`@/assets/emoji/${filename}`);
     },
     
     getAvatarText(name) {
@@ -243,21 +399,19 @@ export default {
 </script>
 
 <style scoped lang="less">
-/* 定义气泡颜色变量 */
-@me-bg: #95ec69;      /* 微信绿 */
-@other-bg: #ffffff;   /* 白色 */
-@bg-color: #f5f5f5;   /* 聊天背景灰 */
+@me-bg: #95ec69;
+@other-bg: #ffffff;
+@bg-color: #f5f5f5;
 
 .chat-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px); /* 减去顶部导航的高度，根据实际调整 */
+  height: calc(100vh - 120px);
   background-color: @bg-color;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 
-  /* 1. 顶部样式 */
   .chat-header {
     height: 50px;
     background-color: #fff;
@@ -279,12 +433,10 @@ export default {
     }
   }
 
-  /* 2. 消息区域样式 */
   .chat-main {
     flex: 1;
     padding: 15px;
     overflow-y: auto;
-    /* 平滑滚动 */
     scroll-behavior: smooth; 
 
     .loading-tip, .empty-tip {
@@ -315,7 +467,6 @@ export default {
         max-width: 80%;
       }
 
-      /* 对方的消息 (左侧) */
       &.other {
         align-items: flex-start;
         
@@ -325,12 +476,11 @@ export default {
           .bubble {
             background-color: @other-bg;
             color: #333;
-            border-top-left-radius: 0; // 左上角尖角
+            border-top-left-radius: 0;
           }
         }
       }
 
-      /* 我的消息 (右侧) */
       &.me {
         align-items: flex-end;
 
@@ -340,26 +490,73 @@ export default {
           .bubble {
             background-color: @me-bg;
             color: #000;
-            border-top-right-radius: 0; // 右上角尖角
+            border-top-right-radius: 0;
           }
         }
       }
 
-      /* 通用气泡样式 */
       .bubble {
         padding: 10px 14px;
         border-radius: 8px;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         font-size: 15px;
         line-height: 1.5;
-        word-break: break-all; /* 防止长英文不换行 */
+        word-break: break-all;
         position: relative;
         margin-top: 2px;
+
+        &.no-bg {
+          background: transparent !important;
+          padding: 0;
+          box-shadow: none;
+        }
+
+        .image-msg {
+          .chat-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+          }
+
+          .image-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 150px;
+            height: 100px;
+            background: #f5f7fa;
+            color: #909399;
+            font-size: 12px;
+
+            i {
+              font-size: 24px;
+              margin-bottom: 5px;
+            }
+          }
+        }
+
+        .emoji-msg {
+          .emoji-image {
+            width: 80px;
+            height: 80px;
+            display: block;
+          }
+        }
+      }
+      
+      &.me .bubble.no-bg {
+        border-top-right-radius: 0;
+      }
+      
+      &.other .bubble.no-bg {
+        border-top-left-radius: 0;
       }
     }
   }
 
-  /* 3. 底部输入区 */
   .chat-footer {
     min-height: 60px;
     background-color: #fff;
@@ -368,9 +565,40 @@ export default {
     align-items: center;
     padding: 10px 15px;
     flex-shrink: 0;
+    gap: 10px;
 
     .input-area {
-      margin-right: 10px;
+      flex: 1;
+    }
+  }
+}
+
+.emoji-picker {
+  .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    .emoji-item {
+      text-align: center;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 8px;
+      transition: background-color 0.2s;
+      background: #f9f9f9;
+
+      &:hover {
+        background-color: #e6f7ff;
+      }
+
+      .emoji-thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+      }
     }
   }
 }

@@ -5,6 +5,7 @@ import com.yqn.pojo.ChatMessage;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.Delete;
 
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ public interface ChatMessageMapper extends BaseMapper<ChatMessage> {
     @Select("SELECT " +
             "  CASE WHEN m.sender_id = #{userId} THEN m.receiver_id ELSE m.sender_id END AS target_user_id, " +
             "  m.content AS last_message, " +
+            "  m.type AS last_message_type, " +
             "  m.create_time AS last_time, " +
             "  (SELECT COUNT(*) FROM chat_message " +
             "   WHERE sender_id = CASE WHEN m.sender_id = #{userId} THEN m.receiver_id ELSE m.sender_id END " +
@@ -62,4 +64,16 @@ public interface ChatMessageMapper extends BaseMapper<ChatMessage> {
     @Update("UPDATE chat_message SET is_read = 1 " +
             "WHERE sender_id = #{senderId} AND receiver_id = #{receiverId} AND is_read = 0")
     int markAsRead(@Param("senderId") Long senderId, @Param("receiverId") Long receiverId);
+
+    /**
+     * 清空两个用户之间的聊天记录
+     *
+     * @param userId   当前用户ID
+     * @param targetId 对方用户ID
+     * @return 影响行数
+     */
+    @Delete("DELETE FROM chat_message " +
+            "WHERE (sender_id = #{userId} AND receiver_id = #{targetId}) " +
+            "   OR (sender_id = #{targetId} AND receiver_id = #{userId})")
+    int clearChatHistory(@Param("userId") Long userId, @Param("targetId") Long targetId);
 }

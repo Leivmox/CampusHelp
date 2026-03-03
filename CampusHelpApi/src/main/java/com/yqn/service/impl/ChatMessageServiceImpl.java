@@ -57,6 +57,7 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
 
             // 复制其他字段
             item.put("lastMessage", contact.get("last_message"));
+            item.put("lastMessageType", contact.get("last_message_type"));
             item.put("lastTime", contact.get("last_time"));
 
             // 处理未读数
@@ -94,5 +95,10 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
     @Override
     public void markAsRead(Long senderId, Long receiverId) {
         chatMessageMapper.markAsRead(senderId, receiverId);
+    }
+
+    @Override
+    public boolean clearChatHistory(Long userId, Long targetId) {
+        return chatMessageMapper.clearChatHistory(userId, targetId) > 0;
     }
 }

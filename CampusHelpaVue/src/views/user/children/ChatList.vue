@@ -26,9 +26,8 @@
           v-for="(item, index) in chatList"
           :key="index"
           class="chat-item"
-          @click="toChat(item.targetUser.id, item.unreadCount)"
         >
-          <div class="chat-left">
+          <div class="chat-left" @click="toChat(item.targetUser.id, item.unreadCount)">
             <el-avatar
               :size="50"
               :src="getResUrl(item.targetUser.avatar)"
@@ -44,7 +43,7 @@
                   {{ item.unreadCount }} 条未读
                 </el-tag>
               </div>
-              <p class="last-msg">{{ item.lastMessage || '暂无消息内容' }}</p>
+              <p class="last-msg">{{ formatLastMessage(item) }}</p>
             </div>
           </div>
 
@@ -52,8 +51,11 @@
             <span class="time">{{ item.lastTime | formatDate }}</span>
             <div class="action-row">
               <span v-if="item.unreadCount > 0" class="unread-dot"></span>
-              <el-button size="small" type="primary" plain round>
+              <el-button size="small" type="primary" plain round @click="toChat(item.targetUser.id, item.unreadCount)">
                 发消息
+              </el-button>
+              <el-button size="small" type="danger" plain round icon="el-icon-delete" @click="deleteChat(item)">
+                删除
               </el-button>
             </div>
           </div>
@@ -105,6 +107,13 @@ export default {
     getAvatarText(username) {
       if (!username) return "U";
       return username.charAt(0).toUpperCase();
+    },
+
+    formatLastMessage(item) {
+      if (!item.lastMessage) return '暂无消息内容';
+      if (item.lastMessageType === 1) return '[图片]';
+      if (item.lastMessageType === 2) return '[表情]';
+      return item.lastMessage;
     },
     
     startPolling() {
@@ -171,6 +180,31 @@ export default {
         query: { toUser: targetUserId },
       });
     },
+
+    deleteChat(item) {
+      this.$confirm(
+        `确定删除与 ${item.targetUser.username} 的聊天吗？聊天记录将被清空。`,
+        "删除聊天",
+        { type: "warning" }
+      ).then(() => {
+        this.$del("/chat/delete", {
+          userId: this.user.id,
+          targetId: item.targetUser.id
+        }).then((res) => {
+          if (res.data.status) {
+            this.$msg("聊天已删除", "success");
+            this.chatList = this.chatList.filter(
+              c => c.targetUser.id !== item.targetUser.id
+            );
+          } else {
+            this.$msg(res.data.msg || "删除失败", "error");
+          }
+        }).catch(err => {
+          console.error(err);
+          this.$msg("删除失败", "error");
+        });
+      }).catch(() => {});
+    },
   },
   filters: {
     formatDate(time) {
@@ -200,7 +234,6 @@ export default {
     align-items: center;
     padding: 15px 10px;
     border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
     transition: background-color 0.2s;
 
     &:hover {
@@ -215,6 +248,7 @@ export default {
       display: flex;
       align-items: center;
       flex: 1;
+      cursor: pointer;
       
       .chat-info {
         margin-left: 15px;
