@@ -201,8 +201,18 @@ export default {
     },
 
     handleRemove(file, fileList) {
-      const urlToRemove = file.response ? file.response.url : file.url;
-      this.imgList = this.imgList.filter((url) => url !== urlToRemove);
+      this.imgList = fileList.map((f) => {
+        if (f.response && f.response.url) {
+          return f.response.url;
+        }
+        if (f.url) {
+          if (f.url.startsWith(this.baseUrl)) {
+            return f.url.substring(this.baseUrl.length);
+          }
+          return f.url;
+        }
+        return null;
+      }).filter((url) => url !== null);
     },
 
     handleExceed() {
