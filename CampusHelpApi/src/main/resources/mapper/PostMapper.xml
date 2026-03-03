@@ -31,9 +31,6 @@
                                AND lr.target_type = 1
                                AND lr.user_id = #{userId}
         WHERE p.school_id = #{schoolId}
-        <if test="userId != null">
-            AND p.user_id = #{userId}
-        </if>
         ORDER BY p.create_time DESC
     </select>
 

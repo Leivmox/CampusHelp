@@ -64,6 +64,11 @@
           <span style="font-size: 20px">公告管理</span>
         </el-menu-item>
 
+        <el-menu-item index="/admin/home/image">
+          <i class="el-icon-picture"></i>
+          <span style="font-size: 20px">图片管理</span>
+        </el-menu-item>
+
         <el-menu-item index="logout" @click="exit">
           <i class="el-icon-switch-button"></i>
           <span style="font-size: 20px">退出登录</span>

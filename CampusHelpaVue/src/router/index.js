@@ -215,6 +215,12 @@ const routes = [
         meta: { title: "评价信息" },
         component: () => import("@v/remark/remark.vue"),
       },
+      {
+        name: "image",
+        path: "image",
+        meta: { title: "图片管理" },
+        component: () => import("@v/admin/children/Image.vue"),
+      },
     ],
   },
 ];

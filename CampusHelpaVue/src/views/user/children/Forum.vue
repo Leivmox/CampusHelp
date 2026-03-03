@@ -149,7 +149,7 @@ export default {
     getPosts() {
       this.$get("/post", { 
           schoolId: this.user.school.id,
-          userId: this.user.id  // 新增
+          userId: this.user.id
       }).then((res) => {
         if (res.data.status) {
           this.postList = res.data.posts;
