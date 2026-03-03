@@ -72,8 +72,7 @@ public class Post {
         if (this.imgList != null && !this.imgList.isEmpty()) {
             this.imgUrl = String.join(",", this.imgList);
         } else {
-            // 如果前端传了空数组，或者没传，视情况置空
-            // this.imgUrl = null;
+            this.imgUrl = "";
         }
     }
 

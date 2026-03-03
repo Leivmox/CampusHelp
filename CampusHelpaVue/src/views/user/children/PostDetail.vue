@@ -436,29 +436,32 @@ fetchPostDetail() {
       }
     },
     // 🟢 修改状态下的移除图片
-    handleEditRemove(file) {
-      // 无论是刚上传的还是回显的，都从 editForm.imgList 中过滤掉
-      const urlToRemove = file.response ? file.response.url : "";
-      this.editForm.imgList = this.editForm.imgList.filter(
-        (url) => url !== urlToRemove
-      );
+    handleEditRemove(file, fileList) {
+      this.editForm.imgList = fileList.map((f) => {
+        if (f.response && f.response.url) {
+          return f.response.url;
+        }
+        if (f.url) {
+          if (f.url.startsWith(this.baseUrl)) {
+            return f.url.substring(this.baseUrl.length);
+          }
+          return f.url;
+        }
+        return null;
+      }).filter((url) => url !== null);
     },
     handleEdit() {
       this.editForm = {
         id: this.post.id,
         title: this.post.title,
         content: this.post.content,
-        imgList: [...(this.post.imgList || [])], // 深拷贝原图片数组
+        imgList: [...(this.post.imgList || [])],
       };
 
-      // 初始化 fileList 用于回显已有图片
-      this.fileList = this.editForm.imgList.map((url) => {
-        return {
-          name: url, // 文件名随便写
-          url: this.getResUrl(url), // 完整的预览图地址
-          response: { url: url }, // 模拟上传成功的返回格式，方便 handleEditRemove 统一处理
-        };
-      });
+      this.fileList = (this.post.imgList || []).map(url => ({
+        name: url,
+        url: this.getResUrl(url)
+      }));
 
       this.editDialogVisible = true;
     },
