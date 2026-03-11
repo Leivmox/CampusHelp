@@ -83,7 +83,7 @@ public class UserController {
 
     // 添加User
     @PostMapping
-    public Map<String, Object> saveUser(User user) {
+    public Map<String, Object> saveUser(@RequestBody User user) {
         QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.eq("school_id", user.getSchoolId())
                 .eq("student_id", user.getStudentId());
