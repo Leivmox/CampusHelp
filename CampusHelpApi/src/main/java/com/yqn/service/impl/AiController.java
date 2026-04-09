@@ -1,6 +1,7 @@
 package com.yqn.service.impl;
 
 import cn.hutool.http.HttpRequest;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.yqn.common.tools.MessageTools;
@@ -8,14 +9,20 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @RestController
 @RequestMapping("/ai")
@@ -25,7 +32,6 @@ public class AiController {
     @Autowired
     private MessageTools message;
 
-    // 从 secret.properties 注入
     @Value("${ai.api-key:}")
     private String apiKey;
 
@@ -35,32 +41,189 @@ public class AiController {
     @Value("${ai.model-id:deepseek-ai/DeepSeek-V3}")
     private String modelId;
 
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
+
     @PostMapping("/chat")
     public Map<String, Object> chat(@RequestBody ChatRequest request) {
-        // 1. 构建请求体 (OpenAI 格式)
         JSONObject body = new JSONObject();
         body.set("model", modelId);
-        body.set("stream", false);  // 流式
-        body.set("temperature", 0.7); // 创新程度
-        body.set("max_tokens", 512);  // 限制回复长度，防止废话
+        body.set("stream", false);
+        body.set("temperature", 0.7);
+        body.set("max_tokens", 512);
 
-// 2. 构建消息历史 (System Prompt + User Prompt)
         List<JSONObject> messages = new ArrayList<>();
-
-        // --- 1. 设置系统人设 (System Prompt) ---
         JSONObject systemPrompt = new JSONObject();
         systemPrompt.set("role", "system");
+        systemPrompt.set("content", buildSystemPrompt());
+        messages.add(systemPrompt);
 
-        // 使用 StringBuilder 拼接你的完整提示词
+        JSONObject userMsg = new JSONObject();
+        userMsg.set("role", "user");
+        userMsg.set("content", request.getContent());
+        messages.add(userMsg);
+
+        body.set("messages", messages);
+
+        try {
+            String result = HttpRequest.post(apiUrl)
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .body(body.toString())
+                    .timeout(20000)
+                    .execute()
+                    .body();
+
+            JSONObject jsonResult = JSONUtil.parseObj(result);
+
+            if (!jsonResult.containsKey("choices")) {
+                return message.message(false, "AI 接口报错: " + result, null, null);
+            }
+
+            String aiReply = jsonResult.getJSONArray("choices")
+                    .getJSONObject(0)
+                    .getJSONObject("message")
+                    .getStr("content");
+
+            return message.message(true, "请求成功", "reply", aiReply);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return message.message(false, "连接 AI 服务器超时，请稍后再试", null, null);
+        }
+    }
+
+    @PostMapping(value = "/chat/stream", produces = "text/event-stream;charset=UTF-8")
+    public SseEmitter chatStream(@RequestBody ChatRequest request) {
+        System.out.println("【SSE】收到流式请求，内容: " + request.getContent());
+        
+        SseEmitter emitter = new SseEmitter(120000L);
+
+        executorService.execute(() -> {
+            try {
+                JSONObject body = new JSONObject();
+                body.set("model", modelId);
+                body.set("stream", true);
+                body.set("temperature", 0.7);
+                body.set("max_tokens", 1024);
+
+                List<JSONObject> messages = new ArrayList<>();
+                JSONObject systemPrompt = new JSONObject();
+                systemPrompt.set("role", "system");
+                systemPrompt.set("content", buildSystemPrompt());
+                messages.add(systemPrompt);
+
+                JSONObject userMsg = new JSONObject();
+                userMsg.set("role", "user");
+                userMsg.set("content", request.getContent());
+                messages.add(userMsg);
+
+                body.set("messages", messages);
+
+                System.out.println("【SSE】开始请求AI API...");
+
+                URL url = new URL(apiUrl);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Accept", "text/event-stream");
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(30000);
+                conn.setReadTimeout(120000);
+
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                }
+
+                int responseCode = conn.getResponseCode();
+                System.out.println("【SSE】AI API响应码: " + responseCode);
+                
+                if (responseCode != 200) {
+                    BufferedReader errorReader = new BufferedReader(
+                            new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
+                    StringBuilder errorResponse = new StringBuilder();
+                    String line;
+                    while ((line = errorReader.readLine()) != null) {
+                        errorResponse.append(line);
+                    }
+                    errorReader.close();
+                    System.out.println("【SSE】AI API错误: " + errorResponse.toString());
+                    emitter.send(SseEmitter.event().name("error").data(errorResponse.toString()));
+                    emitter.complete();
+                    return;
+                }
+
+                StringBuilder fullContent = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println("【SSE】收到行: " + line);
+                        
+                        if (line.startsWith("data: ")) {
+                            String data = line.substring(6);
+                            if ("[DONE]".equals(data)) {
+                                System.out.println("【SSE】流式传输完成");
+                                emitter.send(SseEmitter.event().name("done").data("[DONE]"));
+                                break;
+                            }
+
+                            try {
+                                JSONObject chunk = JSONUtil.parseObj(data);
+                                JSONArray choices = chunk.getJSONArray("choices");
+                                if (choices != null && !choices.isEmpty()) {
+                                    JSONObject choice = choices.getJSONObject(0);
+                                    JSONObject delta = choice.getJSONObject("delta");
+                                    if (delta != null && delta.containsKey("content")) {
+                                        String content = delta.getStr("content");
+                                        if (content != null) {
+                                            fullContent.append(content);
+                                            String encodedContent = content.replace("\n", "\\n").replace("\r", "\\r");
+                                            emitter.send(SseEmitter.event().name("message").data(encodedContent));
+                                        }
+                                    }
+                                }
+                            } catch (Exception e) {
+                                System.out.println("【SSE】解析错误: " + e.getMessage());
+                            }
+                        }
+                    }
+                }
+
+                System.out.println("【SSE】完整回复: " + fullContent.toString());
+                emitter.complete();
+
+            } catch (Exception e) {
+                System.out.println("【SSE】异常: " + e.getMessage());
+                e.printStackTrace();
+                try {
+                    emitter.send(SseEmitter.event().name("error").data("连接AI服务器失败: " + e.getMessage()));
+                    emitter.completeWithError(e);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        emitter.onCompletion(() -> System.out.println("【SSE】连接关闭"));
+        emitter.onTimeout(() -> {
+            System.out.println("【SSE】连接超时");
+            emitter.complete();
+        });
+        emitter.onError(e -> System.out.println("【SSE】连接错误: " + e.getMessage()));
+
+        return emitter;
+    }
+
+    private String buildSystemPrompt() {
         StringBuilder sb = new StringBuilder();
 
-        // ==================== 身份定义 ====================
         sb.append("【身份设定】\n");
         sb.append("你是【校园IT互助平台】的智能助手，名字叫'小互'。\n");
         sb.append("你的语气热情友好，像一个乐于助人的学长/学姐。\n");
         sb.append("你的职责是帮助同学们解答平台使用问题、引导功能操作、提供IT技术建议。\n\n");
 
-        // ==================== 平台功能介绍 ====================
         sb.append("【平台功能概述】\n");
         sb.append("本平台是校园IT互助系统，主要功能包括：\n");
         sb.append("1. 求助中心：发布IT相关求助(修电脑、装系统、软件问题等)，悬赏积分可选10/15/20/25/30，其他同学可接单帮忙\n");
@@ -70,7 +233,6 @@ public class AiController {
         sb.append("5. 积分系统：新用户初始100积分，发布求助扣除悬赏积分，完成互助后积分转给帮助者\n");
         sb.append("6. 智能助手：就是你！可以回答平台使用问题和IT技术问题\n\n");
 
-        // ==================== 页面导航地图 ====================
         sb.append("【系统页面导航】(用户问路时必须精确回答)：\n");
         sb.append("◆ 首页：/home - 查看平台数据概览、置顶精选帖子、个人信息卡片\n");
         sb.append("◆ 求助中心：\n");
@@ -88,7 +250,6 @@ public class AiController {
         sb.append("◆ 个人信息：点击右上角头像 - 修改昵称、头像、个性签名、密码等\n");
         sb.append("◆ 智能助手：就是你正在使用的功能，可以问我任何问题！\n\n");
 
-        // ==================== 常见问题解答 ====================
         sb.append("【常见问题FAQ】\n");
         sb.append("Q: 怎么发布求助？\n");
         sb.append("A: 点击左侧菜单【求助中心-发布求助】，填写标题、详细描述问题，选择悬赏积分(10-30)，可上传图片，提交即可。\n\n");
@@ -107,7 +268,6 @@ public class AiController {
         sb.append("Q: 帖子可以置顶吗？\n");
         sb.append("A: 帖子置顶由管理员操作，优质内容有机会被置顶展示在首页。\n\n");
 
-        // ==================== 回复原则 ====================
         sb.append("【回复原则】\n");
         sb.append("1. 回答要简洁明了，直接告诉用户去哪个页面、怎么操作\n");
         sb.append("2. 禁止回答'请查看相关页面'这种模糊的话，必须给出具体菜单路径\n");
@@ -116,55 +276,7 @@ public class AiController {
         sb.append("5. 可以使用Markdown格式(代码块、加粗、列表)让回复更清晰\n");
         sb.append("6. 如果用户问IT技术问题(如电脑故障、软件使用)，可以给出专业建议\n");
 
-        // 【核心修复】：将拼接好的 sb 放入 content 字段
-        systemPrompt.set("content", sb.toString());
-
-        // 将系统消息放入列表的第一位
-        messages.add(systemPrompt);
-
-        // --- 2. 设置用户提问 (User Prompt) ---
-        JSONObject userMsg = new JSONObject();
-        userMsg.set("role", "user");
-        userMsg.set("content", request.getContent()); // 获取前端传来的问题
-        messages.add(userMsg);
-
-        // --- 3. 放入请求体 ---
-        body.set("messages", messages);
-
-        try {
-            // 3. 发送请求
-            System.out.println("正在请求硅基流动 API...");
-
-            String result = HttpRequest.post(apiUrl)
-                    .header("Authorization", "Bearer " + apiKey) // 必须带 Bearer
-                    .header("Content-Type", "application/json")
-                    .body(body.toString())
-                    .timeout(20000) // 20秒超时
-                    .execute()
-                    .body();
-
-            System.out.println("API返回结果: " + result);
-
-            // 4. 解析结果
-            JSONObject jsonResult = JSONUtil.parseObj(result);
-
-            // 错误处理：如果返回里没有 choices，说明报错了
-            if (!jsonResult.containsKey("choices")) {
-                return message.message(false, "AI 接口报错: " + result, null, null);
-            }
-
-            // 提取回复内容
-            String aiReply = jsonResult.getJSONArray("choices")
-                    .getJSONObject(0)
-                    .getJSONObject("message")
-                    .getStr("content");
-
-            return message.message(true, "请求成功", "reply", aiReply);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return message.message(false, "连接 AI 服务器超时，请稍后再试", null, null);
-        }
+        return sb.toString();
     }
 
     @Data

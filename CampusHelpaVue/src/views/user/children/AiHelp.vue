@@ -48,8 +48,9 @@
 
         <div v-if="loading" class="chat-row ai">
           <el-avatar shape="circle" :src="aiAvatar" class="avatar" />
-          <div class="bubble ai loading">
-            <i class="el-icon-loading"></i> 小互正在思考…
+          <div class="bubble ai streaming">
+            <span v-html="renderMarkdown(streamingContent)"></span>
+            <span class="cursor-blink">|</span>
           </div>
         </div>
       </div>
@@ -92,7 +93,6 @@
 </template>
 
 <script>
-import request from "@/util/request";
 import { mapState } from "vuex";
 
 export default {
@@ -101,6 +101,7 @@ export default {
     return {
       inputMsg: "",
       loading: false,
+      streamingContent: "",
       aiAvatar: (() => {
         try {
           return require("@/assets/img/avator_ai.jpg");
@@ -193,33 +194,121 @@ export default {
         .catch(() => {});
     },
 
-    sendMsg() {
+    async sendMsg() {
       if (!this.inputMsg.trim() || this.loading) return;
 
       const text = this.inputMsg.trim();
       this.msgList.push({ role: "user", content: text });
       this.inputMsg = "";
       this.scrollBottom();
+      
       this.loading = true;
+      this.streamingContent = "";
 
-      request({
-        url: "/ai/chat",
-        method: "post",
-        data: { content: text },
-        silent: true,
-      })
-        .then((res) => {
-          const reply =
-            res.reply || (res.data && res.data.reply) || "我暂时没理解你的问题";
-          this.msgList.push({ role: "ai", content: reply });
-        })
-        .catch(() => {
-          this.msgList.push({ role: "ai", content: "网络异常，请稍后再试" });
-        })
-        .finally(() => {
-          this.loading = false;
-          this.scrollBottom();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        console.log("【前端】请求超时，已取消");
+      }, 60000);
+
+      try {
+        const token = localStorage.getItem("token");
+        console.log("【前端】开始发送SSE请求...");
+        
+        const response = await fetch("http://localhost:8080/ai/chat/stream", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "token": token || "",
+            "Accept": "text/event-stream"
+          },
+          body: JSON.stringify({ content: text }),
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
+
+        console.log("【前端】响应状态:", response.status);
+        console.log("【前端】响应头Content-Type:", response.headers.get("content-type"));
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("【前端】HTTP错误:", errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        console.log("【前端】开始读取流...");
+
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log("【前端】流读取完成");
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          console.log("【前端】收到数据块:", chunk);
+          buffer += chunk;
+          
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            
+            console.log("【前端】处理行:", line);
+            
+            if (line.includes("event:message")) {
+              const dataMatch = line.match(/data:(.+)/);
+              if (dataMatch) {
+                const data = dataMatch[1].trim();
+                console.log("【前端】提取数据:", data);
+                this.streamingContent += data;
+                this.scrollBottom();
+              }
+            } else if (line.includes("event:done")) {
+              console.log("【前端】收到完成信号");
+              break;
+            } else if (line.includes("event:error")) {
+              const dataMatch = line.match(/data:(.+)/);
+              if (dataMatch) {
+                console.error("【前端】收到错误:", dataMatch[1]);
+                throw new Error(dataMatch[1]);
+              }
+            } else if (line.startsWith("data:")) {
+              const data = line.substring(5).trim();
+              if (data && data !== "[DONE]") {
+                this.streamingContent += data;
+                this.scrollBottom();
+              }
+            }
+          }
+        }
+
+        if (this.streamingContent) {
+          this.msgList.push({ role: "ai", content: this.streamingContent });
+        } else {
+          this.msgList.push({ role: "ai", content: "抱歉，我没有理解您的问题。" });
+        }
+
+      } catch (error) {
+        console.error("【前端】流式错误:", error);
+        if (error.name === 'AbortError') {
+          this.msgList.push({ role: "ai", content: "请求超时，请稍后再试" });
+        } else {
+          this.msgList.push({ role: "ai", content: "网络异常: " + error.message });
+        }
+      } finally {
+        clearTimeout(timeoutId);
+        this.loading = false;
+        this.streamingContent = "";
+        this.scrollBottom();
+      }
     },
 
     scrollBottom() {
@@ -232,6 +321,9 @@ export default {
     renderMarkdown(text) {
       if (!text) return '';
       let html = text
+        .replace(/\\n/g, '\n')
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\r/g, '\n')
         .replace(/```([\s\S]*?)```/g, '<pre class="code-block">$1</pre>')
         .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
@@ -398,13 +490,17 @@ export default {
   border-bottom: 8px solid transparent;
   border-left: 8px solid #409eff;
 }
-.bubble.loading {
-  color: #666;
-  background: #f0f0f0;
-  border: 1px solid #e0e0e0;
+.bubble.streaming {
+  min-height: 40px;
 }
-.bubble.loading:before {
-  display: none;
+.cursor-blink {
+  animation: blink 1s infinite;
+  color: #409eff;
+  font-weight: bold;
+}
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 .input-area {
   flex-shrink: 0;
