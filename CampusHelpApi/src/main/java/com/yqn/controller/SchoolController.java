@@ -27,7 +27,7 @@ public class SchoolController {
     // 获取全部school
     @GetMapping
     public Map<String, Object> schools() {
-        List<School> schools = schoolService.list();
+        List<School> schools = schoolService.list(new QueryWrapper<School>().orderByAsc("id"));
         return message.message(true, "请求成功", "school", schools);
     }
 

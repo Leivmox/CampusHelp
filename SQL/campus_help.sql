@@ -1,7 +1,7 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : localhost
+ Source Server         : 127
  Source Server Type    : MySQL
  Source Server Version : 50724 (5.7.24)
  Source Host           : localhost:3306
@@ -11,7 +11,7 @@
  Target Server Version : 50724 (5.7.24)
  File Encoding         : 65001
 
- Date: 10/04/2026 00:56:19
+ Date: 09/04/2026 23:27:31
 */
 
 SET NAMES utf8mb4;
@@ -50,7 +50,7 @@ CREATE TABLE `chat_message`  (
   `is_read` int(11) NOT NULL DEFAULT 0 COMMENT '是否已读：0未读 1已读',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_sender_receiver`(`sender_id`, `receiver_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 48 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 45 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of chat_message
@@ -84,9 +84,6 @@ INSERT INTO `chat_message` VALUES (41, 10, 1, '如果可以,方便远程看看�
 INSERT INTO `chat_message` VALUES (42, 1, 10, '731724196.gif', '2026-03-17 02:25:14', 2, 1);
 INSERT INTO `chat_message` VALUES (43, 10, 1, '怎么了?', '2026-03-17 03:01:55', 0, 1);
 INSERT INTO `chat_message` VALUES (44, 10, 1, '321942586.gif', '2026-03-17 03:02:05', 2, 1);
-INSERT INTO `chat_message` VALUES (45, 11, 1, '你好', '2026-04-09 23:57:59', 0, 0);
-INSERT INTO `chat_message` VALUES (46, 11, 1, '我接取了你的求助', '2026-04-09 23:58:15', 0, 0);
-INSERT INTO `chat_message` VALUES (47, 11, 1, '请问方便帮忙吗', '2026-04-09 23:58:28', 0, 0);
 
 -- ----------------------------
 -- Table structure for class
@@ -124,7 +121,7 @@ CREATE TABLE `comment`  (
   `content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '评论内容',
   `create_time` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 78 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 78 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of comment
@@ -261,7 +258,7 @@ CREATE TABLE `post`  (
   `img_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
   `is_top` int(11) NULL DEFAULT 0 COMMENT '是否置顶 0-否 1-是',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 36 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 36 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of post
@@ -289,7 +286,7 @@ INSERT INTO `post` VALUES (26, 21, 1, '图书馆空调太冷了', '每次去图�
 INSERT INTO `post` VALUES (27, 22, 1, '寻找羽毛球搭子', '每周三晚上体育馆约球，目前三缺一，速来', 15, '2026-01-25 18:00:00', NULL, 0);
 INSERT INTO `post` VALUES (28, 17, 1, '快递站排队太久了', '双十一的快递到现在还没取完，排队排了半小时', 67, '2026-01-26 16:30:00', '/profile/post/202603/a62662f9-167e-4a8f-8ddf-0249ee72f7b0.png', 0);
 INSERT INTO `post` VALUES (29, 18, 1, '推荐校门口奶茶店', '新开了家茶百道，杨枝甘露超好喝', 29, '2026-01-27 11:00:00', '/profile/post/202603/f5d6e145-ca1d-4d54-804b-6cc5422a7e52.png', 0);
-INSERT INTO `post` VALUES (30, 20, 1, '晚霞好美', '今天傍晚的天空太好看了，随手一拍都是壁纸', 89, '2026-01-29 17:45:00', '/profile/post/202603/5d540dbb-6123-4a3f-9052-265051cfb54c.png', 0);
+INSERT INTO `post` VALUES (30, 20, 1, '晚霞好美', '今天傍晚的天空太好看了，随手一拍都是壁纸', 90, '2026-01-29 17:45:00', '/profile/post/202603/5d540dbb-6123-4a3f-9052-265051cfb54c.png', 0);
 INSERT INTO `post` VALUES (31, 4, 1, '最全的微软msdn原版Windows系统镜像和Office Visio Project下载地址集锦', '随着windows的发展，越来越多的人都热衷于微软的原版系统下载了，相比之前的版本比如winxp版本，windows vista/win7/win8/win8.1/win10/win11后来的版本在安装方面也比较简单了，所以ghost系统正在渐渐的消失市场，即便如此，很多同学还是找不到微软原版的系统和office下载，所以亦是美网络特意归结了一下微软msdn原版系统和原版office各个版本的下载，希望对正在苦苦找寻原版系统的同学有所帮助。\r\n\r\n说在前面的话：\r\n\r\n1、本文提供的镜像包括：Windows、Server、Office、Visio、Project等\r\n\r\n2、选装Windows系统或Office、Visio、Project版本，一般来说专业版较适合我们！\r\n\r\n3、Windows / Server、Office / Visio / Project激活请：点击此处\r\n\r\n4、以下地址建议使用迅雷下载工具进行下载\r\n\r\n5、如需帮助，请不吝发件至邮箱：yishimeicn@qq.com\r\n\r\n推荐相关阅读：\r\n\r\n专业U盘格式化与系统安装启动盘制作工具 - rufus 4.11中文版 说明介绍\r\n\r\n关于Windows服务器版本（Server2003/2008/2012/2016/2019/2022/2025）的下载、安装与激活说明\r\n\r\nwindows 11 家庭版/家庭单语言版/教育版/专业版/专业教育版/专业工作站版 简体中文\r\n\r\nmagnet:?xt=urn:btih:808632e57ba30de8f564ec8e62ffdbe495c7bcae&dn=zh-cn_windows_11_consumer_editions_version_25h2_updated_dec_2025_x64_dvd_115b2867.iso&xl=8330770432\r\n\r\nwindows 11 教育版/专业版/专业教育版/企业版/专业工作站版 简体中文\r\n\r\nmagnet:?xt=urn:btih:c46a16eb293e3386d1e4b717624c83086aae7e02&dn=zh-cn_windows_11_business_editions_version_25h2_updated_dec_2025_x64_dvd_5aa0bca1.iso&xl=8245350400\r\n\r\nwindows 11 Enterprise LTSC 2024 简体中文：\r\n\r\nmagnet:?xt=urn:btih:b84e74c1dbcc88a02c5b24a6f84383f353a2e1dd&dn=zh-cn_windows_11_enterprise_ltsc_2024_x64_dvd_cff9cd2d.iso&xl=5287520256\r\n\r\nWindows 11 Pro China Only 专业中文版\r\n\r\ned2k://|file|Win11_24H2_Pro_Chinese_Simplified_x64.iso|5606453248|1B20C6FADEF04DE45934A339AD6A6596|/\r\n\r\nwindows 11 Home China 家庭中文版\r\n\r\n随着windows的发展，越来越多的人都热衷于微软的原版系统下载了，相比之前的版本比如winxp版本，windows vista/win7/win8/win8.1/win10/win11后来的版本在安装方面也比较简单了，所以ghost系统正在渐渐的消失市场，即便如此，很多同学还是找不到微软原版的系统和office下载，所以亦是美网络特意归结了一下微软msdn原版系统和原版office各个版本的下载，希望对正在苦苦找寻原版系统的同学有所帮助。', 182, '2026-01-14 01:58:33', NULL, 1);
 INSERT INTO `post` VALUES (32, 4, 1, '图文详解彻底关闭win10、win11系统自带的windows defender杀毒功能', 'Windows Defender，简称WD，是win8、win10、win11系统自带的集成的杀毒软件，既然是杀毒软件，我们就要讨论它的查杀能力，据广大小伙伴反映，WD查杀能力太强大了，不管三七二十一，眉毛胡子一把抓，管你是正常软件还是不正常软件，只要它认定是不正常的，才不管你同意不同意，更不会询问你，统统杀掉，让你猝不及防，乱杀软件也就算了，在系统后台，WD也没有闲着，动不动就给你来个系统扫描，它不会管你是否在玩游戏，硬盘是否能承受得住，它先扫描爽了再说，于是乎，很多小伙伴的电脑硬盘经常出现占用100%的情况，然后系统直接卡顿...那就将它关闭了吧？想要关闭？难！是可忍，孰不可忍，是时候彻底关闭嚣张的WD了！\r\n\r\n首先我们右键win10、win11系统的开始菜单，选择“设置”，或者直接按下Win+i组合键，打开系统“设置”，\r\n\r\n点击“更新和安全”，\r\n\r\n点击左侧的“Windows安全中心”，\r\n\r\n点击“病毒和威胁防护”，\r\n\r\n找到“病毒和威胁防护”设置，点击“管理设置”，如上图所示，\r\n\r\n将右侧的“实时保护”、“云提供保护”、“自动提交样本”、“篡改保护”四项全部手动关掉，如上图所示，\r\n\r\nPS：如果使用的是系统自带的Edge浏览器，还会阻止我们下载，这时，我们打开浏览器，点击右上角的三个点“···”-“设置”，\r\n\r\n在左侧搜索框里输入“smartscreen”，然后在右侧将“Microsoft Defnder Smartscreen”的选项关闭掉即可。', 133, '2025-12-10 01:59:19', NULL, 1);
 INSERT INTO `post` VALUES (33, 4, 1, '全面剖析固态硬盘M.2接口与PCI-E SSD固态硬盘的关系', '经常玩硬件的小伙伴们肯定对固态硬盘的M.2接口和PCI-E SSD有所了解，但很多小伙伴都有一个疑问，那就是为什么我的固态硬盘是PCI-E接口，经过跑分测试速度却与SATA 3.0接口的固态硬盘速度差不多？到底是购买的产品质量有问题，还是搭配的平台环境有问题？还是我们对固态硬盘的接口概念一知半解？今天亦是美网络小编就给大家讲讲固态硬盘M.2接口与PCI-E SSD的关系。\r\n\r\n首先，我们来了解一下什么是固态硬盘M.2接口，M.2接口是英特尔公司推出的一种替代MSATA接口的新接口规范标准，也就是我们以前经常提到的NGFF接口，并且M.2接口有两种规格类型：Socket 2和Socket 3，其中Socket 2类型支持SATA和PCI-E 2.0双通道接口，最大读取速度为700M/S，最大写入速度550M/S；Socket 3接口则支持PCI-E 3.0四通道接口，理论速度可以达到4GB/S。\r\n\r\n其次，那什么是PCI-E固态硬盘呢？PCI-E固态硬盘就是总线采用PCI-E来实现传输的固态硬盘，PCI-E也是英特尔公司提出的最新的总线标准，PCI-E总线采用点对点串行连接的设备连接方式，每个设备都有自己的专用连接，可以把数据传输率提高到一个很高的频率10GB/S，固态硬盘的PCI-E接口是一种表现形式，可能是PCI-E传统接口，以显卡接口的形式出现，也可能以M.2接口的形式出现，关键在于固态硬盘的PCI-E原生/桥接主控，这决定它是否能走PCI-E总线。\r\n\r\n第三，PCI-E固态硬盘与M.2接口有什么关系呢？大家都知道M.2接口提供PCI-E总线通道，同样的有的采用PCI-E总线的固态硬盘也可能以M.2接口形式出现，但是要注意，不同的主板提供的M.2接口所支持的通道也是不一样的，有的主板仅支持PCI-E和SATA通道中的一种，有的主板则同时兼容这两种通道，后者的主板既可以支持PCI-E通道的固态硬盘，也可以支持SATA 3.0通道的固态硬盘。总结：有M.2接口的主板不一定支持PCI-E固态硬盘。\r\n\r\n第四，为什么PCI-E接口的固态硬盘达不到官方标称的速度？上面已经讲到，并不是所有的PCI-E固态硬盘都采用M.2主板接口，同样的并不是所有支持M.2主板接口的固态硬盘都是PCI-E总线固态硬盘，是不是有点绕？绕就对 了，这些概念需要反复揣摩去理解才行，只有当固态硬盘的主控是PCI-E控制器时，它才是真正的PCI-E固态硬盘，另外，即使是真正的PCI-E固态硬盘，如果安装到了仅支持SATA总线的M.2接口的主板上，PCI-E接口的固态硬盘也不能完全发挥性能，其只能达到SATA 3.0固态硬盘的表现，只有当采用PCI-E总线的固态硬盘安装到了支持PCI-E总线的M.2接口的主板上，PCI-E固态硬盘才能发挥其最大性能。', 167, '2025-12-10 02:00:05', NULL, 1);
@@ -368,7 +365,7 @@ CREATE TABLE `task`  (
   CONSTRAINT `FK_TASK_ACCEPT_USER` FOREIGN KEY (`accept_user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `FK_TASK_PUBLISH_USER` FOREIGN KEY (`publish_user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `FK_TASK_USER_SCHOOL` FOREIGN KEY (`user_school_id`) REFERENCES `school` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 30 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of task
@@ -382,13 +379,9 @@ INSERT INTO `task` VALUES (17, 4, 2, 1, 0, '2025-12-22 07:52:16', '2025-12-22 08
 INSERT INTO `task` VALUES (19, 10, NULL, 1, 15, '2026-03-11 18:50:48', NULL, NULL, '求助,电脑卡顿', '大家好，最近电脑出了点问题，想在这个 IT 互助平台求助一下。我的笔记本最近总是莫名卡顿，开机很慢，打开软件经常无响应，有时候还会自动蓝屏重启。\n我自己不太懂电脑，不敢乱删文件，也不知道是系统问题还是硬件故障。\n马上要赶作业和论文，电脑这样特别影响使用。\n想问问有没有懂电脑的同学可以帮忙看看，教教我怎么简单排查一下问题，或者推荐一下靠谱的修复方法。\n如果能远程帮忙看下就更好了，非常感谢大家！', 0, '');
 INSERT INTO `task` VALUES (21, 12, NULL, 1, 10, '2026-03-07 18:01:03', NULL, NULL, 'word文档报错怎么办', '求帮忙！Word 文档突然打不开了，一打开就报错，里面是我写了好久的课程论文，现在完全打不开，也不敢乱操作。\n有没有同学懂修复文档的，救救孩子呜呜呜！', 0, '');
 INSERT INTO `task` VALUES (22, 15, 1, 1, 15, '2026-03-09 10:54:39', '2026-03-11 19:24:06', NULL, '谁能教我PPT插入视频', '求助！PPT 插入视频后播放不了，只有声音没有画面，换了好几种格式还是不行，明天就要课堂展示了，现在卡在这里，有没有会弄的同学指点一下？', 1, '/profile/common/202603/8a162901-6cbc-445c-87b9-4b7a9260aecb.png');
-INSERT INTO `task` VALUES (23, 17, NULL, 1, 20, '2026-03-09 17:57:54', NULL, NULL, '求助清理C盘', '电脑 C 盘爆红，内存不足，我也没装什么软件，不知道为什么占满了。\n不敢乱删文件怕删错系统，求懂电脑的同学帮忙清理一下，万分感谢！', 0, '/profile/common/202604/ab877cc4-c855-42c5-8fc1-5c29ac9bcdd6.png');
-INSERT INTO `task` VALUES (24, 18, NULL, 1, 10, '2026-04-06 19:00:36', NULL, NULL, '笔记本充电慢有什么办法吗', '求助！笔记本充电特别慢，有时候还充不进去，充电器和接口都检查过了，不知道是电池坏了还是设置问题。上课经常没电，太影响使用了，求大佬帮忙看看！', 0, '/profile/common/202604/cf74f43b-c15c-4304-b2ff-cea8fe4a2423.png');
+INSERT INTO `task` VALUES (23, 17, NULL, 1, 10, '2026-03-09 17:57:54', NULL, NULL, '求助清理C盘', '电脑 C 盘爆红，内存不足，我也没装什么软件，不知道为什么占满了。\n不敢乱删文件怕删错系统，求懂电脑的同学帮忙清理一下，万分感谢！', 0, '');
+INSERT INTO `task` VALUES (24, 18, NULL, 1, 10, '2026-03-10 19:00:36', NULL, NULL, '笔记本充电慢有什么办法吗', '求助！笔记本充电特别慢，有时候还充不进去，充电器和接口都检查过了，不知道是电池坏了还是设置问题。上课经常没电，太影响使用了，求大佬帮忙看看！', 0, '');
 INSERT INTO `task` VALUES (25, 1, 10, 1, 15, '2026-03-11 19:06:37', '2026-03-11 19:07:49', '2026-03-11 19:25:27', '求助,笔记本卡顿', '笔记本最近运行特别卡顿，开机要好几分钟，打开浏览器、Word 这些常用软件都要等很久，多开几个页面就容易卡死。我试过用杀毒软件扫描、清理垃圾，但效果都不明显。\n因为平时要写作业、查资料、上网课，电脑这样严重影响学习效率。我对电脑系统和硬件都不太了解，不敢随便重装系统或删除文件，担心把重要资料弄丢。想问问有没有懂 IT 的同学可以帮忙看看，分析一下是配置太低、系统垃圾太多，还是启动项过多的问题。如果能告诉我一些简单安全的优化方法，或者指导我一步步操作，我真的非常感谢！', 2, '/profile/common/202603/70895d31-c780-4966-8e65-1f9846ebe73f.png');
-INSERT INTO `task` VALUES (26, 2, NULL, 1, 15, '2026-04-05 23:50:10', NULL, NULL, '求助，笔记本打字卡顿', '笔记本最近打字特别卡顿，敲完键盘要等半秒才出字，打开文档、聊天软件都反应迟钝，多开几个窗口就更卡。我试过清理垃圾、关闭后台，但效果不明显。平时要写作业、记笔记、上网课，打字延迟特别影响效率。我对电脑不太懂，不敢乱删文件或重装系统，怕弄丢资料。想问问有没有懂电脑的同学帮忙分析一下，是内存不够、系统问题还是驱动问题？如果有简单安全的解决办法，一步步教我就太感谢了。', 0, '');
-INSERT INTO `task` VALUES (27, 5, NULL, 1, 10, '2026-04-07 23:51:20', NULL, NULL, '笔记本连不上 WiFi怎么办', '笔记本最近经常连不上 WiFi，要么搜不到信号，要么连上就掉线，网课和查资料都受影响。我试过重启路由器、忘记网络重连，但还是不稳定。我对网络设置不太懂，不敢乱改 IP 和 DNS，怕越改越乱。想问问有没有懂 IT 的同学帮忙看看，是网卡问题、驱动问题还是路由器问题？能告诉我一些简单安全的排查方法就真的非常感谢。', 0, '/profile/common/202604/b216c9b2-8b5d-4052-af61-7623ce7a275e.png');
-INSERT INTO `task` VALUES (28, 10, NULL, 1, 10, '2026-04-07 23:51:58', NULL, NULL, '电脑风扇狂转还发烫', '笔记本最近一用就发烫，风扇一直狂转噪音很大，稍微开几个软件就开始卡顿降频。我试过清理后台、垫高电脑，但温度还是下不来。平时要写论文、上网课，电脑发烫特别影响使用。我不懂拆机清灰，也不敢乱拆，怕弄坏硬件。想问问懂电脑的同学分析一下原因，有没有简单安全的降温方法可以一步步操作。', 0, '');
-INSERT INTO `task` VALUES (29, 1, 11, 1, 15, '2026-04-09 23:53:59', '2026-04-09 23:57:45', NULL, '求助，电脑开机黑屏没反应', '笔记本最近经常开机黑屏，按电源键只有风扇转，屏幕不亮，有时候要重启好几次才能进系统。我试过拔电源重启，但问题还是反复出现。我对硬件故障完全不懂，不敢拆机检查，也怕资料丢失。想问问懂 IT 的同学帮忙看看可能是什么问题，有没有简单安全的排查步骤，真的很影响学习使用。', 1, '');
 
 -- ----------------------------
 -- Table structure for user
@@ -423,12 +416,12 @@ CREATE TABLE `user`  (
 -- Records of user
 -- ----------------------------
 INSERT INTO `user` VALUES (1, '20250101', 'e10adc3949ba59abbe56e057f20f883e', '18999999991', 1, 1, 1, 1, '白露为霜', '/profile/avatar/202603/7fb97f67-5974-48d3-a37b-9805ab7e31b2.jpg', '巴巴博一', 'ming@qh.edu.com', '2025-12-15 18:27:27', 0, 99);
-INSERT INTO `user` VALUES (2, '20250102', 'e10adc3949ba59abbe56e057f20f883e', '18999999992', 1, 1, 3, 1, '氓の蚩', '/profile/avatar/202512/83d03f2b-adb9-4a7c-9658-968a1d57e19e.jpg', '不见复关，泣涕涟涟.', 'leivmox@gmail.com', '2025-12-15 18:27:48', 0, 52);
+INSERT INTO `user` VALUES (2, '20250102', 'e10adc3949ba59abbe56e057f20f883e', '18999999992', 1, 1, 3, 1, '氓の蚩', '/profile/avatar/202512/83d03f2b-adb9-4a7c-9658-968a1d57e19e.jpg', '不见复关，泣涕涟涟.', 'leivmox@gmail.com', '2025-12-15 18:27:48', 0, 62);
 INSERT INTO `user` VALUES (3, '20250103', 'e10adc3949ba59abbe56e057f20f883e', '18999999993', 1, 2, 2, 0, '不吃香菜', '/profile/avatar/202603/5930451e-9b63-48cb-af5d-f2b85a3f27a7.jpg', '热爱编程，热爱生活', '', '2025-12-15 18:28:01', 0, 99);
 INSERT INTO `user` VALUES (4, '20250104', 'e10adc3949ba59abbe56e057f20f883e', '18999999994', 1, 2, 2, 1, '龙龙打go', '/profile/avatar/202512/4ad9f7ea-2ad6-44b2-be42-c24b08733165.png', '梦', NULL, '2025-12-15 18:28:11', 0, 69);
-INSERT INTO `user` VALUES (5, '20250105', 'e10adc3949ba59abbe56e057f20f883e', '18999999995', 1, 2, 2, 0, '巴巴博一', '/profile/avatar/202603/61de63b2-fd2a-4c88-951f-50e57128ca97.jpg', '代码改变世界，技术成就梦想', NULL, '2025-12-15 18:35:15', 0, 89);
+INSERT INTO `user` VALUES (5, '20250105', 'e10adc3949ba59abbe56e057f20f883e', '18999999995', 1, 2, 2, 0, '巴巴博一', '/profile/avatar/202603/61de63b2-fd2a-4c88-951f-50e57128ca97.jpg', '代码改变世界，技术成就梦想', NULL, '2025-12-15 18:35:15', 0, 99);
 INSERT INTO `user` VALUES (6, '20250106', 'e10adc3949ba59abbe56e057f20f883e', '18999999996', 1, 1, 3, 1, '番茄炒蛋', '/profile/avatar/202603/ca4bf858-d8e6-4bf3-bd0e-359c0e5fa81a.jpg', '努力成为全栈工程师', NULL, '2025-12-15 18:36:29', 0, 99);
-INSERT INTO `user` VALUES (10, '20250110', 'e10adc3949ba59abbe56e057f20f883e', '18999933333', 1, 1, 3, 0, '张伟1', '/profile/avatar/202603/ad01db59-4a41-49a1-8fed-b6aaf7bd0ba5.png', '每天进步一点点', NULL, '2025-12-15 19:32:18', 0, 30);
+INSERT INTO `user` VALUES (10, '20250110', 'e10adc3949ba59abbe56e057f20f883e', '18999933333', 1, 1, 3, 0, '张伟1', '/profile/avatar/202603/ad01db59-4a41-49a1-8fed-b6aaf7bd0ba5.png', '每天进步一点点', NULL, '2025-12-15 19:32:18', 0, 40);
 INSERT INTO `user` VALUES (11, '000003', 'e10adc3949ba59abbe56e057f20f883e', '13800000001', 1, 2, 2, 1, '林小雨', '/profile/avatar/202603/a49e97b1-bbcb-44ac-857e-cbcac0b66334.jpg', '学习使我快乐', NULL, '2026-01-30 01:30:01', 0, 500);
 INSERT INTO `user` VALUES (12, '000004', 'e10adc3949ba59abbe56e057f20f883e', '13800000002', 1, 2, 2, 0, '张明远', '/profile/avatar/202603/7c849210-6aba-4602-99a6-8d4b056fd6cc.jpg', '人生苦短，我用Python', NULL, '2026-01-30 01:31:44', 0, 790);
 INSERT INTO `user` VALUES (13, '000005', 'e10adc3949ba59abbe56e057f20f883e', '13800000003', 2, 1, 1, 0, '王子轩', '/profile/avatar/202603/e936d990-7bf5-4b47-87df-c87761d6d99e.jpg', 'Bug修复师，问题终结者', NULL, '2026-01-30 01:31:44', 0, 600);
@@ -453,7 +446,7 @@ CREATE TABLE `user_like`  (
   `target_type` int(11) NOT NULL COMMENT '1-帖子，2-评论',
   `create_time` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 53 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 52 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_like
@@ -461,5 +454,6 @@ CREATE TABLE `user_like`  (
 INSERT INTO `user_like` VALUES (33, 2, 9, 1, '2025-12-24 02:35:12');
 INSERT INTO `user_like` VALUES (49, 2, 11, 1, '2025-12-24 02:52:00');
 INSERT INTO `user_like` VALUES (50, 24, 30, 1, '2026-03-11 19:22:02');
+INSERT INTO `user_like` VALUES (51, 1, 30, 1, '2026-03-11 19:23:50');
 
 SET FOREIGN_KEY_CHECKS = 1;
