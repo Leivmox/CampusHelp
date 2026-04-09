@@ -64,7 +64,7 @@
           <template slot-scope="scope">
             <el-upload
               class="avatar-uploader"
-              action="http://localhost:8080/common/upload"
+              :action="baseUrl + '/common/upload'"
               :show-file-list="false"
               :on-success="(res, file) => handleAvatarSuccess(res, file, scope.row)"
               :before-upload="beforeAvatarUpload"
@@ -226,6 +226,7 @@
 <script>
 import { formatDate } from '@/util/date';
 import { updateUserAvatar } from '@/api/system/user';
+import BASE_URL from "@/config";
 
 export default {
   name: "AdminStudent",
@@ -234,7 +235,7 @@ export default {
       users: [],
       filteredUsers: [],
       searchKeyword: '',
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
       headers: {
         Authorization: localStorage.getItem("token"),
       },

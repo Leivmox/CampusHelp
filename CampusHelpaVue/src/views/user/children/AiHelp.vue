@@ -94,6 +94,7 @@
 
 <script>
 import { mapState } from "vuex";
+import BASE_URL from "@/config";
 
 export default {
   name: "AiChat",
@@ -134,7 +135,7 @@ export default {
     userAvatarUrl() {
       if (!this.user || !this.user.avatar) return "";
       if (this.user.avatar.startsWith("http")) return this.user.avatar;
-      return `http://localhost:8080${this.user.avatar}`;
+      return `${BASE_URL}${this.user.avatar}`;
     },
     userAvatarText() {
       if (!this.user || !this.user.username) return "U";
@@ -215,7 +216,7 @@ export default {
         const token = localStorage.getItem("token");
         console.log("【前端】开始发送SSE请求...");
         
-        const response = await fetch("http://localhost:8080/ai/chat/stream", {
+        const response = await fetch(`${BASE_URL}/ai/chat/stream`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

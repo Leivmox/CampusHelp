@@ -101,7 +101,7 @@
         </el-form-item>
         <el-form-item label="图片">
           <el-upload
-            action="http://localhost:8080/common/upload"
+            :action="baseUrl + '/common/upload'"
             :data="{ type: 'post' }"
             name="file"
             list-type="picture-card"
@@ -126,6 +126,7 @@
 <script>
 import { mapState } from "vuex";
 import { formatDate } from "@/util/date";
+import BASE_URL from "@/config";
 
 export default {
   name: "CircleIndex",
@@ -139,7 +140,7 @@ export default {
         imgList: [] 
       },
       fileList: [], 
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
       sortType: 'time',
       sortOrder: 'desc'
     };

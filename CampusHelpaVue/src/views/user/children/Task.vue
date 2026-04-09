@@ -77,7 +77,7 @@
           <div class="label-text">上传图片 (最多9张)</div>
           <div class="upload-container">
             <el-upload
-              action="http://localhost:8080/common/upload"
+              :action="baseUrl + '/common/upload'"
               :data="{ type: 'task' }"
               name="file"
               list-type="picture-card"
@@ -155,6 +155,7 @@
 <script>
 import { mapMutations, mapState } from "vuex";
 import { formatDate } from "@/util/date";
+import BASE_URL from "@/config";
 
 export default {
   name: "Task",
@@ -169,7 +170,7 @@ export default {
       activeNames: ["1", "2", "3", "4", "5"],
       imgList: [],
       fileList: [],
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
       reward: 10,
       rewardOptions: [10, 15, 20, 25, 30]
     };

@@ -144,6 +144,7 @@
 import { mapState } from "vuex";
 import * as echarts from "echarts";
 import { listPublished, listAccepted } from "@/api/task/task";
+import BASE_URL from "@/config";
 
 export default {
   name: "Index",
@@ -170,7 +171,7 @@ export default {
     fullAvatarUrl() {
       if (!this.user.avatar) return "";
       if (this.user.avatar.startsWith("http")) return this.user.avatar;
-      return `http://localhost:8080${this.user.avatar}`;
+      return `${BASE_URL}${this.user.avatar}`;
     },
   },
   mounted() {

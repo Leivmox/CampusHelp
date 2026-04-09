@@ -3,7 +3,7 @@ import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
 var instance = axios.create({
-    baseURL: 'http://localhost:8080',
+    baseURL: process.env.VUE_APP_BASE_API || 'http://localhost:8080',
     headers: {
         'Content-Type': 'application/json;charset=utf-8'
     },
@@ -29,7 +29,7 @@ instance.interceptors.response.use(function (response) {
 });
 
 var service = axios.create({
-    baseURL: 'http://localhost:8080',
+    baseURL: process.env.VUE_APP_BASE_API || 'http://localhost:8080',
     timeout: 20000
 });
 

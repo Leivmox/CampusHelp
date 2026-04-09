@@ -122,6 +122,9 @@
 </template>
 
 <script>
+import { formatDate } from '@/util/date';
+import BASE_URL from "@/config";
+
 export default {
   name: "ImageManager",
   data() {
@@ -142,7 +145,7 @@ export default {
       },
       filterType: "",
       filterStatus: "",
-      baseUrl: "http://localhost:8080"
+      baseUrl: BASE_URL
     };
   },
   computed: {

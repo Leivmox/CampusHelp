@@ -94,7 +94,7 @@
         <el-button slot="reference" circle class="emoji-btn">😊</el-button>
       </el-popover>
       <el-upload
-        action="http://localhost:8080/common/upload"
+        :action="baseUrl + '/common/upload'"
         :data="{ type: 'chat' }"
         name="file"
         :show-file-list="false"
@@ -120,6 +120,7 @@
 <script>
 import { mapState } from "vuex";
 import { formatDate } from "@/util/date";
+import BASE_URL from "@/config";
 
 const emojiContext = require.context('@/assets/emoji', false, /\.gif$/);
 const emojiList = emojiContext.keys().map(key => key.replace('./', ''));
@@ -128,7 +129,7 @@ export default {
   name: "ChatDetail",
   data() {
     return {
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
       targetUserId: null,
       targetUser: {},
       msgList: [],

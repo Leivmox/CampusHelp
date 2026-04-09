@@ -102,13 +102,14 @@
 <script>
 import { mapState } from "vuex";
 import { formatDate } from "@/util/date";
+import BASE_URL from "@/config";
 
 export default {
   name: "AcceptedTasks",
   data() {
     return {
       acceptedTasks: [],
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
     };
   },
   computed: { ...mapState("user", ["user"]) },

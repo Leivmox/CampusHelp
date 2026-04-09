@@ -238,6 +238,7 @@
 
 <script>
 import { formatDate } from '@/util/date';
+import BASE_URL from "@/config";
 
 export default {
   name: "AdminTask",
@@ -247,7 +248,7 @@ export default {
       filteredTasks: [],
       filterStatus: '',
       searchKeyword: '',
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
       dialogVisible: false,
       currentTask: null
     }

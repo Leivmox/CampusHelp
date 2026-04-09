@@ -242,7 +242,7 @@
         </el-form-item>
         <el-form-item label="图片">
           <el-upload
-            action="http://localhost:8080/common/upload"
+            :action="baseUrl + '/common/upload'"
             :data="{ type: 'post' }"
             name="file"
             list-type="picture-card"
@@ -269,6 +269,7 @@
 import { mapState } from "vuex";
 import { formatDate } from "@/util/date";
 import { listPublished, listAccepted } from "@/api/task/task";
+import BASE_URL from "@/config";
 
 export default {
   name: "PostDetail",
@@ -278,7 +279,7 @@ export default {
       post: null,
       loading: false,
       commentContent: "",
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
       userBgImg: require("@/assets/img/user_bg.jpg"),
       pubStats: { publishCount: 0, solveCount: 0 },
       fileList: [], // 用于存储 el-upload 显示的图片列表

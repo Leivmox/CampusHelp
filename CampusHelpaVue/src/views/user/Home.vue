@@ -279,6 +279,7 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
+import BASE_URL from "@/config";
 
 export default {
   name: "Home",
@@ -511,10 +512,8 @@ export default {
     // ==========================================
     fullAvatarUrl() {
       if (!this.user || !this.user.avatar) return "";
-      // 如果已经是 http 开头，直接用
       if (this.user.avatar.startsWith("http")) return this.user.avatar;
-      // 否则拼接后端地址 (假设你的后端端口是 8080)
-      return `http://localhost:8080${this.user.avatar}`;
+      return `${BASE_URL}${this.user.avatar}`;
     },
 
     theme() {

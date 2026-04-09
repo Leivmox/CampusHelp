@@ -114,13 +114,14 @@
 <script>
 import { mapState } from "vuex";
 import { formatDate } from "@/util/date";
+import BASE_URL from "@/config";
 
 export default {
   name: "TaskIndex",
   data() {
     return {
       tasks: [],
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
       sortType: "time",
       sortOrder: "desc"
     };

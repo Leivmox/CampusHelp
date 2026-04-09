@@ -259,6 +259,7 @@
 
 <script>
 import { formatDate } from '@/util/date';
+import BASE_URL from "@/config";
 
 export default {
   name: "AdminPost",
@@ -269,7 +270,7 @@ export default {
       filteredPosts: [],
       selectSchoolId: null,
       searchKeyword: '',
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
       dialogVisible: false,
       currentPost: null,
       sortType: 'time',

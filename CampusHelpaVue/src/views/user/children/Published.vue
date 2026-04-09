@@ -153,6 +153,7 @@
 import { mapState, mapMutations } from "vuex";
 import { formatDate } from "@/util/date";
 import { addRemark } from "@/api/remark/remark";
+import BASE_URL from "@/config";
 
 export default {
   name: "Published",
@@ -166,7 +167,7 @@ export default {
       form: { star: 5, remark: "" },
       rules: {},
       title: "",
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
     };
   },
   computed: { ...mapState("user", ["user"]) },

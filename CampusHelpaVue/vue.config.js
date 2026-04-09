@@ -15,7 +15,8 @@ module.exports = {
         //默认启动打开浏览器
         open: true,
         // 设置开发服务器的端口号
-        port: 8848
+        port: 8848,
+        disableHostCheck: true
     },
     // 配置webpack相关
     configureWebpack:{

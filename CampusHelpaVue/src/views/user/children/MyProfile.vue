@@ -20,7 +20,7 @@
         <div class="avatar-section">
           <el-upload
             class="avatar-uploader"
-            action="http://localhost:8080/common/upload"
+            :action="BASE_URL + '/common/upload'"
             :show-file-list="false"
             :on-success="handleAvatarSuccess"
             :before-upload="beforeAvatarUpload"
@@ -184,6 +184,7 @@ import { mapState } from "vuex";
 import { listPublished, listAccepted } from "@/api/task/task";
 import { updateUserAvatar } from "@/api/system/user";
 import { formatDate } from "@/util/date";
+import BASE_URL from "@/config";
 
 export default {
   name: "MyProfile",
@@ -203,7 +204,7 @@ export default {
     fullAvatarUrl() {
       if (!this.user.avatar) return "";
       if (this.user.avatar.startsWith("http")) return this.user.avatar;
-      return `http://localhost:8080${this.user.avatar}`;
+      return `${BASE_URL}${this.user.avatar}`;
     },
   },
   filters: {
@@ -233,7 +234,7 @@ export default {
 
       if (!url) return "";
       if (url.startsWith("http")) return url;
-      return `http://localhost:8080${url}`;
+      return `${BASE_URL}${url}`;
     },
     getMyPosts() {
       if (!this.user || !this.user.id) return;

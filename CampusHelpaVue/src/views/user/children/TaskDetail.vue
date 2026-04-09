@@ -176,6 +176,7 @@
 import { mapState } from "vuex";
 import { formatDate } from "@/util/date";
 import { listPublished, listAccepted } from "@/api/task/task";
+import BASE_URL from "@/config";
 
 export default {
   name: "TaskDetail",
@@ -184,7 +185,7 @@ export default {
       taskId: null,
       task: null,
       loading: true,
-      baseUrl: "http://localhost:8080",
+      baseUrl: BASE_URL,
       pubStats: { publishCount: 0, solveCount: 0 },
     };
   },

@@ -151,6 +151,7 @@
 
 <script>
 import { formatDate } from '@/util/date';
+import BASE_URL from "@/config";
 
 export default {
   name: "AdminIndex",
@@ -160,7 +161,7 @@ export default {
       recentUsers: [],
       recentPosts: [],
       tasks: [],
-      baseUrl: "http://localhost:8080"
+      baseUrl: BASE_URL
     }
   },
   computed: {

@@ -115,6 +115,7 @@
 
 <script>
 import { listRemark, getRemark, delRemark, addRemark, updateRemark } from "@/api/remark/remark";
+import BASE_URL from "@/config";
 
 export default {
   name: "Remark",
@@ -131,7 +132,7 @@ export default {
       },
       form: {},
       rules: {},
-      baseUrl: "http://localhost:8080"
+      baseUrl: BASE_URL
     };
   },
   
