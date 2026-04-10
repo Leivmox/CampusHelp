@@ -14,6 +14,9 @@
  Date: 09/04/2026 23:27:31
 */
 
+CREATE DATABASE IF NOT EXISTS campus_help;
+USE campus_help;
+
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
