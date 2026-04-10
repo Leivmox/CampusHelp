@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yqn.mapper.UserMapper">
+<mapper namespace="com.wjy.mapper.UserMapper">
 
-    <resultMap id="userResultMap" type="com.yqn.pojo.User">
+    <resultMap id="userResultMap" type="com.wjy.pojo.User">
         <id column="id" property="id"/>
         <result column="avatar" property="avatar"/>
         <result column="signature" property="signature"/>
@@ -15,19 +15,19 @@
         <association property="aClass" column="class_id" select="findEntityClassById"/>
     </resultMap>
 
-    <select id="findEntitySchoolById" resultType="com.yqn.pojo.School">
+    <select id="findEntitySchoolById" resultType="com.wjy.pojo.School">
         select *
         from school
         where id = #{id}
     </select>
 
-    <select id="findEntityDeptById" resultType="com.yqn.pojo.Dept">
+    <select id="findEntityDeptById" resultType="com.wjy.pojo.Dept">
         select *
         from dept
         where id = #{id}
     </select>
 
-    <select id="findEntityClassById" resultType="com.yqn.pojo.Class">
+    <select id="findEntityClassById" resultType="com.wjy.pojo.Class">
         select *
         from class
         where id = #{id}

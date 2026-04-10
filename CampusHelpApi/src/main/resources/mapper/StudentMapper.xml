@@ -2,10 +2,10 @@
 <!DOCTYPE mapper
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yqn.mapper.StudentMapper">
+<mapper namespace="com.wjy.mapper.StudentMapper">
 
 
-    <resultMap type="com.yqn.pojo.Student" id="studentResult">
+    <resultMap type="com.wjy.pojo.Student" id="studentResult">
         <id property="id"    column="id"    />
         <association property="name"    column="name"    />
         <association property="age"    column="age"    />
@@ -15,7 +15,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select id, name, age from student
     </sql>
 
-    <select id="selectStudentList" resultType="com.yqn.pojo.Student">
+    <select id="selectStudentList" resultType="com.wjy.pojo.Student">
         <include refid="selectStudentVo"/>
         <where>
             <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
@@ -23,7 +23,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
 
-    <select id="selectStudentById" parameterType="Long" resultType="com.yqn.pojo.Student">
+    <select id="selectStudentById" parameterType="Long" resultType="com.wjy.pojo.Student">
         <include refid="selectStudentVo"/>
         where id = #{id}
     </select>

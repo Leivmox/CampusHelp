@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yqn.mapper.RemarkMapper">
+<mapper namespace="com.wjy.mapper.RemarkMapper">
 
-    <resultMap type="com.yqn.pojo.Remark" id="RemarkResult">
+    <resultMap type="com.wjy.pojo.Remark" id="RemarkResult">
         <result property="id"    column="id"    />
         <result property="star"    column="star"    />
         <result property="remark"    column="remark"    />
@@ -17,7 +17,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select id, star, remark, task_id, accept_id, publish_id from remark
     </sql>
 
-    <select id="selectRemarkList"  resultType="com.yqn.pojo.Remark">
+    <select id="selectRemarkList"  resultType="com.wjy.pojo.Remark">
         <include refid="selectRemarkVo"/>
         <where>
             <if test="star != null "> and star = #{star}</if>
@@ -27,7 +27,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
     </select>
 
-    <select id="selectRemarkById" parameterType="Long" resultType="com.yqn.pojo.Remark">
+    <select id="selectRemarkById" parameterType="Long" resultType="com.wjy.pojo.Remark">
         <include refid="selectRemarkVo"/>
         where id = #{id}
     </select>

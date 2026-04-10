@@ -23,7 +23,7 @@ spring:
     password: 123456
 
     druid:
-      aop-patterns: com.yqn.*
+      aop-patterns: com.wjy.*
       filters: stat,wall
 
       stat-view-servlet:
@@ -36,5 +36,5 @@ spring:
         url-pattern: /*
 logging:
   level:
-    com.yqn.mapper: debug
+    com.wjy.mapper: debug
 #    org.springframework.web: DEBUG

@@ -59,6 +59,17 @@
           <span>{{ row.name }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="操作" width="120" align="center">
+        <template #default="{ row }">
+          <el-button 
+            type="danger" 
+            size="mini" 
+            icon="el-icon-delete"
+            @click="handleDelete('school', row)">
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
     </el-table>
     
     <!-- 院系列表 -->
@@ -75,6 +86,17 @@
       <el-table-column label="院系名称">
         <template #default="{ row }">
           <span>{{ row.name }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="120" align="center">
+        <template #default="{ row }">
+          <el-button 
+            type="danger" 
+            size="mini" 
+            icon="el-icon-delete"
+            @click="handleDelete('dept', row)">
+            删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -98,6 +120,17 @@
       <el-table-column label="班级">
         <template #default="{ row }">
           <span>{{ row.name }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="120" align="center">
+        <template #default="{ row }">
+          <el-button 
+            type="danger" 
+            size="mini" 
+            icon="el-icon-delete"
+            @click="handleDelete('class', row)">
+            删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -378,6 +411,48 @@ export default {
       } finally {
         this.submitLoading = false;
       }
+    },
+    
+    handleDelete(type, row) {
+      const typeNames = {
+        school: '学校',
+        dept: '院系',
+        class: '班级'
+      };
+      
+      let warningMsg = '';
+      if (type === 'school') {
+        const deptCount = this.depts.filter(d => d.schoolId === row.id).length;
+        if (deptCount > 0) {
+          warningMsg = `该学校下有 ${deptCount} 个院系，需先删除院系`;
+        }
+      } else if (type === 'dept') {
+        const classCount = this.classes.filter(c => c.deptId === row.id).length;
+        if (classCount > 0) {
+          warningMsg = `该院系下有 ${classCount} 个班级，需先删除班级`;
+        }
+      }
+      
+      if (warningMsg) {
+        this.$message.warning(warningMsg);
+        return;
+      }
+      
+      this.$confirm(`确定要删除${typeNames[type]}"${row.name}"吗？`, '提示', {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          const url = `/${type}/${row.id}`;
+          await this.$del(url);
+          this.$message.success('删除成功');
+          this.loadData();
+        } catch (error) {
+          const msg = error?.response?.data?.message || error.message || '删除失败';
+          this.$message.error(msg);
+        }
+      }).catch(() => {});
     }
   },
   mounted() {

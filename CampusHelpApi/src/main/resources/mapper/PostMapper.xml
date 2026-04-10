@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yqn.mapper.PostMapper">
+<mapper namespace="com.wjy.mapper.PostMapper">
 
-    <resultMap id="postResultMap" type="com.yqn.pojo.Post">
+    <resultMap id="postResultMap" type="com.wjy.pojo.Post">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="school_id" property="schoolId"/>
@@ -17,7 +17,7 @@
         <association property="publisher" column="user_id" select="findUserWithAssociation"/>
     </resultMap>
 
-    <select id="findUserWithAssociation" resultMap="com.yqn.mapper.UserMapper.userResultMap">
+    <select id="findUserWithAssociation" resultMap="com.wjy.mapper.UserMapper.userResultMap">
         SELECT * FROM user WHERE id = #{id}
     </select>
 

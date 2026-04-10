@@ -2,13 +2,13 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yqn.mapper.DeptMapper">
-    <resultMap id="deptResultMap" type="com.yqn.pojo.Dept">
+<mapper namespace="com.wjy.mapper.DeptMapper">
+    <resultMap id="deptResultMap" type="com.wjy.pojo.Dept">
         <id column="id" property="id"/>
-        <collection property="classes" column="id" ofType="com.yqn.pojo.Class" select="findClassByDeptId"/>
+        <collection property="classes" column="id" ofType="com.wjy.pojo.Class" select="findClassByDeptId"/>
     </resultMap>
 
-    <select id="findClassByDeptId" resultType="com.yqn.pojo.Class">
+    <select id="findClassByDeptId" resultType="com.wjy.pojo.Class">
         select * from class where dept_id=#{id}
     </select>
 
